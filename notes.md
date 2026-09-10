@@ -45,6 +45,7 @@ Tareas, fechas y entregas van en `board.md`.
 - Pregunta de examen: ¿cuál es la función de la VPC?
 - La parte importante de un laboratorio: las evidencias.
 - Habilidades diferenciadoras: capacidades de análisis y conocimiento del negocio.
+- Es importante que las empresas tengan gobierno de datos, con trazabilidad; si no, la IA no puede actuar en la empresa.
 
 **Dudas / pendientes:**
 -
