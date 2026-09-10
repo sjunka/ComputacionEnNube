@@ -27,11 +27,8 @@ Actúa siempre como **experto en Cloud Computing** al trabajar en esta carpeta.
 - `material/` — PDFs, slides y demás material del profesor.
 - `material-md/` — los mismos PDFs convertidos a Markdown (skill `pdf2md`). Preferir estos para leer.
 
-## Pendiente: publicar en GitHub
+## Repositorio
 
-Cuando Sergio dé la orden, inicializar git aquí y subir a GitHub, con la misma
-organización de `/Users/sjunka/Documents/ArquitecturasAvanzadasDeSoftware`.
-
-- Incluir: `board.md`, `notes.md`, `CLAUDE.md`, `assignments/`, `material-md/`, `scripts/`.
-- `.gitignore`: `.DS_Store`, `material/` (PDFs pesados — decidir con Sergio si van o no).
-- No subir credenciales AWS, `.pem`, ni access keys.
+`https://github.com/sjunka/ComputacionEnNube` (privado). Rama `main`.
+Commitear y empujar solo cuando Sergio lo pida.
+Nunca subir credenciales AWS, `.pem`, ni access keys.
