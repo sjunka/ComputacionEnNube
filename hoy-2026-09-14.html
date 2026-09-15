@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clase 3 · Lun 14 sep</title>
+<style>
+  :root {
+    --bg: #272822; --bg2: #3e3d32; --fg: #f8f8f2; --dim: #75715e;
+    --pink: #f92672; --orange: #fd971f; --yellow: #e6db74;
+    --green: #a6e22e; --blue: #66d9ef; --purple: #ae81ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.6 "JetBrains Mono", Menlo, Consolas, monospace; padding: 24px 16px; }
+  main { max-width: 860px; margin: 0 auto; }
+  h1 { color: var(--pink); margin: 0 0 4px; font-size: 1.6em; }
+  h2 { color: var(--green); border-bottom: 1px solid var(--bg2); padding-bottom: 4px; margin-top: 36px; }
+  h3 { color: var(--orange); margin: 22px 0 6px; font-size: 1.05em; }
+  .sub { color: var(--dim); margin: 0; }
+  code { color: var(--yellow); }
+  b { color: var(--blue); font-weight: normal; }
+  pre { background: #1e1f1c; border-left: 3px solid var(--purple); padding: 12px;
+    overflow-x: auto; color: var(--yellow); font-size: 13px; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 3px 0; }
+  .why { color: var(--dim); font-style: italic; }
+  .ok { color: var(--green); }
+  .warn { border: 1px solid var(--pink); color: var(--pink); padding: 8px 12px; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { border: 1px solid var(--bg2); padding: 6px 8px; text-align: left; }
+  th { color: var(--purple); }
+  .check label { display: flex; gap: 10px; padding: 6px 0; cursor: pointer; }
+  .check input { accent-color: var(--green); width: 18px; height: 18px; margin-top: 3px; }
+  .check input:checked + span { color: var(--dim); text-decoration: line-through; }
+  #progress { color: var(--green); }
+  details { background: var(--bg2); padding: 8px 12px; margin: 10px 0; }
+  summary { cursor: pointer; color: var(--orange); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Clase 3 · Lunes 14 sep 2026</h1>
+  <p class="sub">18:00–20:00 · Bloque 35-302 · Semana 2: Resiliencia y escalabilidad · Lab Evolutivo 02</p>
+  <p>Hoy <b>no hay entrega</b>. Toca preparar las lecturas, tener listo el baseline del Lab 01 y hacer el Lab 02 en clase.</p>
+
+  <h2>Checklist <span id="progress"></span></h2>
+  <div class="check" id="checklist">
+    <label><input type="checkbox" data-k="leer1"><span>Leer: Well-Architected, Reliability Pillar (principios de diseño y REL11-BP01 a BP03). 9 min</span></label>
+    <label><input type="checkbox" data-k="leer2"><span>Leer: ALB target groups y health checks (estados initial, healthy y unhealthy). 8 min</span></label>
+    <label><input type="checkbox" data-k="leer3"><span>Leer: Auto Scaling, capacidad min/desired/max y reemplazo de instancias. 7 min</span></label>
+    <label><input type="checkbox" data-k="explicar"><span>Poder explicar la cadena: fallo → detección → retiro de tráfico → recuperación de capacidad</span></label>
+    <label><input type="checkbox" data-k="lab01"><span>Baseline del Lab 01 en <code>us-east-1</code>: <code>dcl-dev-vpc</code> y dos subnets en AZ distintas</span></label>
+    <label><input type="checkbox" data-k="evid01"><span>Evidencias del Lab 01: capturas de la VPC y las subnets, salida de la CLI y tabla de checkpoint</span></label>
+    <label><input type="checkbox" data-k="acceso"><span>Acceso a la cuenta AWS del equipo y CloudShell funcionando</span></label>
+    <label><input type="checkbox" data-k="equipo"><span>Confirmar con el Equipo 1 el tag <code>dcl:owner-team=team-01</code></span></label>
+    <label><input type="checkbox" data-k="laptop"><span>Llevar portátil cargado y carpeta para las capturas del Lab 02</span></label>
+    <label><input type="checkbox" data-k="cleanup"><span>Al terminar el Lab 02, hacer el cleanup para que no quede cobrando el ALB ni las EC2</span></label>
+  </div>
+
+  <h2>Fechas que vienen</h2>
+  <table>
+    <tr><th>Fecha</th><th>Evaluación</th><th>Peso</th></tr>
+    <tr><td>Mié 30 sep</td><td>Checkpoint Lab 1</td><td>20%</td></tr>
+    <tr><td>Mié 21 oct</td><td>Checkpoint Lab 2</td><td>20%</td></tr>
+    <tr><td>Lun 26 oct</td><td>Entrega final del Architecture Challenge</td><td>40%</td></tr>
+    <tr><td>Mié 28 oct</td><td>Defensa final</td><td>20%</td></tr>
+  </table>
+
+  <h2>Speedrun CLI (1 min lectura)</h2>
+  <p>Todo el taller por AWS CLI, por si toca ir rápido o defender qué hace cada comando. Corre en orden; cada bloque guarda el ID que necesita el siguiente.</p>
+
+  <h3>1. Identidad y región</h3>
+<pre>aws sts get-caller-identity
+aws configure set region us-east-1</pre>
+  <p class="why">Confirma quién eres y fija la región para no crear recursos en otro lado por accidente.</p>
+
+  <h3>2. Baseline Lab 01: VPC y subnets</h3>
+<pre>VPC_ID=$(aws ec2 create-vpc --cidr-block 10.20.0.0/16 \
+  --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=dcl-dev-vpc},{Key=dcl:project,Value=digital-cafe-luna},{Key=dcl:environment,Value=dev},{Key=dcl:owner-team,Value=team-01}]' \
+  --query 'Vpc.VpcId' --output text)
+
+SUB_A=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.20.1.0/24 \
+  --availability-zone us-east-1a \
+  --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=dcl-dev-subnet-a}]' \
+  --query 'Subnet.SubnetId' --output text)
+
+SUB_B=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.20.2.0/24 \
+  --availability-zone us-east-1b \
+  --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=dcl-dev-subnet-b}]' \
+  --query 'Subnet.SubnetId' --output text)</pre>
+  <p class="why">Si ya existe el baseline, saltar este bloque y solo recuperar los IDs con <code>describe-vpcs</code> / <code>describe-subnets</code> filtrando por el tag <code>dcl:project</code>.</p>
+
+  <h3>3. Conectividad: Internet Gateway y ruta pública</h3>
+<pre>IGW_ID=$(aws ec2 create-internet-gateway \
+  --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=dcl-dev-igw-s02}]' \
+  --query 'InternetGateway.InternetGatewayId' --output text)
+aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id $IGW_ID
+
+RT_ID=$(aws ec2 create-route-table --vpc-id $VPC_ID \
+  --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=dcl-dev-rt-s02-public}]' \
+  --query 'RouteTable.RouteTableId' --output text)
+aws ec2 create-route --route-table-id $RT_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW_ID
+aws ec2 associate-route-table --route-table-id $RT_ID --subnet-id $SUB_A
+aws ec2 associate-route-table --route-table-id $RT_ID --subnet-id $SUB_B</pre>
+  <p class="why">El ALB internet-facing exige un Internet Gateway en la VPC; la ruta 0.0.0.0/0 hace que las dos subnets salgan a internet.</p>
+
+  <h3>4. Security groups</h3>
+<pre>SG_ALB=$(aws ec2 create-security-group --group-name dcl-dev-sg-alb --description "ALB" \
+  --vpc-id $VPC_ID --query 'GroupId' --output text)
+aws ec2 authorize-security-group-ingress --group-id $SG_ALB --protocol tcp --port 80 --cidr 0.0.0.0/0
+
+SG_APP=$(aws ec2 create-security-group --group-name dcl-dev-sg-app --description "App" \
+  --vpc-id $VPC_ID --query 'GroupId' --output text)
+aws ec2 authorize-security-group-ingress --group-id $SG_APP --protocol tcp --port 80 --source-group $SG_ALB</pre>
+  <p class="why">El ALB recibe HTTP de cualquiera; las instancias solo aceptan HTTP que venga del SG del ALB, nunca directo de internet.</p>
+
+  <h3>5. Launch Template, Target Group y ALB</h3>
+<pre>AMI_ID=$(aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 \
+  --query 'Parameters[0].Value' --output text)
+
+USER_DATA=$(base64 <<'EOF'
+#!/bin/bash
+set -euxo pipefail
+dnf install -y httpd
+TOKEN=$(curl -sS -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" http://169.254.169.254/latest/api/token)
+IID=$(curl -sS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+AZ=$(curl -sS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
+echo "Digital Café Luna | instance=${IID} | az=${AZ}" > /var/www/html/index.html
+systemctl enable --now httpd
+EOF
+)
+
+LT_ID=$(aws ec2 create-launch-template --launch-template-name dcl-dev-lt-web \
+  --launch-template-data "{\"ImageId\":\"$AMI_ID\",\"InstanceType\":\"t3.micro\",\"UserData\":\"$USER_DATA\",\"NetworkInterfaces\":[{\"DeviceIndex\":0,\"AssociatePublicIpAddress\":true,\"Groups\":[\"$SG_APP\"]}]}" \
+  --query 'LaunchTemplate.LaunchTemplateId' --output text)
+
+TG_ARN=$(aws elbv2 create-target-group --name dcl-dev-tg-web --protocol HTTP --port 80 \
+  --vpc-id $VPC_ID --health-check-path / --healthy-threshold-count 2 --health-check-interval-seconds 10 \
+  --query 'TargetGroups[0].TargetGroupArn' --output text)
+
+ALB_ARN=$(aws elbv2 create-load-balancer --name dcl-dev-alb --type application \
+  --subnets $SUB_A $SUB_B --security-groups $SG_ALB \
+  --query 'LoadBalancers[0].LoadBalancerArn' --output text)
+
+aws elbv2 create-listener --load-balancer-arn $ALB_ARN --protocol HTTP --port 80 \
+  --default-actions Type=forward,TargetGroupArn=$TG_ARN</pre>
+  <p class="why">Launch Template define cómo nace cada instancia (AMI, tipo, SG, user data). Target Group decide quién es elegible. ALB expone un único endpoint y reparte tráfico hacia el Target Group.</p>
+
+  <h3>6. Auto Scaling Group</h3>
+<pre>aws autoscaling create-auto-scaling-group --auto-scaling-group-name dcl-dev-asg-web \
+  --launch-template LaunchTemplateId=$LT_ID,Version='$Latest' \
+  --min-size 2 --desired-capacity 2 --max-size 4 \
+  --target-group-arns $TG_ARN \
+  --vpc-zone-identifier "$SUB_A,$SUB_B" \
+  --health-check-type EC2</pre>
+  <p class="why">min/desired/max=2/2/4, health check EC2 (no ELB), sin scaling policy: solo queremos ver que mantiene desired, no que escale por demanda.</p>
+
+  <h3>7. Probar y limpiar</h3>
+<pre>ALB_DNS=$(aws elbv2 describe-load-balancers --names dcl-dev-alb --query 'LoadBalancers[0].DNSName' --output text)
+for i in {1..20}; do curl -s "http://${ALB_DNS}"; echo; done | sort | uniq -c
+
+# terminar una instancia y observar reemplazo
+IID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names dcl-dev-asg-web \
+  --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
+aws ec2 terminate-instances --instance-ids $IID
+
+# cleanup obligatorio, en orden
+aws autoscaling update-auto-scaling-group --auto-scaling-group-name dcl-dev-asg-web --min-size 0 --desired-capacity 0
+aws autoscaling delete-auto-scaling-group --auto-scaling-group-name dcl-dev-asg-web --force-delete
+aws elbv2 delete-load-balancer --load-balancer-arn $ALB_ARN
+aws elbv2 delete-target-group --target-group-arn $TG_ARN
+aws ec2 delete-launch-template --launch-template-id $LT_ID
+aws ec2 revoke-security-group-ingress --group-id $SG_APP --protocol tcp --port 80 --source-group $SG_ALB
+aws ec2 delete-security-group --group-id $SG_APP
+aws ec2 delete-security-group --group-id $SG_ALB
+aws ec2 disassociate-route-table --association-id $(aws ec2 describe-route-tables --route-table-ids $RT_ID --query 'RouteTables[0].Associations[0].RouteTableAssociationId' --output text)
+aws ec2 delete-route-table --route-table-id $RT_ID
+aws ec2 detach-internet-gateway --internet-gateway-id $IGW_ID --vpc-id $VPC_ID
+aws ec2 delete-internet-gateway --internet-gateway-id $IGW_ID</pre>
+  <p class="why">Terminar la instancia demuestra recuperación: el ASG la reemplaza porque detecta que ya no está running (no por health check del ALB). El cleanup baja el ASG a 0 antes de borrarlo para no dejar instancias huérfanas cobrando.</p>
+
+  <h2>Ejercicio 1 · Lab 01: baseline de red (prerrequisito)</h2>
+  <p>Si ya existe, solo hay que validarlo y no crear nada duplicado.</p>
+  <table>
+    <tr><th>Recurso</th><th>CIDR</th><th>Ubicación</th></tr>
+    <tr><td><code>dcl-dev-vpc</code></td><td>10.20.0.0/16</td><td>us-east-1</td></tr>
+    <tr><td><code>dcl-dev-subnet-a</code></td><td>10.20.1.0/24</td><td>AZ A</td></tr>
+    <tr><td><code>dcl-dev-subnet-b</code></td><td>10.20.2.0/24</td><td>AZ B (distinta)</td></tr>
+  </table>
+  <p>Tags en cada recurso: <code>Name</code>, <code>dcl:project=digital-cafe-luna</code>, <code>dcl:environment=dev</code>, <code>dcl:owner-team=team-01</code>, <code>dcl:managed-by=console</code></p>
+  <ol>
+    <li>Entrar a la consola, poner la región <b>us-east-1</b> y anotarla.</li>
+    <li>Ir a VPC → Your VPCs y buscar <code>dcl-dev-vpc</code>. Si no existe: Create VPC → <b>VPC only</b>, CIDR 10.20.0.0/16, sin IPv6, Tenancy Default, con los tags.</li>
+    <li>Ir a Subnets → Create subnet, elegir la VPC y escoger dos AZ distintas.</li>
+    <li>Crear <code>dcl-dev-subnet-a</code> (10.20.1.0/24, AZ A) y <code>dcl-dev-subnet-b</code> (10.20.2.0/24, AZ B), con los tags.</li>
+    <li>Validar desde CloudShell:</li>
+  </ol>
+<pre>aws sts get-caller-identity
+aws ec2 describe-vpcs --filters 'Name=tag:dcl:project,Values=digital-cafe-luna' \
+  --query 'Vpcs[].{Name:Tags[?Key==`Name`]|[0].Value,VpcId:VpcId,CIDR:CidrBlock,State:State}' --output table
+aws ec2 describe-subnets --filters 'Name=tag:dcl:project,Values=digital-cafe-luna' \
+  --query 'Subnets[].{Name:Tags[?Key==`Name`]|[0].Value,CIDR:CidrBlock,AZ:AvailabilityZone,State:State}' --output table</pre>
+  <p class="why">Pregunta de la bitácora: ¿por qué dos subnets en AZ distintas no hacen por sí solas que la app sea altamente disponible? Porque solo preparan la red. Sin cómputo repartido, balanceo y recuperación, no hay HA.</p>
+
+  <h2>Ejercicio 2 · Lab 02: ALB + Auto Scaling (hoy en clase)</h2>
+  <p class="warn">Usar solo <code>us-east-1</code>. No crear access keys ni key pair SSH. Al final hay que hacer cleanup obligatorio.</p>
+
+  <h3>Paso 1 · Conectividad mínima</h3>
+  <ol>
+    <li>En VPC → Internet gateways, crear <code>dcl-dev-igw-s02</code> y adjuntarlo a <code>dcl-dev-vpc</code>.</li>
+    <li>En Route tables, crear <code>dcl-dev-rt-s02-public</code> y agregar la ruta <code>0.0.0.0/0 → igw</code>.</li>
+    <li>Asociar las dos subnets a esa route table.</li>
+  </ol>
+
+  <h3>Paso 2 · Security groups</h3>
+  <ul>
+    <li><code>dcl-dev-sg-alb</code>: inbound TCP 80 desde <code>0.0.0.0/0</code></li>
+    <li><code>dcl-dev-sg-app</code>: inbound TCP 80 solo desde <code>dcl-dev-sg-alb</code>, sin SSH</li>
+  </ul>
+
+  <h3>Paso 3 · Launch Template <code>dcl-dev-lt-web</code></h3>
+  <ol>
+    <li>AMI Amazon Linux 2023 x86_64, tipo <b>t3.micro</b> y sin key pair.</li>
+    <li>En Network no fijar subnet, activar Auto-assign public IP y usar <code>dcl-dev-sg-app</code>.</li>
+    <li>Confirmar Delete on termination = Yes y pegar este user data:</li>
+  </ol>
+<pre>#!/bin/bash
+set -euxo pipefail
+dnf install -y httpd
+TOKEN=$(curl -sS -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" http://169.254.169.254/latest/api/token)
+INSTANCE_ID=$(curl -sS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+AZ=$(curl -sS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
+echo "Digital Café Luna | instance=${INSTANCE_ID} | az=${AZ}" > /var/www/html/index.html
+systemctl enable --now httpd</pre>
+
+  <h3>Paso 4 · Target Group <code>dcl-dev-tg-web</code></h3>
+  <ol>
+    <li>Configurar Instances, HTTP:80 y VPC <code>dcl-dev-vpc</code>.</li>
+    <li>Health check en <code>/</code> con código 200, interval 10 s y healthy threshold 2.</li>
+    <li>No registrar instancias a mano, porque el ASG lo hace solo.</li>
+  </ol>
+
+  <h3>Paso 5 · ALB <code>dcl-dev-alb</code></h3>
+  <ol>
+    <li>Configurar Internet-facing, IPv4, las dos subnets y <code>dcl-dev-sg-alb</code>.</li>
+    <li>Crear el listener HTTP:80 con forward a <code>dcl-dev-tg-web</code>.</li>
+    <li>Esperar State = Active y copiar el DNS name.</li>
+  </ol>
+
+  <h3>Paso 6 · Auto Scaling Group <code>dcl-dev-asg-web</code></h3>
+  <ol>
+    <li>Usar el launch template <code>dcl-dev-lt-web</code> con las dos subnets y adjuntarlo a <code>dcl-dev-tg-web</code>.</li>
+    <li>Dejar el health check type en <b>EC2</b>, sin activar el de ELB.</li>
+    <li>Poner min=2, desired=2 y max=4, <b>sin scaling policy</b>.</li>
+    <li>Validar que haya 2 instancias InService y 2 targets healthy.</li>
+  </ol>
+
+  <h3>Prueba A · Distribución</h3>
+<pre>ALB_DNS=$(aws elbv2 describe-load-balancers --names dcl-dev-alb \
+  --query 'LoadBalancers[0].DNSName' --output text)
+for i in {1..20}; do curl -s "http://${ALB_DNS}"; echo; done | sort | uniq -c</pre>
+  <p class="ok">La salida debe mostrar al menos 2 instance IDs. No tiene que ser 50/50.</p>
+
+  <h3>Prueba B · Terminación controlada</h3>
+  <ol>
+    <li>Anotar los IDs de las 2 instancias del ASG.</li>
+    <li>Terminar una desde EC2 → Instance state → Terminate. No hay que tocar el desired.</li>
+    <li>Tener abiertas tres vistas: Target Group → Targets, ASG → Activity y EC2 → Instances.</li>
+    <li>Seguir enviando curl: el servicio responde desde la instancia que queda.</li>
+    <li>Ver cómo el ASG lanza un reemplazo, que pasa de Pending a InService y luego de initial a healthy.</li>
+    <li>Repetir la Prueba A y comprobar que aparece el ID nuevo.</li>
+  </ol>
+  <details>
+    <summary>Respuestas de cierre (para defender)</summary>
+    <ul>
+      <li><b>Health:</b> decide si un target puede recibir tráfico. No recupera nada.</li>
+      <li><b>ALB:</b> reparte tráfico solo entre targets elegibles. No mantiene capacidad.</li>
+      <li><b>ASG:</b> mantiene desired capacity y crea reemplazos desde el Launch Template.</li>
+      <li><b>¿Por qué max=4 no escala solo?</b> Porque max es un límite. Sin scaling policy, nadie cambia el desired.</li>
+      <li><b>No decir</b> que el health check del ALB provocó el reemplazo. El ASG usa el health check de EC2.</li>
+    </ul>
+  </details>
+
+  <h3>Evidencias (capturas)</h3>
+  <ul>
+    <li>ALB en Active con su DNS, TG con 2 healthy y ASG con 2/2/4</li>
+    <li>Salida del curl con 2 IDs, antes y después de la prueba de fallo</li>
+    <li>ID de la instancia terminada, Activity history con el reemplazo y el ID nuevo en estado healthy</li>
+  </ul>
+
+  <h3>Cleanup obligatorio (en este orden)</h3>
+  <ol>
+    <li>Bajar el ASG a min=0 y desired=0, y esperar a que terminen las instancias.</li>
+    <li>Eliminar el ASG.</li>
+    <li>Eliminar el ALB y esperar a que se liberen sus ENI.</li>
+    <li>Eliminar el Target Group.</li>
+    <li>Eliminar el Launch Template.</li>
+    <li>Eliminar <code>sg-app</code> y <code>sg-alb</code>.</li>
+    <li>Desasociar las subnets de la route table S02 y eliminarla.</li>
+    <li>Desadjuntar el IGW y eliminarlo.</li>
+    <li>Verificar que solo queden la VPC y las 2 subnets, que son el baseline.</li>
+  </ol>
+</main>
+<script>
+  const boxes = document.querySelectorAll('#checklist input');
+  const progress = document.getElementById('progress');
+  const update = () => {
+    const done = [...boxes].filter(b => b.checked).length;
+    progress.textContent = `${done}/${boxes.length}`;
+  };
+  boxes.forEach(b => {
+    try { b.checked = localStorage.getItem('hoy-' + b.dataset.k) === '1'; } catch (e) {}
+    b.addEventListener('change', () => {
+      try { localStorage.setItem('hoy-' + b.dataset.k, b.checked ? '1' : '0'); } catch (e) {}
+      update();
+    });
+  });
+  update();
+</script>
+</body>
+</html>

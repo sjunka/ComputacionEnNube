@@ -31,5 +31,10 @@ Otros equipos:
 ### 2026-09-09 — Clase 2
 - (pegar notas aquí)
 
+### 2026-09-14 — Clase 3
+- Clase remota por Teams (profe indispuesto), mismo horario 6:00-6:05 p.m.
+- **Lab Evolutivo 02 se corre el miércoles**, no el lunes.
+- Profesor subió material nuevo: *Cloud Native Architecture and Design* (handbook) y *Cloud Application Architecture Patterns*. Ya convertidos a `material-md/`.
+
 ## Sin clasificar
 
