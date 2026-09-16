@@ -16,10 +16,19 @@ Equipo 1 (team-01) · Región us-east-1 · Creado por AWS CLI desde CloudShell (
 
 ![Salida de describe-vpcs y describe-subnets](verificacion-cli.png)
 
-## Evidencias pendientes
+## Capturas de consola
 
-- Captura de consola: VPC > Your VPCs mostrando `dcl-dev-vpc` con el selector de región visible.
-- Captura de consola: VPC > Subnets mostrando las dos subnets.
+VPC > Your VPCs: `dcl-dev-vpc`, VPC ID, State y IPv4 CIDR.
+
+![VPC en consola](consola-vpc.png)
+
+Selector de región en N. Virginia (us-east-1) con `dcl-dev-vpc` visible.
+
+![Región en consola](consola-region.png)
+
+VPC > Subnets: subnet-0cdc98430dba1d1da (10.20.1.0/24, us-east-1a) y subnet-0ffd7bd61b1b140c4 (10.20.2.0/24, us-east-1b) en `dcl-dev-vpc`. Las demás filas son subnets de la VPC default (172.31.0.0/16), fuera del lab.
+
+![Subnets en consola](consola-subnets.png)
 
 ## Respuesta para la bitácora
 
