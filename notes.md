@@ -8,6 +8,34 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-09-16 — Clase
+
+**Notas:**
+- **Portabilidad**: llevar la app de una nube a otra sin reescribirla. Ejemplo: un contenedor Docker.
+- **Interoperabilidad**: sistemas de distintas nubes trabajando juntos gracias a estándares. Ejemplo: una API REST.
+- Terraform despliega arquitectura como código, no solo en la nube. Garantiza niveles de portabilidad.
+- **Vendor lock-in**: quedar amarrado a un proveedor porque salir es muy caro. Ejemplo: DynamoDB, Lambda.
+- El vendor lock-in no permite cierta cantidad de innovación, porque los procesos de innovación pertenecen al proveedor.
+- **No vendor lock-in**: poder cambiar de proveedor sin reescribir la app. Ejemplo: Docker, Kubernetes, Terraform.
+- **Multi-nube**: cuando tengo 2 providers.
+- **Nube híbrida**: nube pública más infraestructura propia (on-prem), conectadas. Ejemplo: un banco con el core en su data center y la app web en AWS.
+- **On-premise**: servidores propios en el data center de la empresa, comprados y operados por ella. Es lo opuesto a la nube.
+- **Nube privada**: una nube tipo AWS (autoservicio, VMs por demanda) pero de uso exclusivo de una empresa. Ejemplo: un banco con OpenStack en su data center.
+- Para una nube privada se necesita un orquestador, un facturador y tecnología específica para gestión y virtualización.
+- Debe garantizar la soberanía de esas cargas.
+- Vamos a comenzar con el laboratorio 2.
+- La estrategia que vamos a usar es tagging.
+- 1 VPC solo puede tener 1 Internet Gateway.
+- Las subnets tienen una tabla de ruteo asociada, y eso las hace privadas.
+- Los targets del balanceador no son solo una máquina: pueden ser una dirección IP u otro balanceador.
+- Hay 3 tipos de balanceadores. El ALB trabaja a nivel de capa 7.
+- **RTO** (Recovery Time Objective): cuánto tiempo puedes estar caído.
+- **RPO** (Recovery Point Objective): cuántos datos puedes perder.
+- **Tarea:** hacer el Lab Evolutivo 02 para entender bien los conceptos.
+- Debemos tener esos conceptos claros.
+
+---
+
 ## 2026-09-09 — Clase 2
 
 **Tema:** IAM en AWS

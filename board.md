@@ -36,5 +36,10 @@ Otros equipos:
 - **Lab Evolutivo 02 se corre el miércoles**, no el lunes.
 - Profesor subió material nuevo: *Cloud Native Architecture and Design* (handbook) y *Cloud Application Architecture Patterns*. Ya convertidos a `material-md/`.
 
+### 2026-09-16 — Clase 4
+- Conceptos: portabilidad, interoperabilidad, vendor lock-in, multi-nube, nube híbrida, on-premise, nube privada, RTO/RPO.
+- Se comenzó el Lab Evolutivo 02 (resiliencia y escalabilidad: ALB, Target Group, Launch Template, ASG).
+- **Tarea:** hacer el Lab Evolutivo 02 para entender bien los conceptos.
+
 ## Sin clasificar
 
