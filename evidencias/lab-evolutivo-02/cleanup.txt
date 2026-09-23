@@ -1,0 +1,36 @@
+== 2026-09-23 11:10:24 -05 | Cleanup Lab 02 ==
+ASG borrado (force-delete)
+ALB en borrado
+ALB borrado
+
+aws: [ERROR]: An error occurred (ResourceInUse) when calling the DeleteTargetGroup operation: Target group 'arn:aws:elasticloadbalancing:us-east-1:278835524469:targetgroup/dcl-dev-tg-web/ded9c536a3db590e' is currently in use by a listener or a rule
+dcl-dev-lt-web
+{
+    "Return": true,
+    "GroupId": "sg-06a59f4237f63124a"
+}
+sg-app borrado
+{
+    "Return": true,
+    "GroupId": "sg-0be5786e1d8f54d60"
+}
+sg-alb borrado
+desasociada rtbassoc-089a1769994983a8c
+desasociada rtbassoc-0abe577e89be44712
+RT borrada
+IGW borrado
+--- verificacion ---
+ALBs: 
+ASGs: dcl-dev-asg-web
+EC2 vivas: 
+IGW en VPC: 
+SG en VPC: default
+Route tables: rtb-030269cef8405d013
+Volumenes: 
+== 2026-09-23 11:16:17 -05 | Cleanup Lab 02 (reintento TG y verificacion ASG) ==
+TG borrado
+ASG ya no existe
+TGs: 
+Launch templates: 
+Volumenes: 
+EC2 no terminadas: 

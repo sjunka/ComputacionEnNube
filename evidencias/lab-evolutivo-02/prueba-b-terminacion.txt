@@ -1,0 +1,85 @@
+== 2026-09-23 11:07:22 -05 | Prueba B: terminacion controlada ==
+Instancia a terminar: i-062e3a461f4ebac71 (desired capacity NO se toca)
+-----------------------------------------------------
+|                TerminateInstances                 |
++----------------+----------+-----------------------+
+|      Ahora     |  Antes   |          Id           |
++----------------+----------+-----------------------+
+|  shutting-down |  running |  i-062e3a461f4ebac71  |
++----------------+----------+-----------------------+
+--- peticiones al ALB durante la recuperacion (una cada 10 s) ---
+11:07:24 | Digital Café Luna | instance=i-062e3a461f4ebac71 | az=us-east-1b | TG: i-062e3a461f4ebac71:healthy i-0f977899c4df950ce:healthy 
+11:07:36 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-062e3a461f4ebac71:healthy i-0f977899c4df950ce:healthy 
+11:07:47 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-062e3a461f4ebac71:healthy i-0f977899c4df950ce:healthy 
+11:07:58 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy 
+11:08:10 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy 
+11:08:21 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy 
+11:08:32 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy 
+11:08:44 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy 
+11:08:55 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy 
+11:09:06 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy i-07f9d1d4d672826e8:initial 
+11:09:17 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy i-07f9d1d4d672826e8:unhealthy 
+11:09:29 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy i-07f9d1d4d672826e8:unhealthy 
+11:09:40 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy i-07f9d1d4d672826e8:unhealthy 
+11:09:51 | Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a | TG: i-0f977899c4df950ce:healthy i-07f9d1d4d672826e8:unhealthy 
+11:10:03 | Digital Café Luna | instance=i-07f9d1d4d672826e8 | az=us-east-1b | TG: i-0f977899c4df950ce:healthy i-07f9d1d4d672826e8:healthy 
+--- Activity history del ASG ---
+[
+    {
+        "Inicio": "2026-09-23T16:09:01.438000+00:00",
+        "Estado": "Successful",
+        "Descripcion": "Launching a new EC2 instance: i-07f9d1d4d672826e8",
+        "Causa": "At 2026-09-23T16:08:59Z an instance was launched in response to an unhealthy instance needing to be replaced."
+    },
+    {
+        "Inicio": "2026-09-23T16:08:59.241000+00:00",
+        "Estado": "WaitingForELBConnectionDraining",
+        "Descripcion": "Terminating EC2 instance: i-062e3a461f4ebac71 - Waiting For ELB Connection Draining.",
+        "Causa": "At 2026-09-23T16:08:59Z an instance was taken out of service in response to an EC2 health check indicating it has been terminated or stopped."
+    },
+    {
+        "Inicio": "2026-09-23T16:05:47.081000+00:00",
+        "Estado": "Successful",
+        "Descripcion": "Launching a new EC2 instance: i-0f977899c4df950ce",
+        "Causa": "At 2026-09-23T16:02:48Z a user request created an AutoScalingGroup changing the desired capacity from 0 to 2.  At 2026-09-23T16:05:45Z an instance was started in response to a difference between desired and actual capacity, increasing the capacity from 0 to 2."
+    },
+    {
+        "Inicio": "2026-09-23T16:05:46.986000+00:00",
+        "Estado": "Successful",
+        "Descripcion": "Launching a new EC2 instance: i-062e3a461f4ebac71",
+        "Causa": "At 2026-09-23T16:02:48Z a user request created an AutoScalingGroup changing the desired capacity from 0 to 2.  At 2026-09-23T16:05:45Z an instance was started in response to a difference between desired and actual capacity, increasing the capacity from 0 to 2."
+    }
+]
+--- estado de la instancia terminada ---
+--------------------------------------------------------
+|                   DescribeInstances                  |
++--------+---------------------------------------------+
+|  Estado|  terminated                                 |
+|  Id    |  i-062e3a461f4ebac71                        |
+|  Motivo|  User initiated (2026-09-23 16:07:23 GMT)   |
++--------+---------------------------------------------+
+--- repeticion Prueba A ---
+{
+    "Min": 2,
+    "Desired": 2,
+    "Max": 4,
+    "Instances": [
+        [
+            "i-062e3a461f4ebac71",
+            "us-east-1b",
+            "Terminating"
+        ],
+        [
+            "i-07f9d1d4d672826e8",
+            "us-east-1b",
+            "InService"
+        ],
+        [
+            "i-0f977899c4df950ce",
+            "us-east-1a",
+            "InService"
+        ]
+    ]
+}
+  10 Digital Café Luna | instance=i-07f9d1d4d672826e8 | az=us-east-1b
+  10 Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a

@@ -8,6 +8,85 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## Correo evaluaciones individuales (Ing. Luis Lunar, fecha no indicada)
+
+**Notas:**
+- Por propuesta del grupo, las evaluaciones calificadas serán **individuales**. Pesos no cambian; cambia modalidad.
+- Aplica a:
+  - Checkpoint Lab 1 — 20%
+  - Checkpoint Lab 2 — 20%
+  - Architecture Challenge — Architecture Decision Brief — 40%
+  - Architecture Challenge — Defensa — 20%
+- **Checkpoints Lab 1 y 2** (mismo modelo, reemplaza el 70/30 anterior):
+  - **50% Funcionamiento**: cada estudiante con su propia implementación; demostrar que el comportamiento esperado funciona, no solo que los recursos existen.
+  - **30% Test**: 5 preguntas de escenario, 3 opciones, una explica mejor el comportamiento, decisión o diagnóstico. Basado en clase, lecturas y sobre todo Labs Evolutivos. Sin verdadero/falso, sin comandos, sin nombres de opciones de consola.
+    - Ejemplo: instancia de un ASG con desired capacity = 2 terminada manualmente; aparece otra. Respuesta: el ASG detectó capacidad bajo el valor deseado y lanzó reemplazo (no el ALB, no el Target Group).
+  - **20% Validación oral**: 2 preguntas sobre la propia plataforma y el comportamiento demostrado.
+    - Ejemplo (causalidad): tráfico llega a dos instancias detrás del mismo endpoint. ¿Qué componente distribuye y qué evidencia demuestra que son instancias distintas?
+- Ignorar entregables evaluativos indicados en las guías de los Labs (informes, paquetes de evidencias, documentos). Solo cuentan los tres componentes.
+- Igual hay que hacer implementaciones, pruebas y validaciones de los labs: se necesitan para construir y entender.
+- Objetivo: que funcione → entender por qué funciona → explicar y defender.
+- **Architecture Challenge individual**: cada uno su Architecture Decision Brief (arquitectura, restricciones, decisiones, trade-offs, riesgos, supuestos, costo aproximado, evidencia cuando aporte). Defensa individual.
+- Guías actualizadas llegarán en los próximos días.
+
+---
+
+## 2026-09-24 — Correo calendario actualizado (Ing. Luis Lunar)
+
+**Notas:**
+- Calendario actualizado en `material/calendario-operativo-actualizado-v01-cerrado.pdf` (y `material-md/`).
+- El contenido del curso se mantiene. Cambia la organización de sesiones y los materiales se publican con anticipación.
+- Fechas clave:
+  - 23/09: Lab Evolutivo 03
+  - 28/09: S04 — Networking y conectividad
+  - 30/09: Lab Evolutivo 04 + Checkpoint Lab 1
+  - 21/10: Checkpoint Lab 2
+  - 28/10: Architecture Challenge
+- Horario se mantiene: 18:00–20:00.
+- Lecturas y labs se compartirán con anticipación para llegar preparados.
+
+---
+
+## 2026-09-23 — Correo Checkpoint Lab 1 (Ing. Luis Lunar)
+
+> **Reemplazado** por el correo de evaluaciones individuales (arriba): ahora 50/30/20 individual, sin 6–8 evidencias.
+
+**Notas:**
+- **Checkpoint Lab 1**: miércoles 30 de septiembre. Primer corte de los Labs Evolutivos, **20%** de la nota final.
+- Integra S01–S04. No evalúa memorización de procedimientos: demostrar que lo construido funciona, presentar evidencia y explicar decisiones técnicas y su causalidad.
+- **70% — Ejecución y evidencia del equipo**: funcionamiento, continuidad de lo construido en los labs, calidad de evidencias, decisiones técnicas, relaciones causa–efecto, trade-offs y cleanup.
+- **30% — Defensa**: se elige en el momento a un integrante elegible del equipo para responder preguntas. Su nota es común para todo el equipo.
+- Preparar unas **6 a 8 evidencias** relevantes de los Labs Evolutivos. No se requiere informe adicional ni documentar el paso a paso.
+- Preguntas de la defensa: por qué funciona la solución, qué pasaría ante cambios o fallos, cómo diagnosticar un problema, qué trade-offs introducen las decisiones. No se evalúan comandos de memoria.
+- Usar material S04 y Lab Evolutivo 04 para prepararse.
+- Dudas sobre la dinámica se revisan en clase.
+- Guía del estudiante del Checkpoint Lab 1 en `material/` (y `material-md/`).
+
+---
+
+## 2026-09-23 — Correo S04 (Ing. Luis Lunar)
+
+**Notas:**
+- Material compartido: Material del estudiante S04 y Lab Evolutivo 04 — Networking y conectividad (en `material/`).
+- Sesión conceptual S04: lunes 28 de septiembre, 18:00–20:00.
+- Miércoles 30 de septiembre: Lab 04 y **Checkpoint Lab 1**.
+- Revisar ambos documentos antes. En el lab, entender cómo VPC, subnets, routing y Security Groups intervienen en el flujo de tráfico, y cómo validar cuándo una comunicación está permitida o bloqueada.
+- Objetivo: llegar con contexto para la práctica y el troubleshooting.
+- Indicaciones del Checkpoint Lab 1 (evidencias y criterios) llegarán en otro correo.
+
+---
+
+## 2026-09-23 — Clase (correo Ing. Luis Lunar)
+
+**Notas:**
+- Hoy continúa **S03 — Datos y almacenamiento**, 18:00–20:00.
+- Material compartido: Material del estudiante S03 y Lab Evolutivo 03 — Datos y almacenamiento (en `material/`).
+- Lab Evolutivo 03 se trabaja el miércoles 23 de septiembre.
+- Recomendación: revisar ambos documentos antes. Leer el lab para entender qué se construye, qué comportamiento se espera observar y qué evidencias obtener.
+- Material anticipado para usar la clase en analizar decisiones, resolver dudas y practicar.
+
+---
+
 ## 2026-09-16 — Clase
 
 **Notas:**
@@ -33,6 +112,7 @@ Tareas, fechas y entregas van en `board.md`.
 - **RPO** (Recovery Point Objective): cuántos datos puedes perder.
 - **Tarea:** hacer el Lab Evolutivo 02 para entender bien los conceptos.
 - Debemos tener esos conceptos claros.
+- Es hosting y geolocation.
 
 ---
 

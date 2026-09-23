@@ -1,0 +1,28 @@
+== 2026-09-23 11:21:00 -05 | Lab 03 · EFS compartido (FS=fs-032d170d8b46278b7) ==
+
+### Paso 8 · client-a (i-0fdb6090847097409, us-east-1a) monta por mount target A (10.20.1.167) y escribe
+writer=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00
+$ mountpoint /mnt/dcl
+/mnt/dcl is a mountpoint
+$ df -hT /mnt/dcl /
+Filesystem     Type  Size  Used Avail Use% Mounted on
+10.20.1.167:/  nfs4  8.0E     0  8.0E   0% /mnt/dcl
+/dev/nvme0n1p1 xfs   8.0G  1.7G  6.3G  22% /
+
+### Paso 9 · client-b (i-02de01cffd8bd16cf, us-east-1b) monta por mount target B (10.20.2.8), lee y agrega
+$ sudo cat /mnt/dcl/estado-compartido.txt
+writer=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00
+reader=ip-10-20-2-219.ec2.internal | observed=2026-09-23T16:21:51+00:00
+$ mountpoint /mnt/dcl
+/mnt/dcl is a mountpoint
+
+### Paso 10 · de vuelta en client-a: lee el cambio hecho por B
+$ hostname
+ip-10-20-1-67.ec2.internal
+$ sudo cat /mnt/dcl/estado-compartido.txt
+writer=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00
+reader=ip-10-20-2-219.ec2.internal | observed=2026-09-23T16:21:51+00:00
+
+### Cleanup en clientes: umount
+client-a: umount ok
+client-b: umount ok

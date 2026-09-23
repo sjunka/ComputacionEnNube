@@ -1,0 +1,33 @@
+== 2026-09-23 11:22:19 -05 | Cleanup Lab 03 ==
+regla SSH temporal quitada: True
+i-02de01cffd8bd16cf	shutting-down
+i-0fdb6090847097409	shutting-down
+mount target fsmt-0525ef73400c85b29 en borrado
+mount target fsmt-0067d78d6a5ad1b1d en borrado
+clientes terminados
+EFS fs-032d170d8b46278b7 borrado
+versiones borradas: 2
+bucket dcl-s03-team01-278835524469-6474 borrado
+sg-efs borrado
+sg-ec2 borrado
+desasociada rtbassoc-0e86c05269e3657df
+desasociada rtbassoc-0831ba312f26138a6
+RT borrada
+IGW borrado
+--- verificacion final (baseline S01) ---
+EC2 no terminadas: []
+Volumenes: []
+EFS: []
+Buckets dcl: []
+IGW en VPC: []
+SG en VPC: [default]
+Route tables en VPC: [rtb-030269cef8405d013 True ]
+ALB/ASG: [] []
+----------------------------------------------------
+|                  DescribeSubnets                 |
++------------+----------------+--------------------+
+|     AZ     |     CIDR       |       Name         |
++------------+----------------+--------------------+
+|  us-east-1a|  10.20.1.0/24  |  dcl-dev-subnet-a  |
+|  us-east-1b|  10.20.2.0/24  |  dcl-dev-subnet-b  |
++------------+----------------+--------------------+

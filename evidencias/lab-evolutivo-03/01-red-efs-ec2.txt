@@ -1,0 +1,5 @@
+== 2026-09-23 11:16:56 -05 | Lab 03 · preflight ==
+ALBs: []  IGW en VPC: []
+fsmt-0525ef73400c85b29
+fsmt-0067d78d6a5ad1b1d
+IGW=igw-072d04444eb9d773e; RT=rtb-0cc46f3a9970f247b; SG_EC2=sg-0e38e2426a5d13715; SG_EFS=sg-00a5300c281ae9da1; FS=fs-032d170d8b46278b7; IA=i-0fdb6090847097409; IB=i-02de01cffd8bd16cf

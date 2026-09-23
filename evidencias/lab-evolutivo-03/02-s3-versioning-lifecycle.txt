@@ -1,0 +1,53 @@
+== 2026-09-23 11:17:32 -05 | Lab 03 · S3 versioning + lifecycle ==
+Bucket: dcl-s03-team01-278835524469-6474
+/dcl-s03-team01-278835524469-6474
+$ aws s3api get-bucket-versioning
+{
+    "Status": "Enabled"
+}
+$ aws s3api get-public-access-block
+{
+    "BlockPublicAcls": true,
+    "IgnorePublicAcls": true,
+    "BlockPublicPolicy": true,
+    "RestrictPublicBuckets": true
+}
+$ aws s3api get-bucket-location
+{
+    "LocationConstraint": null
+}
+Completed 28 Bytes/28 Bytes (78 Bytes/s) with 1 file(s) remainingupload: ./estado.txt to s3://dcl-s03-team01-278835524469-6474/estado.txt
+Completed 31 Bytes/31 Bytes (93 Bytes/s) with 1 file(s) remainingupload: ./estado.txt to s3://dcl-s03-team01-278835524469-6474/estado.txt
+$ aws s3api list-object-versions --prefix estado.txt
+---------------------------------------------------------------------------------------
+|                                 ListObjectVersions                                  |
++----------+-----------------------------+-------+------------------------------------+
+| IsLatest |        LastModified         | Size  |             VersionId              |
++----------+-----------------------------+-------+------------------------------------+
+|  True    |  2026-09-23T16:17:40+00:00  |  31   |  zc_.GOw6fdKoRV_Wl36bLUR6OecsxNhf  |
+|  False   |  2026-09-23T16:17:38+00:00  |  28   |  VuNh1YK2gkO4Kk2yJoQzvEjAuWBGWpuU  |
++----------+-----------------------------+-------+------------------------------------+
+VuNh1YK2gkO4Kk2yJoQzvEjAuWBGWpuU
+Version anterior recuperada (VuNh1YK2gkO4Kk2yJoQzvEjAuWBGWpuU):
+pedido=1001 | estado=CREADO
+Version actual:
+pedido=1001 | estado=PROCESADO
+$ aws s3api get-bucket-lifecycle-configuration
+{
+    "TransitionDefaultMinimumObjectSize": "all_storage_classes_128K",
+    "Rules": [
+        {
+            "Expiration": {
+                "ExpiredObjectDeleteMarker": true
+            },
+            "ID": "dcl-s03-noncurrent-cleanup",
+            "Filter": {
+                "Prefix": ""
+            },
+            "Status": "Enabled",
+            "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 7
+            }
+        }
+    ]
+}
