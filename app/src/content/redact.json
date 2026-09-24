@@ -1,0 +1,17 @@
+{
+  "_formato": "destino en public/img: { from: captura en evidencias/, zonas: [[x, y, ancho, alto] en % de la imagen] }. Solo se publican las capturas listadas aquí.",
+  "lab01/consola-region.png": {"from": "evidencias/lab-evolutivo-01/consola-region.png", "zonas": [[87,0,11.5,5.5]]},
+  "lab01/consola-subnets.png": {"from": "evidencias/lab-evolutivo-01/consola-subnets.png", "zonas": []},
+  "lab01/01-vpcs.png": {"from": "evidencias/lab-evolutivo-01/consola/01-vpcs.png", "zonas": [[91.7,14.2,8.2,3.6]]},
+  "lab01/02-subnets.png": {"from": "evidencias/lab-evolutivo-01/consola/02-subnets.png", "zonas": [[91.7,14.2,8.2,3.6]]},
+  "lab03/01-vpc.png": {"from": "evidencias/lab-evolutivo-03/consola/01-vpc.png", "zonas": [[91.7,14.2,8.2,3.6],[73.5,46.2,6.5,2.3]]},
+  "lab03/02-route-table.png": {"from": "evidencias/lab-evolutivo-03/consola/02-route-table.png", "zonas": [[87.7,14.2,12.2,5],[38.6,51.2,8.8,2.6]]},
+  "lab03/03-sg-ec2.png": {"from": "evidencias/lab-evolutivo-03/consola/03-sg-ec2.png", "zonas": [[90.7,14.2,9.2,4],[16.8,40.3,6.8,2.2]]},
+  "lab03/04-sg-efs.png": {"from": "evidencias/lab-evolutivo-03/consola/04-sg-efs.png", "zonas": [[88.9,14.2,11,4.8],[16.5,45.8,8,2.4]]},
+  "lab03/05-efs.png": {"from": "evidencias/lab-evolutivo-03/consola/05-efs.png", "zonas": [[91.7,14.2,8.2,3.6],[22,35.2,32,2.4]]},
+  "lab03/06-s3-versiones.png": {"from": "evidencias/lab-evolutivo-03/consola/06-s3-versiones.png", "zonas": [[88.9,14.2,11,4.8],[10.3,5.8,62.5,3.1],[14,24,15.8,2.4],[18,28.3,25.5,4]]},
+  "lab03/07-s3-lifecycle.png": {"from": "evidencias/lab-evolutivo-03/consola/07-s3-lifecycle.png", "zonas": [[88.9,14.2,11,4.8],[10.3,5.8,62.5,3.1],[14,24,15.8,2.4],[18,28.3,25.5,4]]},
+  "lab03/08-ec2.png": {"from": "evidencias/lab-evolutivo-03/consola/08-ec2.png", "zonas": [[88.9,14.2,11,4.8],[88,46.8,9.8,6.6]]},
+  "lab03/09-efs-client-a.png": {"from": "evidencias/lab-evolutivo-03/consola/09-efs-client-a.png", "zonas": [[91.7,14.2,8.2,3.6],[3.3,92.1,5.2,2]]},
+  "lab03/10-efs-client-b.png": {"from": "evidencias/lab-evolutivo-03/consola/10-efs-client-b.png", "zonas": [[91.7,14.2,8.2,3.6],[3.3,92.1,5.2,2]]}
+}

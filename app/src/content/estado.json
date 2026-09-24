@@ -1,0 +1,33 @@
+{
+  "actualizado": "23 sep 2026, 19:15 (Bogotá)",
+  "items": [
+    {
+      "pill": "ok",
+      "tag": "HECHO",
+      "text": "Lab 01: dcl-dev-vpc 10.20.0.0/16 y las dos subnets (1a y 1b). Se conservan como baseline."
+    },
+    {
+      "pill": "ok",
+      "tag": "HECHO",
+      "text": "Lab 02 corrido de punta a punta (11:02–11:16): distribución 10/10 entre 1a y 1b, terminación y reemplazo por el ASG, cleanup. Sin capturas de consola propias."
+    },
+    {
+      "pill": "warn",
+      "tag": "CORRIENDO",
+      "text": "Lab 03 recreado a las 17:30 para la exposición: S3 con dos versiones y lifecycle, EFS compartido entre client-a y client-b. Capturas de consola en cada paso."
+    },
+    {
+      "pill": "todo",
+      "tag": "30 SEP",
+      "text": "Lab 04 + Checkpoint Lab 1, en clase. Antes hay que hacer el cleanup del Lab 03: su preflight pide la cuenta solo con VPC y subnets."
+    }
+  ],
+  "corriendo": [
+    "2 EC2 t3.micro (client-a, client-b)",
+    "2 IPv4 públicas",
+    "EFS dcl-dev-efs-shared (12 KB)",
+    "Bucket dcl-s03-team01-… (59 B)",
+    "IGW y route table del Lab 03 (sin costo)"
+  ],
+  "costo": "≈ USD 0,03 por hora"
+}

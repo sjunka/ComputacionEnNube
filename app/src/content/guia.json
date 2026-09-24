@@ -1,0 +1,10 @@
+{
+  "titulo": "Labs Evolutivos 01–04 · Digital Café Luna",
+  "intro": "Guía para repetir los labs en tu propia cuenta AWS (el checkpoint ahora es individual). Marca la casilla cuando termines un paso. Clic en el texto del paso muestra qué hace y por qué. Cada paso de los Labs 01 a 03 trae el comando CLI y cómo se hace y se ve en la consola; el selector elige cuál va primero. El progreso queda guardado en este navegador.",
+  "pie": "Basado en las guías del Ing. Luis Lunar (S01 v03, S02 v01, S03 v01, S04 v01). Los comandos CLI son equivalentes a los pasos de consola de la guía.",
+  "repaso": {
+    "titulo": "Repaso para el Checkpoint Lab 1 (30 sep)",
+    "lead": "El test son 5 preguntas de escenario con 3 opciones. Luego 2 preguntas orales sobre tu propia implementación. Aquí van preguntas del mismo estilo, basadas en los cuatro labs.",
+    "why": "<strong>Cómo se califica:</strong> 50% que tu implementación funcione (comportamiento, no solo recursos creados) · 30% test · 20% oral. Sin informes ni paquetes de evidencias."
+  }
+}

@@ -1,0 +1,608 @@
+{
+  "id": "02",
+  "name": "Lab 02",
+  "sub": "ALB + ASG",
+  "lead": "Un endpoint estable (ALB) reparte tráfico entre dos instancias reemplazables (ASG). Terminas una a propósito y observas quién hace qué: health, ALB y ASG.",
+  "why": "<strong>Idea clave:</strong> tres responsabilidades separadas. <em>Health check</em> decide si un target es elegible. El <em>ALB</em> manda tráfico solo a elegibles. El <em>ASG</em> mantiene desired capacity. En este lab el ASG usa health type EC2: el reemplazo lo dispara que la instancia deja de estar running, <em>no</em> el health check del ALB.",
+  "caption": "Arquitectura del Lab 02. Las instancias tienen IP pública solo para descargar httpd; el puerto 80 solo acepta tráfico que venga del SG del ALB.",
+  "fecha": "23 sep",
+  "done": true,
+  "hot": {
+    "l2-igw": {
+      "t": "Internet gateway dcl-dev-igw-s02",
+      "k": {
+        "p": "VPC › Internet gateways › dcl-dev-igw-s02",
+        "s": [
+          "Create internet gateway, Name tag <code>dcl-dev-igw-s02</code>.",
+          "Actions › <b>Attach to VPC</b> › dcl-dev-vpc."
+        ],
+        "m": [
+          "State = <b>Attached</b> y VPC ID = dcl-dev-vpc. Una VPC admite un solo IGW."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#igws:search=dcl-dev-igw-s02"
+      }
+    },
+    "l2-sgalb": {
+      "t": "Security group dcl-dev-sg-alb",
+      "k": {
+        "p": "EC2 › Security Groups › Create security group",
+        "s": [
+          "Name <code>dcl-dev-sg-alb</code>, VPC dcl-dev-vpc.",
+          "Inbound rules › Add rule: Type <b>HTTP</b>, Source <b>Anywhere-IPv4</b> (0.0.0.0/0).",
+          "Outbound: deja la regla por defecto."
+        ],
+        "img": [
+          {
+            "src": "lab03/03-sg-ec2.png",
+            "cap": "Vista equivalente del Lab 03: el Lab 02 ya no está desplegado y no tiene capturas propias."
+          }
+        ],
+        "m": [
+          "Inbound rules (1): HTTP · TCP · 80 · 0.0.0.0/0."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:search=dcl-dev-sg-alb"
+      }
+    },
+    "l2-alb": {
+      "t": "ALB dcl-dev-alb",
+      "k": {
+        "p": "EC2 › Load Balancers › Create load balancer › Application Load Balancer",
+        "s": [
+          "Name <code>dcl-dev-alb</code>, <b>Internet-facing</b>, IPv4.",
+          "Network mapping: VPC dcl-dev-vpc, marca us-east-1a (subnet-a) y us-east-1b (subnet-b).",
+          "Security groups: quita <code>default</code> y deja <code>dcl-dev-sg-alb</code>."
+        ],
+        "m": [
+          "State pasa de Provisioning a <b>Active</b> en 2 a 4 minutos.",
+          "Availability Zones: dos, con una subnet en cada una."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#LoadBalancers:search=dcl-dev-alb"
+      }
+    },
+    "l2-tg": {
+      "t": "Target Group dcl-dev-tg-web",
+      "k": {
+        "p": "EC2 › Target Groups › dcl-dev-tg-web › Targets",
+        "m": [
+          "Health status: <b>initial</b> mientras corre el user data, luego <b>healthy</b> en los dos targets."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#TargetGroups:search=dcl-dev-tg-web"
+      }
+    },
+    "l2-asg": {
+      "t": "Auto Scaling Group dcl-dev-asg-web",
+      "k": {
+        "p": "EC2 › Auto Scaling Groups › dcl-dev-asg-web › Details y Automatic scaling",
+        "m": [
+          "Group details: Desired 2, Min 2, Max 4.",
+          "Automatic scaling: <b>Dynamic scaling policies (0)</b>. Max 4 es un límite, no una orden de crecer."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AutoScalingGroups:search=dcl-dev-asg-web"
+      }
+    },
+    "l2-ec2": {
+      "t": "Instancias del ASG",
+      "k": {
+        "p": "EC2 › Instances › (instancia del ASG) › Instance state › Terminate instance",
+        "s": [
+          "Filtra por el tag <code>aws:autoscaling:groupName = dcl-dev-asg-web</code>.",
+          "Selecciona una, anota su ID e <b>Instance state › Terminate (delete) instance</b>. No toques el ASG."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-web"
+      }
+    }
+  },
+  "phases": [
+    {
+      "h": "0 · Preparar CloudShell",
+      "note": "Pega esto al abrir CloudShell y cada vez que se reinicie la sesión (se duerme a los 20 min sin uso y las variables se pierden).",
+      "steps": [
+        {
+          "t": "Cargar variables del lab",
+          "e": "<span class='k'>Qué hace:</span> busca cada recurso por su nombre y guarda su ID en una variable de shell. Si un recurso todavía no existe, la variable queda en <code>None</code> o vacía; es normal al principio. <span class='k'>Por qué:</span> los comandos siguientes usan <code>$VPC</code>, <code>$SUBA</code>, etc. y no IDs copiados a mano.",
+          "c": "export AWS_REGION=us-east-1\nVPC=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=dcl-dev-vpc --query 'Vpcs[0].VpcId' --output text)\nSUBA=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-a --query 'Subnets[0].SubnetId' --output text)\nSUBB=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-b --query 'Subnets[0].SubnetId' --output text)\nTAGS='{Key=dcl:project,Value=digital-cafe-luna},{Key=dcl:environment,Value=dev},{Key=dcl:owner-team,Value=team-01},{Key=dcl:managed-by,Value=cli}'\nTAGS_KV='Key=dcl:project,Value=digital-cafe-luna Key=dcl:environment,Value=dev Key=dcl:owner-team,Value=team-01 Key=dcl:managed-by,Value=cli'\necho \"VPC=$VPC SUBA=$SUBA SUBB=$SUBB\"\nIGW=$(aws ec2 describe-internet-gateways --filters Name=tag:Name,Values=dcl-dev-igw-s02 --query 'InternetGateways[0].InternetGatewayId' --output text)\nRT=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values=$VPC Name=route.gateway-id,Values=$IGW --query 'RouteTables[0].RouteTableId' --output text)\nSG_ALB=$(aws ec2 describe-security-groups --filters Name=group-name,Values=dcl-dev-sg-alb --query 'SecurityGroups[0].GroupId' --output text)\nSG_APP=$(aws ec2 describe-security-groups --filters Name=group-name,Values=dcl-dev-sg-app --query 'SecurityGroups[0].GroupId' --output text)\nTG_ARN=$(aws elbv2 describe-target-groups --names dcl-dev-tg-web --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null)\nALB_ARN=$(aws elbv2 describe-load-balancers --names dcl-dev-alb --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null)\nALB_DNS=$(aws elbv2 describe-load-balancers --names dcl-dev-alb --query 'LoadBalancers[0].DNSName' --output text 2>/dev/null)\necho \"IGW=$IGW RT=$RT SG_ALB=$SG_ALB SG_APP=$SG_APP\"; echo \"ALB_DNS=$ALB_DNS\"",
+          "k": {
+            "p": "Barra superior › ícono >_ (CloudShell)",
+            "s": [
+              "Abre CloudShell desde el ícono <b>>_</b> de la barra superior. Se abre en la región que tenga el selector.",
+              "Pega las variables. En la consola no hay equivalente: los IDs los ves en cada lista."
+            ],
+            "n": "Este paso es de terminal. La consola lo reemplaza buscando cada recurso por su nombre.",
+            "l": "https://us-east-1.console.aws.amazon.com/cloudshell/home?region=us-east-1"
+          }
+        }
+      ]
+    },
+    {
+      "h": "1 · Conectividad mínima",
+      "note": "Ya existe en tu cuenta (restos del lab en equipo). Se reutiliza y se corrige el nombre.",
+      "steps": [
+        {
+          "t": "IGW <code>dcl-dev-igw-s02</code> adjunto a la VPC",
+          "e": "<span class='k'>Qué es:</span> la puerta entre la VPC e Internet. Una VPC solo puede tener un IGW. <span class='k'>Por qué:</span> AWS exige un IGW para crear un ALB internet-facing, y las instancias lo necesitan para descargar httpd.",
+          "k": {
+            "p": "VPC › Internet gateways › dcl-dev-igw-s02",
+            "s": [
+              "Create internet gateway, Name tag <code>dcl-dev-igw-s02</code>.",
+              "Actions › <b>Attach to VPC</b> › dcl-dev-vpc."
+            ],
+            "m": [
+              "State = <b>Attached</b> y VPC ID = dcl-dev-vpc. Una VPC admite un solo IGW."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#igws:search=dcl-dev-igw-s02"
+          },
+          "d": true
+        },
+        {
+          "t": "Route table con <code>0.0.0.0/0 → IGW</code>, asociada a las dos subnets",
+          "e": "<span class='k'>Qué es:</span> la tabla que decide a dónde va el tráfico que sale de una subnet. <code>10.20.0.0/16 → local</code> mantiene el tráfico interno; <code>0.0.0.0/0 → IGW</code> manda el resto a Internet. Esa ruta es lo que convierte una subnet en «pública», no su nombre.",
+          "k": {
+            "p": "VPC › Route tables › dcl-dev-rt-s02-public",
+            "s": [
+              "Create route table: Name <code>dcl-dev-rt-s02-public</code>, VPC dcl-dev-vpc.",
+              "Pestaña Routes › Edit routes › Add route: <code>0.0.0.0/0</code> → Internet Gateway › dcl-dev-igw-s02.",
+              "Pestaña Subnet associations › Edit subnet associations › marca subnet-a y subnet-b."
+            ],
+            "img": [
+              {
+                "src": "lab03/02-route-table.png",
+                "cap": "Vista equivalente del Lab 03: el Lab 02 ya no está desplegado y no tiene capturas propias."
+              }
+            ],
+            "m": [
+              "Routes: <code>10.20.0.0/16 → local</code> y <code>0.0.0.0/0 → igw-…</code>, ambas Active.",
+              "Explicit subnet associations: 2 subnets. Main: No."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#RouteTables:search=dcl-dev-rt-s02"
+          },
+          "d": true
+        },
+        {
+          "t": "Corregir el nombre de la route table",
+          "e": "<span class='k'>Qué hace:</span> sobrescribe la etiqueta <code>Name</code> (quedó como <code>dcl-dev-rt-s02-</code>) y muestra rutas y subnets asociadas. Deberías ver la ruta local, la de 0.0.0.0/0 al IGW y tus dos subnets.",
+          "c": "aws ec2 create-tags --resources $RT --tags Key=Name,Value=dcl-dev-rt-s02-public\naws ec2 describe-route-tables --route-table-ids $RT \\\n  --query 'RouteTables[0].{Rutas:Routes[].[DestinationCidrBlock,GatewayId],Subnets:Associations[].SubnetId}'",
+          "k": {
+            "p": "VPC › Route tables › (la tabla) › Tags › Manage tags",
+            "s": [
+              "Edita el valor de <code>Name</code> a <code>dcl-dev-rt-s02-public</code> y guarda."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#RouteTables:search=dcl-dev-rt-s02"
+          }
+        }
+      ]
+    },
+    {
+      "h": "2 · Security groups",
+      "steps": [
+        {
+          "t": "SG del ALB: HTTP 80 desde Internet",
+          "e": "<span class='k'>Qué hace:</span> crea un firewall virtual y le abre el puerto 80 a cualquier IP. <span class='k'>Detalle:</span> los SG son <em>stateful</em>: si entra una petición, la respuesta sale sola, sin regla de salida. Por defecto permiten toda la salida.",
+          "c": "SG_ALB=$(aws ec2 create-security-group --group-name dcl-dev-sg-alb \\\n  --description \"ALB: HTTP desde Internet\" --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-alb},$TAGS]\" \\\n  --query GroupId --output text)\naws ec2 authorize-security-group-ingress --group-id $SG_ALB --protocol tcp --port 80 --cidr 0.0.0.0/0\necho $SG_ALB",
+          "k": {
+            "p": "EC2 › Security Groups › Create security group",
+            "s": [
+              "Name <code>dcl-dev-sg-alb</code>, VPC dcl-dev-vpc.",
+              "Inbound rules › Add rule: Type <b>HTTP</b>, Source <b>Anywhere-IPv4</b> (0.0.0.0/0).",
+              "Outbound: deja la regla por defecto."
+            ],
+            "img": [
+              {
+                "src": "lab03/03-sg-ec2.png",
+                "cap": "Vista equivalente del Lab 03: el Lab 02 ya no está desplegado y no tiene capturas propias."
+              }
+            ],
+            "m": [
+              "Inbound rules (1): HTTP · TCP · 80 · 0.0.0.0/0."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:search=dcl-dev-sg-alb"
+          }
+        },
+        {
+          "t": "SG de la app: HTTP 80 solo desde el SG del ALB",
+          "e": "<span class='k'>Qué hace:</span> <code>--source-group</code> permite el 80 solo a interfaces que tengan <code>sg-alb</code>. <span class='k'>Por qué importa:</span> aunque la instancia tenga IP pública, nadie puede entrar directo al 80; solo el ALB. Es la pregunta clásica de causalidad: «¿por qué no abre la IP de la instancia en el navegador?». Tampoco hay regla SSH: no hace falta.",
+          "c": "SG_APP=$(aws ec2 create-security-group --group-name dcl-dev-sg-app \\\n  --description \"App: HTTP solo desde el ALB\" --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-app},$TAGS]\" \\\n  --query GroupId --output text)\naws ec2 authorize-security-group-ingress --group-id $SG_APP --protocol tcp --port 80 --source-group $SG_ALB\necho $SG_APP",
+          "k": {
+            "p": "EC2 › Security Groups › Create security group",
+            "s": [
+              "Name <code>dcl-dev-sg-app</code>, VPC dcl-dev-vpc.",
+              "Inbound rules › Add rule: Type <b>HTTP</b>, Source <b>Custom</b> › escribe <code>sg-</code> y elige <code>dcl-dev-sg-alb</code>.",
+              "Sin regla SSH."
+            ],
+            "img": [
+              {
+                "src": "lab03/04-sg-efs.png",
+                "cap": "Mismo patrón en el Lab 03: el Source de la regla es otro security group"
+              }
+            ],
+            "m": [
+              "Source = <code>sg-…</code> (dcl-dev-sg-alb), no un CIDR. Por eso la IP pública de la instancia no abre en el navegador."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:search=dcl-dev-sg-app"
+          }
+        }
+      ]
+    },
+    {
+      "h": "3 · Launch Template",
+      "steps": [
+        {
+          "t": "Buscar la AMI de Amazon Linux 2023 (x86_64)",
+          "e": "<span class='k'>Qué hace:</span> AWS publica el ID de la AMI más reciente en un parámetro público de SSM. Así no copias un <code>ami-…</code> que cambia por región y por fecha.",
+          "c": "AMI=$(aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 --query Parameter.Value --output text); echo $AMI",
+          "k": {
+            "p": "Launch template › Application and OS Images › Quick Start › Amazon Linux",
+            "s": [
+              "Dentro del asistente del Launch Template elige <b>Amazon Linux 2023 AMI</b>, arquitectura <b>64-bit (x86)</b>. La consola ya muestra la AMI vigente."
+            ]
+          }
+        },
+        {
+          "t": "Escribir el user data (script de arranque)",
+          "e": "<span class='k'>Qué hace:</span> corre como root en el primer arranque. Instala Apache, le pregunta al <em>metadata service</em> (169.254.169.254) su ID y su AZ con un token IMDSv2, y los escribe en la página. <span class='k'>Por qué:</span> cada respuesta del ALB dice qué instancia contestó; eso es la evidencia de distribución. Y un reemplazo nace idéntico sin que nadie entre a configurarlo.",
+          "c": "cat > userdata.sh <<'EOF'\n#!/bin/bash\nset -euxo pipefail\ndnf install -y httpd\nTOKEN=$(curl -sS -X PUT -H \"X-aws-ec2-metadata-token-ttl-seconds: 21600\" http://169.254.169.254/latest/api/token)\nINSTANCE_ID=$(curl -sS -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/instance-id)\nAZ=$(curl -sS -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/placement/availability-zone)\necho \"Digital Café Luna | instance=${INSTANCE_ID} | az=${AZ}\" > /var/www/html/index.html\nsystemctl enable --now httpd\nEOF",
+          "k": {
+            "p": "Launch template › Advanced details › User data",
+            "s": [
+              "Pega el script tal cual. La consola hace el base64 sola."
+            ]
+          }
+        },
+        {
+          "t": "Crear <code>dcl-dev-lt-web</code>",
+          "e": "<span class='k'>Qué hace:</span> guarda la «receta» de cada instancia: AMI, tipo, SG, IP pública y user data (en base64). No fija subnet: el ASG decide en cuál nace cada una. Sin key pair: no hay SSH. <span class='k'>Por qué:</span> la recuperación solo sirve si el reemplazo se reconstruye igual, sin pasos manuales.",
+          "c": "aws ec2 create-launch-template --launch-template-name dcl-dev-lt-web \\\n  --tag-specifications \"ResourceType=launch-template,Tags=[{Key=Name,Value=dcl-dev-lt-web},$TAGS]\" \\\n  --launch-template-data \"{\n    \\\"ImageId\\\":\\\"$AMI\\\",\n    \\\"InstanceType\\\":\\\"t3.micro\\\",\n    \\\"NetworkInterfaces\\\":[{\\\"DeviceIndex\\\":0,\\\"AssociatePublicIpAddress\\\":true,\\\"Groups\\\":[\\\"$SG_APP\\\"]}],\n    \\\"UserData\\\":\\\"$(base64 -w0 userdata.sh)\\\"\n  }\"",
+          "k": {
+            "p": "EC2 › Launch Templates › Create launch template",
+            "s": [
+              "Name <code>dcl-dev-lt-web</code>. AMI Amazon Linux 2023 x86_64, instance type <b>t3.micro</b>.",
+              "Key pair: <b>Don't include in launch template</b>.",
+              "Network settings: no elijas subnet. Advanced network configuration › Auto-assign public IP = <b>Enable</b>, security group <code>dcl-dev-sg-app</code>.",
+              "Storage: el root por defecto con Delete on termination = Yes.",
+              "Advanced details › User data: pega el script. Create launch template."
+            ],
+            "m": [
+              "En el detalle del template: sin subnet, con public IP, SG dcl-dev-sg-app y el user data guardado."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#LaunchTemplates:search=dcl-dev-lt-web"
+          }
+        }
+      ]
+    },
+    {
+      "h": "4 · Target Group y ALB",
+      "steps": [
+        {
+          "t": "Crear Target Group con health check rápido",
+          "e": "<span class='k'>Qué hace:</span> define el grupo de destinos y cómo se decide si están sanos: cada 10 s pide <code>GET /</code>; con 2 respuestas 200 seguidas, el target pasa a healthy. <span class='k'>Por qué:</span> el health check responde una sola pregunta: ¿este target puede atender HTTP ahora? No reemplaza nada. No registres instancias a mano: lo hará el ASG.",
+          "c": "TG_ARN=$(aws elbv2 create-target-group --name dcl-dev-tg-web \\\n  --protocol HTTP --port 80 --vpc-id $VPC --target-type instance \\\n  --health-check-path / --matcher HttpCode=200 \\\n  --health-check-interval-seconds 10 --healthy-threshold-count 2 \\\n  --tags Key=Name,Value=dcl-dev-tg-web $TAGS_KV \\\n  --query 'TargetGroups[0].TargetGroupArn' --output text); echo $TG_ARN",
+          "k": {
+            "p": "EC2 › Target Groups › Create target group",
+            "s": [
+              "Target type <b>Instances</b>, name <code>dcl-dev-tg-web</code>, HTTP : 80, VPC dcl-dev-vpc.",
+              "Health checks: HTTP, path <code>/</code>. Advanced: success codes 200, interval 10 s, healthy threshold 2.",
+              "Register targets: no registres nada. Create target group."
+            ],
+            "m": [
+              "Targets (0): los agrega el ASG más adelante."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#TargetGroups:search=dcl-dev-tg-web"
+          }
+        },
+        {
+          "t": "Crear el ALB internet-facing en las dos subnets",
+          "e": "<span class='k'>Qué hace:</span> crea el balanceador de capa 7 con un nodo en cada AZ y espera a que esté <code>active</code> (2 a 4 min). <span class='k'>Costo:</span> el ALB cobra por hora desde este momento (unos USD 0,02/h + LCU). Créalo tarde y bórralo al terminar.",
+          "c": "ALB_ARN=$(aws elbv2 create-load-balancer --name dcl-dev-alb --type application \\\n  --scheme internet-facing --ip-address-type ipv4 \\\n  --subnets $SUBA $SUBB --security-groups $SG_ALB \\\n  --tags Key=Name,Value=dcl-dev-alb $TAGS_KV \\\n  --query 'LoadBalancers[0].LoadBalancerArn' --output text)\naws elbv2 wait load-balancer-available --load-balancer-arns $ALB_ARN && echo \"ALB activo\"",
+          "k": {
+            "p": "EC2 › Load Balancers › Create load balancer › Application Load Balancer",
+            "s": [
+              "Name <code>dcl-dev-alb</code>, <b>Internet-facing</b>, IPv4.",
+              "Network mapping: VPC dcl-dev-vpc, marca us-east-1a (subnet-a) y us-east-1b (subnet-b).",
+              "Security groups: quita <code>default</code> y deja <code>dcl-dev-sg-alb</code>."
+            ],
+            "m": [
+              "State pasa de Provisioning a <b>Active</b> en 2 a 4 minutos.",
+              "Availability Zones: dos, con una subnet en cada una."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#LoadBalancers:search=dcl-dev-alb"
+          }
+        },
+        {
+          "t": "Listener HTTP :80 → Target Group y copiar el DNS",
+          "e": "<span class='k'>Qué hace:</span> el listener es la regla «lo que llegue al puerto 80, reenvíalo a este Target Group». El DNS del ALB es el endpoint estable: las instancias cambian, él no.",
+          "c": "aws elbv2 create-listener --load-balancer-arn $ALB_ARN --protocol HTTP --port 80 \\\n  --default-actions Type=forward,TargetGroupArn=$TG_ARN\nALB_DNS=$(aws elbv2 describe-load-balancers --load-balancer-arns $ALB_ARN --query 'LoadBalancers[0].DNSName' --output text)\necho http://$ALB_DNS",
+          "k": {
+            "p": "(mismo asistente) Listeners and routing",
+            "s": [
+              "Listener <b>HTTP : 80</b> › Default action <b>Forward to</b> dcl-dev-tg-web. Create load balancer.",
+              "En la pestaña Details del ALB copia el <b>DNS name</b>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#LoadBalancers:search=dcl-dev-alb"
+          }
+        }
+      ]
+    },
+    {
+      "h": "5 · Auto Scaling Group",
+      "steps": [
+        {
+          "t": "Crear <code>dcl-dev-asg-web</code> (2/2/4, health type EC2)",
+          "e": "<span class='k'>Qué hace:</span> lanza 2 instancias desde el Launch Template, una por subnet, y las registra solas en el Target Group. <span class='k'>min/desired/max:</span> desired es lo que el grupo intenta mantener; min y max son límites. <em>max=4 no escala solo</em>: sin scaling policy no hay nada que decida crecer. <span class='k'>Health type EC2:</span> el ASG solo mira si la instancia está running, no el health del ALB. Es deliberado para ver la causalidad limpia.",
+          "c": "aws autoscaling create-auto-scaling-group --auto-scaling-group-name dcl-dev-asg-web \\\n  --launch-template 'LaunchTemplateName=dcl-dev-lt-web,Version=$Latest' \\\n  --min-size 2 --desired-capacity 2 --max-size 4 \\\n  --vpc-zone-identifier \"$SUBA,$SUBB\" \\\n  --target-group-arns $TG_ARN --health-check-type EC2 \\\n  --tags \"ResourceId=dcl-dev-asg-web,ResourceType=auto-scaling-group,Key=Name,Value=dcl-dev-web,PropagateAtLaunch=true\" \\\n         \"ResourceId=dcl-dev-asg-web,ResourceType=auto-scaling-group,Key=dcl:project,Value=digital-cafe-luna,PropagateAtLaunch=true\" \\\n         \"ResourceId=dcl-dev-asg-web,ResourceType=auto-scaling-group,Key=dcl:owner-team,Value=team-01,PropagateAtLaunch=true\"",
+          "k": {
+            "p": "EC2 › Auto Scaling Groups › Create Auto Scaling group",
+            "s": [
+              "Name <code>dcl-dev-asg-web</code>, launch template <code>dcl-dev-lt-web</code>.",
+              "Network: VPC dcl-dev-vpc, subnets subnet-a y subnet-b.",
+              "Load balancing: <b>Attach to an existing load balancer</b> › target group dcl-dev-tg-web. Health checks: deja solo <b>EC2</b>.",
+              "Group size: Desired 2, Min 2, Max 4. Scaling: <b>No scaling policies</b>.",
+              "Tags: Name = dcl-dev-web y las del proyecto, con propagación a instancias."
+            ],
+            "m": [
+              "Instance management: dos instancias InService, una por AZ."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AutoScalingGroups:search=dcl-dev-asg-web"
+          }
+        },
+        {
+          "t": "Esperar 2 targets <code>healthy</code> (unos 3 min)",
+          "e": "<span class='k'>Qué verás:</span> <code>initial</code> mientras arranca y corre el user data, luego <code>healthy</code>. Si queda en <code>unhealthy</code>, revisa que <code>sg-app</code> permita el 80 desde <code>sg-alb</code> y que la instancia tenga IP pública (sin ella no descarga httpd).",
+          "c": "aws elbv2 describe-target-health --target-group-arn $TG_ARN \\\n  --query 'TargetHealthDescriptions[].{Instancia:Target.Id,Estado:TargetHealth.State}' --output table",
+          "r": "11:04:57 healthy=0   (initial: arrancando, user data instalando httpd)\n...\n11:06:46 healthy=2\n|  i-062e3a461f4ebac71 |  healthy  |\n|  i-0f977899c4df950ce |  healthy  |",
+          "k": {
+            "p": "EC2 › Target Groups › dcl-dev-tg-web › Targets",
+            "m": [
+              "Health status: <b>initial</b> mientras corre el user data, luego <b>healthy</b> en los dos targets."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#TargetGroups:search=dcl-dev-tg-web"
+          }
+        }
+      ]
+    },
+    {
+      "h": "6 · Prueba A: distribución",
+      "steps": [
+        {
+          "t": "Abrir <code>http://$ALB_DNS</code> en el navegador",
+          "e": "Verás <code>Digital Café Luna | instance=i-… | az=us-east-1a</code>. Recarga varias veces: debería cambiar.",
+          "k": {
+            "p": "EC2 › Load Balancers › dcl-dev-alb › Details › DNS name",
+            "s": [
+              "Copia el DNS name y ábrelo con <code>http://</code> en otra pestaña. Recarga varias veces."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#LoadBalancers:search=dcl-dev-alb"
+          }
+        },
+        {
+          "t": "20 peticiones y contar respuestas por instancia",
+          "e": "<span class='k'>Qué hace:</span> <code>sort | uniq -c</code> agrupa respuestas iguales y las cuenta. <span class='k'>Evidencia:</span> dos líneas con dos instance IDs distintos (y dos AZ) prueban que el mismo endpoint reparte entre instancias diferentes. No tiene que ser 50/50. Esta es exactamente la pregunta oral de ejemplo del profe.",
+          "c": "for i in {1..20}; do curl -s \"http://$ALB_DNS\"; echo; done | sort | uniq -c",
+          "r": "  10 Digital Café Luna | instance=i-062e3a461f4ebac71 | az=us-east-1b\n  10 Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a\n\ncurl directo a la IP pública de una instancia:\ntimeout contra {{IP_LAB02_EC2}}:80 -> sg-app solo acepta 80 desde sg-alb",
+          "k": {
+            "p": "CloudShell",
+            "n": "La consola no cuenta respuestas: el conteo con <code>uniq -c</code> se hace en CloudShell. En la consola sí puedes mostrar los dos targets healthy en el Target Group.",
+            "l": "https://us-east-1.console.aws.amazon.com/cloudshell/home?region=us-east-1"
+          }
+        },
+        {
+          "t": "Ver el ASG en 2/2/4 y sin scaling policy",
+          "e": "Captura esto: prueba min=2, desired=2, max=4, las dos AZ y que no hay políticas.",
+          "c": "aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names dcl-dev-asg-web \\\n  --query 'AutoScalingGroups[0].{Min:MinSize,Desired:DesiredCapacity,Max:MaxSize,Instancias:Instances[].[InstanceId,AvailabilityZone,LifecycleState]}'\naws autoscaling describe-policies --auto-scaling-group-name dcl-dev-asg-web --query 'ScalingPolicies' # debe dar []",
+          "k": {
+            "p": "EC2 › Auto Scaling Groups › dcl-dev-asg-web › Details y Automatic scaling",
+            "m": [
+              "Group details: Desired 2, Min 2, Max 4.",
+              "Automatic scaling: <b>Dynamic scaling policies (0)</b>. Max 4 es un límite, no una orden de crecer."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AutoScalingGroups:search=dcl-dev-asg-web"
+          }
+        }
+      ]
+    },
+    {
+      "h": "7 · Prueba B: terminar una instancia",
+      "note": "Deja abiertas en la consola: Target Group › Targets, ASG › Activity y EC2 › Instances.",
+      "steps": [
+        {
+          "t": "Terminar una instancia del ASG (sin tocar desired)",
+          "e": "<span class='k'>Qué hace:</span> simula un fallo: apaga y destruye una instancia. Anota el ID: es evidencia.",
+          "c": "VICTIMA=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names dcl-dev-asg-web \\\n  --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)\necho \"Termino $VICTIMA\"\naws ec2 terminate-instances --instance-ids $VICTIMA",
+          "k": {
+            "p": "EC2 › Instances › (instancia del ASG) › Instance state › Terminate instance",
+            "s": [
+              "Filtra por el tag <code>aws:autoscaling:groupName = dcl-dev-asg-web</code>.",
+              "Selecciona una, anota su ID e <b>Instance state › Terminate (delete) instance</b>. No toques el ASG."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-web"
+          }
+        },
+        {
+          "t": "Seguir pidiendo al ALB mientras se recupera",
+          "e": "<span class='k'>Qué verás:</span> el servicio no se cae: responde siempre la instancia que queda, porque la terminada dejó de ser elegible (puede verse <code>draining</code>). Unos minutos después aparece un ID nuevo.",
+          "c": "for i in {1..40}; do echo \"$(date +%T) $(curl -s -m 3 http://$ALB_DNS)\"; sleep 3; done",
+          "r": "11:07:24 | instance=i-062e…(1b) | TG: i-062e:healthy i-0f97:healthy   ← aún responde mientras se apaga\n11:07:36 | instance=i-0f97…(1a) | TG: i-062e:healthy i-0f97:healthy\n11:07:58 | instance=i-0f97…(1a) | TG: i-0f97:healthy                  ← la terminada sale del TG\n11:09:06 | instance=i-0f97…(1a) | TG: i-0f97:healthy i-07f9:initial   ← llega el reemplazo\n11:09:17 | instance=i-0f97…(1a) | TG: i-0f97:healthy i-07f9:unhealthy ← httpd aún no instalado\n11:10:03 | instance=i-07f9…(1b) | TG: i-0f97:healthy i-07f9:healthy   ← reemplazo recibe tráfico",
+          "k": {
+            "p": "EC2 › Target Groups › dcl-dev-tg-web › Targets",
+            "m": [
+              "La terminada pasa a <b>draining</b> y sale de la lista; la otra sigue <b>healthy</b> y atiende todo."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#TargetGroups:search=dcl-dev-tg-web"
+          }
+        },
+        {
+          "t": "Ver la actividad de reemplazo del ASG",
+          "e": "Verás «Terminating EC2 instance: i-…» y luego «Launching a new EC2 instance: i-…». Esa es la prueba de quién reemplazó: el <em>ASG</em>, porque quedó por debajo de desired=2. <strong>No digas</strong> «el health check del ALB provocó el reemplazo»: en esta configuración no es fuente de salud del ASG.",
+          "c": "aws autoscaling describe-scaling-activities --auto-scaling-group-name dcl-dev-asg-web --max-items 3 \\\n  --query 'Activities[].{Hora:StartTime,Estado:StatusCode,Que:Description}' --output table",
+          "r": "Terminating EC2 instance: i-062e3a461f4ebac71\n  Causa: \"an instance was taken out of service in response to an EC2 health check\n          indicating it has been terminated or stopped.\"\nLaunching a new EC2 instance: i-07f9d1d4d672826e8\n  Causa: \"an instance was launched in response to an unhealthy instance needing to be replaced.\" ",
+          "k": {
+            "p": "EC2 › Auto Scaling Groups › dcl-dev-asg-web › Activity › Activity history",
+            "m": [
+              "Dos filas: «Terminating EC2 instance: i-…» y «Launching a new EC2 instance: i-…», cada una con su causa.",
+              "Es la prueba de que reemplazó el ASG y no el health check del ALB."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AutoScalingGroups:search=dcl-dev-asg-web"
+          }
+        },
+        {
+          "t": "Repetir la Prueba A: el ID nuevo ya recibe tráfico",
+          "e": "Cierra la secuencia: el reemplazo pasa de <code>initial</code> a <code>healthy</code>, el ALB le manda tráfico, el grupo vuelve a 2.",
+          "c": "aws elbv2 describe-target-health --target-group-arn $TG_ARN \\\n  --query 'TargetHealthDescriptions[].{Instancia:Target.Id,Estado:TargetHealth.State}' --output table\nfor i in {1..20}; do curl -s \"http://$ALB_DNS\"; echo; done | sort | uniq -c",
+          "r": "Min 2 / Desired 2 / Max 4\n  10 Digital Café Luna | instance=i-07f9d1d4d672826e8 | az=us-east-1b\n  10 Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a",
+          "k": {
+            "p": "EC2 › Target Groups › dcl-dev-tg-web › Targets",
+            "m": [
+              "El ID nuevo aparece como <b>initial</b> y luego <b>healthy</b>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#TargetGroups:search=dcl-dev-tg-web"
+          }
+        }
+      ]
+    },
+    {
+      "h": "8 · Cleanup (el ALB y las EC2 cobran)",
+      "note": "Ojo: si vas a practicar para el checkpoint del 30/09, puedes recrearlo luego con estos mismos comandos. No lo dejes corriendo días.",
+      "cleanup": true,
+      "steps": [
+        {
+          "t": "Borrar el ASG y sus instancias",
+          "e": "<code>--force-delete</code> termina las instancias y borra el grupo en un paso (equivale a bajar a 0/0 y borrar). El root EBS se borra con cada instancia (Delete on termination).",
+          "c": "aws autoscaling delete-auto-scaling-group --auto-scaling-group-name dcl-dev-asg-web --force-delete\naws ec2 wait instance-terminated --filters Name=tag:aws:autoscaling:groupName,Values=dcl-dev-asg-web && echo \"instancias terminadas\"",
+          "k": {
+            "p": "EC2 › Auto Scaling Groups › dcl-dev-asg-web › Actions › Delete",
+            "s": [
+              "La guía pide primero Edit › Desired 0 y Min 0, y esperar a que terminen las instancias.",
+              "Luego Actions › Delete y escribe <code>delete</code> para confirmar."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#AutoScalingGroups:search=dcl-dev-asg-web"
+          }
+        },
+        {
+          "t": "Borrar ALB, Target Group y Launch Template",
+          "e": "El Target Group no se puede borrar mientras un listener lo use; por eso va después del ALB.",
+          "c": "aws elbv2 delete-load-balancer --load-balancer-arn $ALB_ARN\naws elbv2 wait load-balancers-deleted --load-balancer-arns $ALB_ARN && echo \"ALB borrado\"\naws elbv2 delete-target-group --target-group-arn $TG_ARN\naws ec2 delete-launch-template --launch-template-name dcl-dev-lt-web",
+          "k": {
+            "p": "EC2 › Load Balancers / Target Groups / Launch Templates › Actions › Delete",
+            "s": [
+              "Borra el ALB y espera a que desaparezca.",
+              "Borra el Target Group.",
+              "Borra el Launch Template con sus versiones."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#LoadBalancers:search=dcl-dev-alb"
+          }
+        },
+        {
+          "t": "Borrar los SG (primero app, luego alb)",
+          "e": "<code>sg-app</code> referencia a <code>sg-alb</code>, así que va primero. Si sale <code>DependencyViolation</code>, espera otro minuto y repite: aún hay una ENI usando el SG.",
+          "c": "sleep 60   # las interfaces del ALB tardan en liberarse\naws ec2 delete-security-group --group-id $SG_APP\naws ec2 delete-security-group --group-id $SG_ALB",
+          "k": {
+            "p": "EC2 › Security Groups › (selecciona) › Actions › Delete security groups",
+            "s": [
+              "Primero <code>dcl-dev-sg-app</code>, luego <code>dcl-dev-sg-alb</code>. Si la consola avisa de dependencias, espera un minuto."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:search=dcl-dev-sg"
+          }
+        },
+        {
+          "t": "Quitar la route table y el IGW",
+          "e": "Las subnets vuelven a la main route table (solo ruta local). Así la cuenta queda en el baseline de S01, que es lo que pide el Lab 03 antes de empezar.",
+          "c": "for A in $(aws ec2 describe-route-tables --route-table-ids $RT --query 'RouteTables[0].Associations[].RouteTableAssociationId' --output text); do\n  aws ec2 disassociate-route-table --association-id $A; done\naws ec2 delete-route-table --route-table-id $RT\naws ec2 detach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC\naws ec2 delete-internet-gateway --internet-gateway-id $IGW",
+          "k": {
+            "p": "VPC › Route tables y Internet gateways",
+            "s": [
+              "Route table › Subnet associations › Edit › desmarca las dos subnets. Luego Actions › Delete route table.",
+              "Internet gateways › Actions › <b>Detach from VPC</b>, y después Delete."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#RouteTables:search=dcl-dev-rt-s02"
+          }
+        },
+        {
+          "t": "Verificar que solo quedan VPC y subnets",
+          "e": "Las cuatro listas deben salir vacías (<code>[]</code>).",
+          "c": "aws elbv2 describe-load-balancers --query 'LoadBalancers[].LoadBalancerName'\naws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[].AutoScalingGroupName'\naws ec2 describe-instances --filters Name=instance-state-name,Values=pending,running --query 'Reservations[].Instances[].InstanceId'\naws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC --query 'InternetGateways[].InternetGatewayId'",
+          "k": {
+            "p": "EC2 › Load Balancers, Auto Scaling Groups, Instances · VPC › Internet gateways",
+            "m": [
+              "Load Balancers y Auto Scaling Groups vacíos, instancias en Terminated y ningún IGW adjunto a dcl-dev-vpc."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:search=dcl-dev-vpc"
+          }
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "s": "Con el ASG en health type EC2, el httpd de una instancia se cae pero la instancia sigue running. ¿Qué pasa?",
+      "o": [
+        "El ASG la reemplaza porque el ALB la marcó unhealthy.",
+        "El Target Group la marca unhealthy y el ALB deja de enviarle tráfico, pero el ASG no la reemplaza: para él sigue sana.",
+        "El ALB reinicia httpd."
+      ],
+      "a": 1,
+      "x": "El health check del ALB solo decide elegibilidad. Para que el ASG reemplace por eso habría que activar el health type ELB en el ASG."
+    },
+    {
+      "s": "Abres en el navegador la IP pública de una instancia del ASG y no carga, pero por el DNS del ALB sí. ¿Por qué?",
+      "o": [
+        "Las instancias no tienen IP pública.",
+        "httpd solo escucha al ALB.",
+        "sg-app solo permite el puerto 80 desde sg-alb; tu navegador no tiene ese SG."
+      ],
+      "a": 2,
+      "x": "Es la regla por referencia de SG: la instancia tiene IP pública (para descargar httpd), pero el firewall solo acepta el 80 desde el ALB."
+    },
+    {
+      "s": "El ASG tiene min=2, desired=2, max=4 y el tráfico se triplica. ¿Qué pasa?",
+      "o": [
+        "Sube a 4 instancias automáticamente.",
+        "Se queda en 2: no hay scaling policy que decida crecer; max solo es un límite.",
+        "El ALB crea instancias nuevas."
+      ],
+      "a": 1,
+      "x": "max=4 no es una orden de crecer. Para escalar por demanda hace falta una política (por ejemplo target tracking sobre CPU)."
+    },
+    {
+      "s": "El Target Group muestra los dos targets en unhealthy justo después de crear el ASG, y a los 5 minutos siguen así. ¿Qué revisas primero?",
+      "o": [
+        "Que sg-app permita TCP 80 desde sg-alb y que el user data haya instalado httpd (IP pública + ruta al IGW).",
+        "Que el ALB tenga max=4.",
+        "Que el bucket S3 exista."
+      ],
+      "a": 0,
+      "x": "Un target unhealthy casi siempre es: el health check no llega (SG) o no hay servidor que responda (user data falló, típicamente por no tener salida a Internet)."
+    },
+    {
+      "s": "El profe te pide mostrar en la consola quién reemplazó la instancia que terminaste. ¿A dónde vas?",
+      "o": [
+        "EC2 › Auto Scaling Groups › dcl-dev-asg-web › Activity › Activity history.",
+        "EC2 › Target Groups › dcl-dev-tg-web › Health checks.",
+        "VPC › Route tables."
+      ],
+      "a": 0,
+      "x": "Activity history muestra «Terminating…» y «Launching a new EC2 instance…» con la causa. El Target Group solo muestra elegibilidad."
+    },
+    {
+      "s": "¿Dónde muestras en la consola que a las instancias solo les llega HTTP desde el ALB?",
+      "o": [
+        "Load Balancers › dcl-dev-alb › Listeners.",
+        "EC2 › Security Groups › dcl-dev-sg-app › Inbound rules: HTTP 80 con Source = el SG dcl-dev-sg-alb.",
+        "EC2 › Instances › Networking › Public IPv4."
+      ],
+      "a": 1,
+      "x": "La regla por referencia de SG está en el SG de la app. El listener solo dice a dónde reenvía el ALB."
+    }
+  ],
+  "oral": [
+    {
+      "q": "Acabas de mostrar que el tráfico llega a dos instancias detrás del mismo endpoint. ¿Qué componente distribuye y qué evidencia muestra que son instancias distintas?",
+      "a": "El ALB, a través de su listener :80 que reenvía al Target Group. La evidencia: la salida del curl con uniq -c muestra dos instance IDs distintos (y dos AZ), escritos por cada instancia desde su metadata."
+    },
+    {
+      "q": "Terminaste una instancia y apareció otra. ¿Quién la creó y por qué?",
+      "a": "El ASG. Su health type es EC2: detectó una instancia no running, quedó en 1 con desired=2 y lanzó un reemplazo desde el Launch Template. Se ve en Activity history. El ALB solo dejó de enviarle tráfico."
+    },
+    {
+      "q": "¿Qué pasaría si borras la ruta 0.0.0.0/0 antes de crear el ASG?",
+      "a": "El ALB internet-facing no recibiría tráfico de Internet y las instancias no podrían descargar httpd: el user data falla, el health check nunca da 200 y los targets quedan unhealthy."
+    }
+  ]
+}

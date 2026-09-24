@@ -1,0 +1,189 @@
+{
+  "id": "04",
+  "name": "Lab 04",
+  "sub": "Red y SG",
+  "lead": "Para que A llegue a B hacen falta cuatro cosas a la vez: destino correcto, ruta aplicable, un control que lo permita y un servicio escuchando. Rompes una sola (la regla del SG) y observas PASS → FAIL → PASS.",
+  "why": "<strong>Idea clave:</strong> una subnet es pública porque su route table tiene <code>0.0.0.0/0 → IGW</code>, no por su nombre. A → B no pasa por el IGW: va por la ruta <code>local</code> dentro de 10.20.0.0/16. El SG es <em>stateful</em> y por instancia; la NACL es <em>stateless</em> y por subnet. Se hace en clase el <b>30 sep</b>, junto con el Checkpoint.",
+  "caption": "Arquitectura del Lab 04. El acceso externo termina en A; B solo es alcanzable por IP privada desde el SG de A.",
+  "fecha": "23 sep",
+  "phases": [
+    {
+      "h": "0 · Preflight y variables",
+      "note": "La cuenta ya está en el baseline (verificado el 23 sep). Antes de tocar nada, di el camino en voz alta: A → IP privada de B → ruta local → SG de B → TCP 8080 → servicio.",
+      "steps": [
+        {
+          "t": "Cargar variables del lab",
+          "e": "Igual que en los otros labs: busca por nombre, así sobrevive a un reinicio de CloudShell.",
+          "c": "export AWS_REGION=us-east-1\nVPC=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=dcl-dev-vpc --query 'Vpcs[0].VpcId' --output text)\nSUBA=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-a --query 'Subnets[0].SubnetId' --output text)\nSUBB=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-b --query 'Subnets[0].SubnetId' --output text)\nTAGS='{Key=dcl:project,Value=digital-cafe-luna},{Key=dcl:environment,Value=dev},{Key=dcl:owner-team,Value=team-01},{Key=dcl:managed-by,Value=cli}'\nTAGS_KV='Key=dcl:project,Value=digital-cafe-luna Key=dcl:environment,Value=dev Key=dcl:owner-team,Value=team-01 Key=dcl:managed-by,Value=cli'\necho \"VPC=$VPC SUBA=$SUBA SUBB=$SUBB\"\nIGW=$(aws ec2 describe-internet-gateways --filters Name=tag:Name,Values=dcl-dev-igw-s04 --query 'InternetGateways[0].InternetGatewayId' --output text)\nRT=$(aws ec2 describe-route-tables --filters Name=tag:Name,Values=dcl-dev-rt-public-a-s04 --query 'RouteTables[0].RouteTableId' --output text)\nSG_A=$(aws ec2 describe-security-groups --filters Name=group-name,Values=dcl-dev-sg-a-s04 --query 'SecurityGroups[0].GroupId' --output text)\nSG_B=$(aws ec2 describe-security-groups --filters Name=group-name,Values=dcl-dev-sg-b-s04 --query 'SecurityGroups[0].GroupId' --output text)\necho \"IGW=$IGW RT=$RT SG_A=$SG_A SG_B=$SG_B\""
+        },
+        {
+          "t": "Confirmar que no quedan restos de S02/S03",
+          "e": "Un IGW o una ruta que sobró haría que B tuviera salida a Internet sin que lo sepas, y el troubleshooting dejaría de ser limpio.",
+          "c": "aws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC --query 'InternetGateways[].InternetGatewayId'\naws ec2 describe-route-tables --filters Name=vpc-id,Values=$VPC --query 'RouteTables[].{Id:RouteTableId,Main:Associations[0].Main,Rutas:Routes[].DestinationCidrBlock}'\naws ec2 describe-instances --filters Name=instance-state-name,Values=pending,running --query 'Reservations[].Instances[].InstanceId'",
+          "r": "[]   ← sin IGW\n[{\"Id\": \"{{RTB_MAIN}}\", \"Main\": true, \"Rutas\": [\"10.20.0.0/16\"]}]   ← solo la main, solo ruta local\n[]   ← sin instancias"
+        }
+      ]
+    },
+    {
+      "h": "1 · Subnet A pública (solo A)",
+      "steps": [
+        {
+          "t": "IGW + route table propia para la subnet A",
+          "e": "<span class='k'>Diferencia con S02/S03:</span> allá la route table pública iba a las dos subnets. Aquí solo a A. B sigue en la main route table, que solo tiene la ruta local: B queda <em>privada por routing</em>.",
+          "c": "IGW=$(aws ec2 create-internet-gateway \\\n  --tag-specifications \"ResourceType=internet-gateway,Tags=[{Key=Name,Value=dcl-dev-igw-s04},$TAGS]\" \\\n  --query InternetGateway.InternetGatewayId --output text)\naws ec2 attach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC\nRT=$(aws ec2 create-route-table --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=route-table,Tags=[{Key=Name,Value=dcl-dev-rt-public-a-s04},$TAGS]\" \\\n  --query RouteTable.RouteTableId --output text)\naws ec2 create-route --route-table-id $RT --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW\naws ec2 associate-route-table --route-table-id $RT --subnet-id $SUBA   # solo A"
+        },
+        {
+          "t": "Evidencia: rutas de A y de B",
+          "e": "A debe mostrar <code>10.20.0.0/16 local</code> y <code>0.0.0.0/0 igw-…</code>. B solo <code>10.20.0.0/16 local</code>. Ambas conservan la ruta local: por eso A y B se ven.",
+          "c": "echo \"Subnet A:\"; aws ec2 describe-route-tables --filters Name=association.subnet-id,Values=$SUBA \\\n  --query 'RouteTables[0].Routes[].[DestinationCidrBlock,GatewayId]' --output text\necho \"Subnet B (sin asociación explícita = usa la main):\"; aws ec2 describe-route-tables \\\n  --filters Name=vpc-id,Values=$VPC Name=association.main,Values=true \\\n  --query 'RouteTables[0].Routes[].[DestinationCidrBlock,GatewayId]' --output text"
+        }
+      ]
+    },
+    {
+      "h": "2 · Security groups",
+      "steps": [
+        {
+          "t": "sg-a: SSH solo desde EC2 Instance Connect",
+          "e": "Igual que en el Lab 03. Solo el servicio de Instance Connect puede abrir SSH a A.",
+          "c": "SG_A=$(aws ec2 create-security-group --group-name dcl-dev-sg-a-s04 \\\n  --description \"EC2 A S04: SSH desde EC2 Instance Connect\" --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-a-s04},$TAGS]\" \\\n  --query GroupId --output text)\nPL=$(aws ec2 describe-managed-prefix-lists --filters Name=prefix-list-name,Values=com.amazonaws.us-east-1.ec2-instance-connect \\\n  --query 'PrefixLists[0].PrefixListId' --output text)\naws ec2 authorize-security-group-ingress --group-id $SG_A \\\n  --ip-permissions \"IpProtocol=tcp,FromPort=22,ToPort=22,PrefixListIds=[{PrefixListId=$PL}]\""
+        },
+        {
+          "t": "sg-b: TCP 8080 solo desde sg-a",
+          "e": "<span class='k'>Intención del flujo:</span> ni <code>0.0.0.0/0</code> ni todo el CIDR de la VPC; solo quien tenga <code>sg-a</code>. B no necesita regla SSH: nadie entra a B.",
+          "c": "SG_B=$(aws ec2 create-security-group --group-name dcl-dev-sg-b-s04 \\\n  --description \"EC2 B S04: 8080 solo desde sg-a\" --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-b-s04},$TAGS]\" \\\n  --query GroupId --output text)\naws ec2 authorize-security-group-ingress --group-id $SG_B --protocol tcp --port 8080 --source-group $SG_A"
+        }
+      ]
+    },
+    {
+      "h": "3 · EC2 A y EC2 B",
+      "steps": [
+        {
+          "t": "User data de B: servidor HTTP con Python, sin Internet",
+          "e": "<span class='k'>Por qué Python:</span> B no tiene salida a Internet, así que no puede hacer <code>dnf install</code>. Amazon Linux 2023 ya trae <code>python3</code>. El servicio de systemd lo levanta al arrancar y lo reinicia si se cae. (En la guía PDF el <code>printf</code> sale partido en dos líneas; aquí va con <code>\\n</code>.)",
+          "c": "cat > userdata-b.sh <<'EOF'\n#!/bin/bash\nset -eux\nmkdir -p /opt/dcl\nPRIVATE_IP=$(hostname -I | awk '{print $1}')\nprintf 'Digital Cafe Luna | host=%s | private=%s\\n' \"$(hostname)\" \"$PRIVATE_IP\" > /opt/dcl/index.html\ncat > /etc/systemd/system/dcl-http.service <<'UNIT'\n[Unit]\nAfter=network-online.target\n[Service]\nWorkingDirectory=/opt/dcl\nExecStart=/usr/bin/python3 -m http.server 8080 --bind 0.0.0.0\nRestart=always\n[Install]\nWantedBy=multi-user.target\nUNIT\nsystemctl daemon-reload\nsystemctl enable --now dcl-http\nEOF"
+        },
+        {
+          "t": "Lanzar A (con IP pública) y B (sin IP pública)",
+          "e": "A necesita IP pública para Instance Connect. B no: solo se le habla por IP privada. Con <code>--user-data file://</code> la CLI hace el base64 sola.",
+          "c": "AMI=$(aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 --query Parameter.Value --output text); echo $AMI\naws ec2 run-instances --image-id $AMI --instance-type t3.micro --subnet-id $SUBA \\\n  --security-group-ids $SG_A --associate-public-ip-address \\\n  --tag-specifications \"ResourceType=instance,Tags=[{Key=Name,Value=dcl-dev-ec2-a-s04},$TAGS]\" \\\n  --query 'Instances[0].InstanceId' --output text\naws ec2 run-instances --image-id $AMI --instance-type t3.micro --subnet-id $SUBB \\\n  --security-group-ids $SG_B --no-associate-public-ip-address --user-data file://userdata-b.sh \\\n  --tag-specifications \"ResourceType=instance,Tags=[{Key=Name,Value=dcl-dev-ec2-b-s04},$TAGS]\" \\\n  --query 'Instances[0].InstanceId' --output text"
+        },
+        {
+          "t": "Ver IPs: A con pública, B sin pública",
+          "e": "Captura esta tabla: <code>Publica</code> de B debe salir <code>None</code>. Anota la privada de B (10.20.2.x).",
+          "c": "aws ec2 describe-instances --filters Name=tag:Name,Values=dcl-dev-ec2-a-s04,dcl-dev-ec2-b-s04 Name=instance-state-name,Values=running \\\n  --query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,AZ:Placement.AvailabilityZone,Privada:PrivateIpAddress,Publica:PublicIpAddress}' --output table"
+        }
+      ]
+    },
+    {
+      "h": "4 · PASS → FAIL → PASS",
+      "note": "Terminal 1: EC2 A por Instance Connect (EC2 › Instances › dcl-dev-ec2-a-s04 › Connect). Terminal 2: CloudShell, para cambiar el SG.",
+      "steps": [
+        {
+          "t": "En A: guardar la IP de B y probar (PASS 1)",
+          "e": "<span class='k'>Qué demuestra una respuesta:</span> las cuatro cosas a la vez. IP correcta, ruta local, sg-b permite, servicio escuchando. Debe decir <code>Digital Cafe Luna | host=… | private=10.20.2.X</code>.",
+          "c": "export B_IP=\"10.20.2.X\"\ncurl -sS --connect-timeout 3 \"http://${B_IP}:8080/\""
+        },
+        {
+          "t": "En CloudShell: quitar la regla 8080 de sg-b",
+          "e": "Cambias <em>una sola variable</em>. Ruta, IPs y servicio siguen iguales: si falla, la causa solo puede ser el control.",
+          "c": "aws ec2 revoke-security-group-ingress --group-id $SG_B --protocol tcp --port 8080 --source-group $SG_A"
+        },
+        {
+          "t": "En A: probar otra vez (FAIL controlado)",
+          "e": "<span class='k'>Síntoma esperado: timeout.</span> El SG descarta el paquete en silencio, así que el cliente espera y se rinde. <span class='k'>Si ves <code>Connection refused</code></span>, es otro síntoma: el paquete sí llegó y B respondió que no hay nada escuchando en ese puerto (problema del servicio, no del SG). No toques rutas ni reinicies.",
+          "c": "curl -sS --connect-timeout 3 \"http://${B_IP}:8080/\" || echo \"FAIL esperado: TCP 8080 no permitido\""
+        },
+        {
+          "t": "En CloudShell: restaurar la regla; en A: probar (PASS 2)",
+          "e": "Vuelve a responder igual que en PASS 1. Restaurar exactamente la variable retirada recupera el comportamiento. Las reglas de SG aplican a conexiones nuevas: por eso cada prueba es un <code>curl</code> independiente.",
+          "c": "aws ec2 authorize-security-group-ingress --group-id $SG_B --protocol tcp --port 8080 --source-group $SG_A\n# en A:\ncurl -sS --connect-timeout 3 \"http://${B_IP}:8080/\""
+        }
+      ]
+    },
+    {
+      "h": "5 · Troubleshooting y NACL",
+      "steps": [
+        {
+          "t": "Recorrer el camino con evidencia, en orden",
+          "e": "<span class='k'>1. Destino:</span> ¿la IP es la privada de B, dentro de 10.20.2.0/24? <span class='k'>2. Ruta:</span> ¿las route tables de A y B tienen <code>10.20.0.0/16 local</code>? <span class='k'>3. Control:</span> ¿sg-b permite 8080 desde sg-a? <span class='k'>4. Servicio:</span> ¿hubo un PASS antes, status checks 2/2? <span class='k'>5. ¿Es Internet?</span> No: el flujo es privado, el IGW no participa. El primer punto que no coincide con la intención es el corte."
+        },
+        {
+          "t": "NACL vs SG (conceptual; el challenge es opcional)",
+          "e": "<span class='k'>SG:</span> por interfaz, solo reglas de permitir, <em>stateful</em> (la respuesta sale sola). <span class='k'>NACL:</span> por subnet, reglas de permitir y denegar numeradas, <em>stateless</em>. Para una NACL solo en subnet B harían falta: inbound TCP 8080 desde 10.20.1.0/24 y outbound TCP 1024–65535 (puertos efímeros) hacia 10.20.1.0/24, porque la respuesta no se permite sola. Si olvidas la de salida, el SYN llega pero la respuesta muere: timeout."
+        }
+      ]
+    },
+    {
+      "h": "6 · Cleanup",
+      "cleanup": true,
+      "steps": [
+        {
+          "t": "Terminar A y B, borrar SGs, route table e IGW",
+          "e": "sg-b primero (referencia a sg-a). Al desasociar, la subnet A vuelve a la main route table. Queda solo el baseline.",
+          "c": "IDS=$(aws ec2 describe-instances --filters Name=tag:Name,Values=dcl-dev-ec2-a-s04,dcl-dev-ec2-b-s04 Name=instance-state-name,Values=pending,running,stopped \\\n  --query 'Reservations[].Instances[].InstanceId' --output text)\naws ec2 terminate-instances --instance-ids $IDS\naws ec2 wait instance-terminated --instance-ids $IDS && echo \"instancias terminadas\"\naws ec2 delete-security-group --group-id $SG_B\naws ec2 delete-security-group --group-id $SG_A\nfor A in $(aws ec2 describe-route-tables --route-table-ids $RT --query 'RouteTables[0].Associations[].RouteTableAssociationId' --output text); do\n  aws ec2 disassociate-route-table --association-id $A; done\naws ec2 delete-route-table --route-table-id $RT\naws ec2 detach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC\naws ec2 delete-internet-gateway --internet-gateway-id $IGW"
+        },
+        {
+          "t": "Verificar baseline",
+          "e": "<code>[]</code>, <code>[]</code> y solo <code>[\"default\"]</code>.",
+          "c": "aws ec2 describe-instances --filters Name=instance-state-name,Values=pending,running --query 'Reservations[].Instances[].InstanceId'\naws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC --query 'InternetGateways[].InternetGatewayId'\naws ec2 describe-security-groups --filters Name=vpc-id,Values=$VPC --query 'SecurityGroups[].GroupName'"
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "s": "Desde A, curl a la IP privada de B en el puerto 8080 termina en timeout. Un minuto antes funcionaba y nadie tocó rutas ni instancias. ¿Qué es lo más probable?",
+      "o": [
+        "Falta la ruta 0.0.0.0/0 en la subnet B.",
+        "Se quitó la regla de sg-b que permite 8080 desde sg-a: el SG descarta el tráfico en silencio.",
+        "El servicio Python se cayó."
+      ],
+      "a": 1,
+      "x": "Timeout = el paquete se descarta sin respuesta, típico de SG. Si el servicio estuviera caído, B respondería Connection refused. La ruta a Internet no participa: el flujo es local."
+    },
+    {
+      "s": "curl de A a B:8080 responde «Connection refused». ¿Qué te dice eso?",
+      "o": [
+        "El SG de B bloquea el tráfico.",
+        "No hay ruta entre las subnets.",
+        "El paquete llegó a B, pero nada escucha en el 8080: revisar el servicio."
+      ],
+      "a": 2,
+      "x": "Refused significa que el host contestó con un RST. Hubo camino y el control lo dejó pasar; el problema está en el servicio destino."
+    },
+    {
+      "s": "La subnet B no tiene ruta a ningún IGW. ¿Puede A hablar con B?",
+      "o": [
+        "Sí: 10.20.0.0/16 → local está en todas las route tables de la VPC.",
+        "No: sin IGW no hay conectividad.",
+        "Solo si B tiene IP pública."
+      ],
+      "a": 0,
+      "x": "La ruta local existe siempre y no se puede borrar. Una subnet privada sigue alcanzable dentro de la VPC."
+    },
+    {
+      "s": "Creas una NACL en la subnet B que permite inbound TCP 8080 desde 10.20.1.0/24 y nada más. El curl desde A hace timeout. ¿Por qué?",
+      "o": [
+        "Las NACL no filtran puertos.",
+        "La NACL es stateless: falta permitir la salida hacia 10.20.1.0/24 en puertos efímeros (1024–65535) para la respuesta.",
+        "Hay que reiniciar B."
+      ],
+      "a": 1,
+      "x": "A diferencia del SG, la NACL no recuerda conexiones. La respuesta sale de B hacia el puerto efímero de A y necesita su propia regla outbound."
+    }
+  ],
+  "oral": [
+    {
+      "q": "Mostraste PASS → FAIL → PASS. ¿Dónde estaba el corte y qué evidencia descarta el routing?",
+      "a": "En sg-b: quité solo la regla 8080 desde sg-a. Las route tables no cambiaron (las dos siguen con 10.20.0.0/16 local), la IP de B es la misma y el servicio respondió antes y después. Además el síntoma fue timeout, típico de un SG que descarta; y al restaurar solo esa regla volvió a funcionar."
+    },
+    {
+      "q": "¿Por qué la subnet A es pública y la B no, si las dos están en la misma VPC?",
+      "a": "Por routing: A está asociada a una route table con 0.0.0.0/0 → IGW; B usa la main, que solo tiene la ruta local. El nombre no tiene nada que ver. Y B además no tiene IP pública."
+    },
+    {
+      "q": "Si B necesitara instalar paquetes desde Internet, ¿qué agregarías sin hacerla pública?",
+      "a": "Un NAT Gateway en la subnet pública y una ruta 0.0.0.0/0 → NAT en la route table de B. B podría salir, pero nadie desde Internet podría iniciar conexión hacia ella. Trade-off: el NAT cobra por hora y por GB."
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* Tokens de la guía original. Tailwind los expone como bg-surface, text-ink, border-line, etc. */
+:root {
+  --bg: #f2f4f7; --surface: #ffffff; --ink: #16202e; --muted: #566175; --line: #d6dce6;
+  --accent: #1f6feb; --accent-bg: #e6effd; --code-bg: #0f1722; --code-ink: #dbe4f0;
+  --done: #23875a; --done-bg: #e3f4ea; --warn-bg: #fff4dc; --warn-ink: #744f00;
+  --bad: #c0392b; --bad-bg: #fbe7e4;
+  --net: #1f6feb; --cmp: #b25f00; --dat: #7a3fc2; --sec: #c0392b;
+  --con: #0a7b74; --con-bg: #e0f3f1;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0e131b; --surface: #161d28; --ink: #e2e8f1; --muted: #98a3b6; --line: #2a3445;
+    --accent: #6ea5ff; --accent-bg: #1a2a44; --code-bg: #0a0f16; --code-ink: #dbe4f0;
+    --done: #5cc58f; --done-bg: #15301f; --warn-bg: #2c2412; --warn-ink: #f0cb6e;
+    --bad: #ff8a7a; --bad-bg: #3a1b17;
+    --net: #6ea5ff; --cmp: #f0a54a; --dat: #b891f0; --sec: #ff8a7a;
+    --con: #4fd1c5; --con-bg: #0f2e2c;
+  }
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-bg: var(--accent-bg);
+  --color-code-bg: var(--code-bg);
+  --color-code-ink: var(--code-ink);
+  --color-done: var(--done);
+  --color-done-bg: var(--done-bg);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-ink: var(--warn-ink);
+  --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
+  --color-net: var(--net);
+  --color-cmp: var(--cmp);
+  --color-dat: var(--dat);
+  --color-sec: var(--sec);
+  --color-con: var(--con);
+  --color-con-bg: var(--con-bg);
+}
+
+@layer base {
+  body { @apply bg-bg text-ink font-sans text-[15px] leading-relaxed; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button { cursor: pointer; }
+}
+
+/* Texto con HTML del contenido (JSON): <code>, <b>, <span class='k'> */
+.html code { font: 13px var(--font-mono); background: var(--bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.html .k { font-weight: 600; }
+.html strong { color: inherit; }
+.why strong { color: var(--accent); }
+
+/* Diagramas */
+svg text { font-family: var(--font-sans); fill: var(--ink); }
+svg .mono { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+svg .lbl { font-size: 12px; font-weight: 600; }
+svg .small { font-size: 11px; fill: var(--muted); }
+svg .box { fill: none; stroke: var(--line); stroke-width: 1.5; }
+svg .region { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 6 4; }
+svg .vpc { fill: var(--accent-bg); stroke: var(--net); stroke-width: 1.5; }
+svg .az { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg .sub { fill: var(--surface); stroke: var(--net); stroke-width: 1.2; }
+svg .cmp { fill: var(--surface); stroke: var(--cmp); stroke-width: 1.6; }
+svg .dat { fill: var(--surface); stroke: var(--dat); stroke-width: 1.6; }
+svg .sec { fill: none; stroke: var(--sec); stroke-width: 1.2; stroke-dasharray: 3 3; }
+svg .flow { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+svg .flowd { stroke: var(--dat); stroke-width: 1.5; fill: none; stroke-dasharray: 5 3; }
+svg .ah { fill: var(--ink); }
+svg .ahd { fill: var(--dat); }
+svg .hot { fill: transparent; stroke: transparent; stroke-width: 2.5; cursor: pointer; }
+svg .hot:hover, svg .hot:focus-visible { stroke: var(--con); fill: var(--con-bg); fill-opacity: .35; outline: none; }
+
+dialog::backdrop { background: rgb(8 12 18 / .72); }
+
+@layer components {
+  .btn { @apply rounded-md border border-line bg-surface px-[11px] py-[5px] text-[13px] text-muted hover:border-muted hover:text-ink; }
+  .crumb { @apply font-mono text-[12.5px] leading-normal font-medium text-con; overflow-wrap: anywhere; }
+  .golink { @apply justify-self-start rounded-md border border-con px-2.5 py-1 text-[13px] font-semibold text-con no-underline hover:bg-con-bg; }
+  .blk > summary { @apply cursor-pointer px-2.5 py-[5px] font-mono text-[11px] font-semibold tracking-wider uppercase; list-style-position: inside; }
+  .blk[open] > summary { @apply border-b border-line; }
+  .card { @apply grid gap-2.5 rounded-lg border border-line bg-surface px-4 py-3.5; }
+  .pill { @apply inline-block rounded-[10px] px-[7px] py-0.5 align-[1px] font-mono text-[11px] font-semibold tracking-wide; }
+}
