@@ -1,3 +1,4 @@
+
 <title>Labs Digital Café Luna</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -8,6 +9,7 @@
   --done:#23875a;--done-bg:#e3f4ea;--warn-bg:#fff4dc;--warn-ink:#744f00;
   --bad:#c0392b;--bad-bg:#fbe7e4;
   --net:#1f6feb;--cmp:#b25f00;--dat:#7a3fc2;--sec:#c0392b;
+  --con:#0a7b74;--con-bg:#e0f3f1;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;
@@ -16,6 +18,7 @@
   --done:#5cc58f;--done-bg:#15301f;--warn-bg:#2c2412;--warn-ink:#f0cb6e;
   --bad:#ff8a7a;--bad-bg:#3a1b17;
   --net:#6ea5ff;--cmp:#f0a54a;--dat:#b891f0;--sec:#ff8a7a;
+  --con:#4fd1c5;--con-bg:#0f2e2c;
 }}
 :root[data-theme="dark"]{
   color-scheme:dark;
@@ -24,6 +27,7 @@
   --done:#5cc58f;--done-bg:#15301f;--warn-bg:#2c2412;--warn-ink:#f0cb6e;
   --bad:#ff8a7a;--bad-bg:#3a1b17;
   --net:#6ea5ff;--cmp:#f0a54a;--dat:#b891f0;--sec:#ff8a7a;
+  --con:#4fd1c5;--con-bg:#0f2e2c;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,sans-serif;padding-inline:16px;padding-block:28px 72px}
@@ -75,7 +79,9 @@ ul.steps{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .step .t{font:inherit;font-size:15px;color:var(--ink);text-align:left;background:none;border:0;padding:0;cursor:pointer;border-radius:4px}
 .step .t:hover{text-decoration:underline dotted var(--muted);text-underline-offset:3px}
 .step .t .q{font:500 11px "IBM Plex Mono",monospace;color:var(--accent);margin-left:6px;white-space:nowrap}
-.step.checked .t{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.step{transition:background .2s,box-shadow .2s}
+.step.checked,.step.checked:hover{background:var(--done-bg);box-shadow:inset 3px 0 0 var(--done),0 0 10px -2px var(--done)}
+@media (prefers-reduced-motion:reduce){.step{transition:none}}
 .body{grid-column:2;display:grid;gap:8px;margin-top:6px;min-width:0}
 .exp{font-size:14px;border-left:3px solid var(--accent);padding-left:12px;display:grid;gap:6px}
 .exp .k{font-weight:600}
@@ -118,6 +124,47 @@ svg .flow{stroke:var(--ink);stroke-width:1.5;fill:none}
 svg .flowd{stroke:var(--dat);stroke-width:1.5;fill:none;stroke-dasharray:5 3}
 svg .ah{fill:var(--ink)}
 svg .ahd{fill:var(--dat)}
+/* modo CLI / consola */
+.mode{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.mode button{border:0;border-radius:0;font-weight:600;padding:5px 12px}
+.mode button+button{border-left:1px solid var(--line)}
+.mode button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.mode button[data-mode="console"][aria-pressed="true"]{background:var(--con);color:#fff}
+.body .cli{order:1}.body .con{order:2}.body .exp{order:3}
+.mode-console .body .con{order:1}.mode-console .body .cli{order:2}
+details.blk{border:1px solid var(--line);border-radius:6px;min-width:0}
+details.blk>summary{cursor:pointer;padding:5px 10px;font:600 11px "IBM Plex Mono",monospace;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);list-style-position:inside}
+details.blk[open]>summary{border-bottom:1px solid var(--line)}
+details.blk>.in{padding:10px;display:grid;gap:10px;min-width:0}
+details.cli{border-color:var(--line)}
+details.con{border-color:var(--con);background:var(--surface)}
+details.con>summary{color:var(--con);background:var(--con-bg)}
+.crumb{font:500 12.5px/1.5 "IBM Plex Mono",monospace;color:var(--con);overflow-wrap:anywhere}
+.con ol{margin:0;padding-left:20px;display:grid;gap:3px;font-size:14px}
+.con .look{margin:0;padding-left:18px;display:grid;gap:3px;font-size:14px}
+.con .lk{font-weight:600;font-size:13px}
+.golink{justify-self:start;font:600 13px "IBM Plex Sans",sans-serif;color:var(--con);text-decoration:none;border:1px solid var(--con);border-radius:6px;padding:4px 10px}
+.golink:hover{background:var(--con-bg)}
+.shot{margin:0;padding:0;border:0;background:none;display:grid;gap:4px;overflow:visible}
+.shot button{padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg);cursor:zoom-in;display:block}
+.shot img{display:block;width:100%;height:auto}
+.shot figcaption{margin:0;font-size:12.5px}
+.noimg{font-size:13px;color:var(--muted)}
+/* diagrama clicable */
+figure svg .hot{fill:transparent;stroke:transparent;stroke-width:2.5;cursor:pointer}
+figure svg .hot:hover,figure svg .hot:focus-visible{stroke:var(--con);fill:var(--con-bg);fill-opacity:.35;outline:none}
+.fighint{font-size:12.5px;color:var(--con);margin-top:6px}
+/* visor */
+#zoom{border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink);width:min(1200px,96vw);max-height:92vh}
+#zoom::backdrop{background:rgba(8,12,18,.72)}
+#zoom .zin{display:grid;gap:10px;padding:14px 16px;overflow:auto;max-height:92vh}
+#zoom .zhead{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+#zoom img{width:100%;height:auto;border:1px solid var(--line);border-radius:6px}
+#zoom p{font-size:14px}
+.qcard .shot{max-width:620px}
+.live{font:500 11px "IBM Plex Mono",monospace;color:var(--muted)}
+.run{background:var(--warn-bg);color:var(--warn-ink);border-radius:6px;padding:8px 12px;display:grid;gap:4px}
+.run ul{margin:0;padding-left:18px}
 @media (max-width:520px){h1{font-size:1.45rem}.tabs .mini{display:none}}
 @media (prefers-reduced-motion:reduce){.fill{transition:none}}
 </style>
@@ -125,8 +172,9 @@ svg .ahd{fill:var(--dat)}
 <main>
   <header>
     <h1>Labs Evolutivos 01–04 · Digital Café Luna</h1>
-    <p>Guía para repetir los labs en tu propia cuenta AWS (el checkpoint ahora es individual). Marca la casilla cuando termines un paso. Clic en el texto del paso muestra qué hace y por qué. Los comandos van en CloudShell (us-east-1). El progreso queda guardado en este navegador.</p>
+    <p>Guía para repetir los labs en tu propia cuenta AWS (el checkpoint ahora es individual). Marca la casilla cuando termines un paso. Clic en el texto del paso muestra qué hace y por qué. Cada paso de los Labs 01 a 03 trae el comando CLI y cómo se hace y se ve en la consola; el selector elige cuál va primero. El progreso queda guardado en este navegador.</p>
     <div class="bar">
+      <div class="mode" role="group" aria-label="Forma de trabajo"><button type="button" data-mode="cli" aria-pressed="true">CLI</button><button type="button" data-mode="console" aria-pressed="false">Consola</button></div>
       <div class="track"><div class="fill" id="fill"></div></div>
       <span class="count" id="count">0/0</span>
       <button id="toggleAll" type="button">Mostrar todas las explicaciones</button>
@@ -134,22 +182,21 @@ svg .ahd{fill:var(--dat)}
     </div>
   </header>
 
-  <div class="state">
-    <strong>Estado de tu cuenta 278835524469 (23 sep 2026, 11:25, us-east-1)</strong>
-    <ul>
-      <li><span class="pill ok">HECHO</span> Lab 01: <code>dcl-dev-vpc</code> 10.20.0.0/16 y las dos subnets (1a y 1b). Se conservan como baseline.</li>
-      <li><span class="pill ok">HECHO</span> Lab 02 corrido de punta a punta en tu cuenta (11:02–11:16): distribución 10/10 entre 1a y 1b, terminación y reemplazo por el ASG, cleanup. Evidencias en <code>evidencias/lab-evolutivo-02/</code>.</li>
-      <li><span class="pill ok">HECHO</span> Lab 03 corrido (11:16–11:24): S3 con dos versiones y lifecycle, EFS compartido A → B → A, cleanup. Evidencias en <code>evidencias/lab-evolutivo-03/</code>.</li>
-      <li><span class="pill todo">30 SEP</span> Lab 04 + Checkpoint Lab 1, en clase. La cuenta está limpia (solo VPC y subnets), que es lo que pide su preflight.</li>
-    </ul>
-    <p>Los bloques verdes <b>«Resultado real»</b> dentro de los pasos muestran lo que salió al correrlos hoy. Úsalos para comparar cuando los repitas tú.</p>
-  </div>
+  <div class="state" id="state" aria-live="polite"></div>
 
   <nav class="tabs" role="tablist" id="tabs"></nav>
   <div id="panes"></div>
 
   <footer>Basado en las guías del Ing. Luis Lunar (S01 v03, S02 v01, S03 v01, S04 v01). Los comandos CLI son equivalentes a los pasos de consola de la guía.</footer>
 </main>
+
+<dialog id="zoom" aria-labelledby="ztitle"><div class="zin">
+  <div class="zhead"><h3 id="ztitle"></h3><button type="button" id="zclose">Cerrar</button></div>
+  <div class="crumb" id="zpath"></div>
+  <p id="ztext"></p>
+  <img id="zimg" alt="">
+  <a class="golink" id="zlink" target="_blank" rel="noopener">Abrir en la consola ↗</a>
+</div></dialog>
 
 <template id="svg-lab1">
 <svg viewBox="0 0 640 250" role="img" aria-label="Región us-east-1 con la VPC 10.20.0.0/16 y dos subnets, una en cada AZ">
@@ -167,6 +214,10 @@ svg .ahd{fill:var(--dat)}
   <rect class="sub" x="354" y="114" width="220" height="78" rx="6"/>
   <text class="lbl" x="370" y="140">dcl-dev-subnet-b</text><text class="mono" x="370" y="160">10.20.2.0/24 · 251 usables</text>
   <text class="small" x="370" y="178">vacía: sin instancias aún</text>
+  <rect class="hot" data-hot="l1-region" x="8" y="8" width="300" height="28" rx="6" tabindex="0" role="button" aria-label="Ver la región en la consola"/>
+  <rect class="hot" data-hot="l1-vpc" x="26" y="44" width="588" height="30" rx="6" tabindex="0" role="button" aria-label="Ver la VPC en la consola"/>
+  <rect class="hot" data-hot="l1-subnets" x="66" y="114" width="220" height="78" rx="6" tabindex="0" role="button" aria-label="Ver la subnet A en la consola"/>
+  <rect class="hot" data-hot="l1-subnets" x="354" y="114" width="220" height="78" rx="6" tabindex="0" role="button" aria-label="Ver la subnet B en la consola"/>
 </svg>
 </template>
 
@@ -201,6 +252,13 @@ svg .ahd{fill:var(--dat)}
   <text class="small" x="352" y="292">subnet-b · us-east-1b</text>
   <rect class="cmp" x="364" y="300" width="190" height="40" rx="6"/>
   <text class="lbl" x="376" y="318">EC2 t3.micro (httpd)</text><text class="mono" x="376" y="333">nace del Launch Template</text>
+  <rect class="hot" data-hot="l2-igw" x="250" y="60" width="140" height="30" rx="6" tabindex="0" role="button" aria-label="Internet gateway en la consola"/>
+  <rect class="hot" data-hot="l2-sgalb" x="180" y="128" width="280" height="16" rx="6" tabindex="0" role="button" aria-label="SG del ALB en la consola"/>
+  <rect class="hot" data-hot="l2-alb" x="200" y="146" width="240" height="30" rx="6" tabindex="0" role="button" aria-label="ALB en la consola"/>
+  <rect class="hot" data-hot="l2-tg" x="210" y="206" width="220" height="26" rx="6" tabindex="0" role="button" aria-label="Target Group en la consola"/>
+  <rect class="hot" data-hot="l2-asg" x="40" y="250" width="560" height="22" rx="6" tabindex="0" role="button" aria-label="Auto Scaling Group en la consola"/>
+  <rect class="hot" data-hot="l2-ec2" x="84" y="300" width="190" height="40" rx="6" tabindex="0" role="button" aria-label="Instancias en la consola"/>
+  <rect class="hot" data-hot="l2-ec2" x="364" y="300" width="190" height="40" rx="6" tabindex="0" role="button" aria-label="Instancias en la consola"/>
 </svg>
 </template>
 
@@ -246,6 +304,14 @@ svg .ahd{fill:var(--dat)}
   <text class="small" x="464" y="268">a los 7 días</text>
   <text class="lbl" x="486" y="352">CloudShell</text>
   <path class="flow" d="M540 336 V314" marker-end="url(#a3b)"/>
+  <rect class="hot" data-hot="l3-vpc" x="12" y="12" width="416" height="28" rx="6" tabindex="0" role="button" aria-label="VPC y rutas en la consola"/>
+  <rect class="hot" data-hot="l3-ca" x="42" y="74" width="154" height="54" rx="6" tabindex="0" role="button" aria-label="Terminal de client-a"/>
+  <rect class="hot" data-hot="l3-cb" x="244" y="74" width="154" height="54" rx="6" tabindex="0" role="button" aria-label="Terminal de client-b"/>
+  <rect class="hot" data-hot="l3-mt" x="42" y="170" width="154" height="50" rx="6" tabindex="0" role="button" aria-label="Mount target A en la consola"/>
+  <rect class="hot" data-hot="l3-mt" x="244" y="170" width="154" height="50" rx="6" tabindex="0" role="button" aria-label="Mount target B en la consola"/>
+  <rect class="hot" data-hot="l3-efs" x="42" y="284" width="356" height="86" rx="6" tabindex="0" role="button" aria-label="EFS en la consola"/>
+  <rect class="hot" data-hot="l3-s3" x="450" y="60" width="180" height="172" rx="6" tabindex="0" role="button" aria-label="Versiones del bucket en la consola"/>
+  <rect class="hot" data-hot="l3-lc" x="450" y="236" width="180" height="74" rx="6" tabindex="0" role="button" aria-label="Lifecycle del bucket en la consola"/>
 </svg>
 </template>
 
@@ -318,7 +384,252 @@ echo "IGW=$IGW RT=$RT SG_EC2=$SG_EC2 SG_EFS=$SG_EFS FS=$FS BUCKET=$BUCKET"`;
 
 const AMI = `AMI=$(aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 --query Parameter.Value --output text); echo $AMI`;
 
-// Estructura: lab → fases → pasos {t: texto, e: explicación, c: código, d: ya hecho por defecto}
+// ---------- consola ----------
+// Enlaces por nombre (search=) y no por ID: siguen sirviendo cuando el lab se recrea y los IDs cambian.
+const C = "https://us-east-1.console.aws.amazon.com/";
+const LK = {
+  shell: C + "cloudshell/home?region=us-east-1",
+  vpcs: C + "vpcconsole/home?region=us-east-1#vpcs:search=dcl-dev-vpc",
+  subnets: C + "vpcconsole/home?region=us-east-1#subnets:search=dcl-dev-subnet",
+  rt: n => C + "vpcconsole/home?region=us-east-1#RouteTables:search=" + n,
+  igw: n => C + "vpcconsole/home?region=us-east-1#igws:search=" + n,
+  sg: n => C + "ec2/home?region=us-east-1#SecurityGroups:search=" + n,
+  ec2: n => C + "ec2/home?region=us-east-1#Instances:search=" + n,
+  lt: C + "ec2/home?region=us-east-1#LaunchTemplates:search=dcl-dev-lt-web",
+  tg: C + "ec2/home?region=us-east-1#TargetGroups:search=dcl-dev-tg-web",
+  alb: C + "ec2/home?region=us-east-1#LoadBalancers:search=dcl-dev-alb",
+  asg: C + "ec2/home?region=us-east-1#AutoScalingGroups:search=dcl-dev-asg-web",
+  efs: C + "efs/home?region=us-east-1#/file-systems",
+  s3: "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1",
+  tags: C + "resource-groups/tag-editor/find-resources?region=us-east-1"
+};
+const SAME3 = "Vista equivalente del Lab 03: el Lab 02 ya no está desplegado y no tiene capturas propias.";
+
+// k: {p: ruta de clics, s: pasos en consola, l: enlace, img: [archivo, pie] o lista, m: qué mirar, n: nota}
+const K = {
+  shell: {p:"Barra superior › ícono >_ (CloudShell)", l:LK.shell,
+    s:["Abre CloudShell desde el ícono <b>>_</b> de la barra superior. Se abre en la región que tenga el selector.","Pega las variables. En la consola no hay equivalente: los IDs los ves en cada lista."],
+    n:"Este paso es de terminal. La consola lo reemplaza buscando cada recurso por su nombre."},
+
+  // Lab 01
+  "l1.region": {p:"Selector de región (arriba a la derecha) › United States (N. Virginia)", l:LK.vpcs,
+    img:["lab1/consola-region.png","Selector de región con N. Virginia · us-east-1 marcado, 16 sep"],
+    s:["Inicia sesión y mira el selector de región, arriba a la derecha.","Elige <b>N. Virginia · us-east-1</b>.","Busca «VPC» en la barra de búsqueda y abre el servicio. El selector no debe cambiar."],
+    m:["La región resaltada es la que devuelve <code>describe-availability-zones … RegionName</code>.","El usuario y la cuenta (278835524469) salen arriba a la derecha: es lo que responde <code>sts get-caller-identity</code>."]},
+  "l1.vpc": {p:"VPC › Your VPCs › dcl-dev-vpc", l:LK.vpcs,
+    img:["lab1/01-vpcs.png","Your VPCs filtrado por dcl-dev, 23 sep"],
+    s:["En VPC dashboard abre <b>Your VPCs</b> y busca <code>dcl-dev-vpc</code>.","Si existe con 10.20.0.0/16, valida State = Available y no crees otra.","Si no existe: Create VPC › VPC only, Name tag <code>dcl-dev-vpc</code>, IPv4 CIDR manual <code>10.20.0.0/16</code>, las etiquetas del estándar y Create."],
+    m:["Name, VPC ID, State y IPv4 CIDR son las mismas columnas que pide el <code>--query</code> del CLI.","<b>Main route table</b> es la tabla que usan las subnets mientras nadie les asocie otra."]},
+  "l1.subnets": {p:"VPC › Subnets (filtra por dcl-dev-vpc)", l:LK.subnets,
+    img:[["lab1/consola-subnets.png","Subnets con su Availability Zone y 251 IP libres, 16 sep"],["lab1/02-subnets.png","Las mismas subnets el 23 sep con el Lab 03 corriendo: 249 IP libres"]],
+    s:["Abre <b>Subnets</b> y busca <code>dcl-dev-subnet-a</code> y <code>dcl-dev-subnet-b</code>.","Si faltan: Create subnet › VPC dcl-dev-vpc › subnet-a en us-east-1a con 10.20.1.0/24 y subnet-b en us-east-1b con 10.20.2.0/24, con sus etiquetas."],
+    m:["<b>Availability Zone</b>: <code>use1-az1 (us-east-1a)</code> y <code>use1-az2 (us-east-1b)</code>. El AZ ID (use1-az1) es la ubicación física; la letra puede cambiar entre cuentas.","<b>Available IPv4</b> = 251: 256 menos las 5 que reserva AWS. Con el Lab 03 corriendo baja a 249, porque la EC2 y el mount target ocupan una IP cada uno.","La lista también trae las subnets 172.31.x de la VPC default: filtra por VPC."]},
+  "l1.map": {p:"VPC › Your VPCs › dcl-dev-vpc › Resource map", l:LK.vpcs,
+    img:["lab3/01-vpc.png","Resource map del 23 sep: la route table y el IGW son temporales del Lab 03"],
+    m:["La VPC (regional) contiene subnets agrupadas por AZ (zonales): úsalo para explicar regional frente a zonal en voz alta.","Si hay un lab corriendo, aparecen sus route tables e IGW. Con la cuenta en baseline solo quedan la VPC, las dos subnets y la main route table."]},
+
+  // Lab 02 (sin capturas propias)
+  "l2.igw": {p:"VPC › Internet gateways › dcl-dev-igw-s02", l:LK.igw("dcl-dev-igw-s02"),
+    s:["Create internet gateway, Name tag <code>dcl-dev-igw-s02</code>.","Actions › <b>Attach to VPC</b> › dcl-dev-vpc."],
+    m:["State = <b>Attached</b> y VPC ID = dcl-dev-vpc. Una VPC admite un solo IGW."]},
+  "l2.rt": {p:"VPC › Route tables › dcl-dev-rt-s02-public", l:LK.rt("dcl-dev-rt-s02"),
+    img:["lab3/02-route-table.png", SAME3],
+    s:["Create route table: Name <code>dcl-dev-rt-s02-public</code>, VPC dcl-dev-vpc.","Pestaña Routes › Edit routes › Add route: <code>0.0.0.0/0</code> → Internet Gateway › dcl-dev-igw-s02.","Pestaña Subnet associations › Edit subnet associations › marca subnet-a y subnet-b."],
+    m:["Routes: <code>10.20.0.0/16 → local</code> y <code>0.0.0.0/0 → igw-…</code>, ambas Active.","Explicit subnet associations: 2 subnets. Main: No."]},
+  "l2.rtname": {p:"VPC › Route tables › (la tabla) › Tags › Manage tags", l:LK.rt("dcl-dev-rt-s02"),
+    s:["Edita el valor de <code>Name</code> a <code>dcl-dev-rt-s02-public</code> y guarda."]},
+  "l2.sgalb": {p:"EC2 › Security Groups › Create security group", l:LK.sg("dcl-dev-sg-alb"),
+    img:["lab3/03-sg-ec2.png", SAME3],
+    s:["Name <code>dcl-dev-sg-alb</code>, VPC dcl-dev-vpc.","Inbound rules › Add rule: Type <b>HTTP</b>, Source <b>Anywhere-IPv4</b> (0.0.0.0/0).","Outbound: deja la regla por defecto."],
+    m:["Inbound rules (1): HTTP · TCP · 80 · 0.0.0.0/0."]},
+  "l2.sgapp": {p:"EC2 › Security Groups › Create security group", l:LK.sg("dcl-dev-sg-app"),
+    img:["lab3/04-sg-efs.png","Mismo patrón en el Lab 03: el Source de la regla es otro security group"],
+    s:["Name <code>dcl-dev-sg-app</code>, VPC dcl-dev-vpc.","Inbound rules › Add rule: Type <b>HTTP</b>, Source <b>Custom</b> › escribe <code>sg-</code> y elige <code>dcl-dev-sg-alb</code>.","Sin regla SSH."],
+    m:["Source = <code>sg-…</code> (dcl-dev-sg-alb), no un CIDR. Por eso la IP pública de la instancia no abre en el navegador."]},
+  "l2.ami": {p:"Launch template › Application and OS Images › Quick Start › Amazon Linux",
+    s:["Dentro del asistente del Launch Template elige <b>Amazon Linux 2023 AMI</b>, arquitectura <b>64-bit (x86)</b>. La consola ya muestra la AMI vigente."]},
+  "l2.ud": {p:"Launch template › Advanced details › User data",
+    s:["Pega el script tal cual. La consola hace el base64 sola."]},
+  "l2.lt": {p:"EC2 › Launch Templates › Create launch template", l:LK.lt,
+    s:["Name <code>dcl-dev-lt-web</code>. AMI Amazon Linux 2023 x86_64, instance type <b>t3.micro</b>.","Key pair: <b>Don't include in launch template</b>.","Network settings: no elijas subnet. Advanced network configuration › Auto-assign public IP = <b>Enable</b>, security group <code>dcl-dev-sg-app</code>.","Storage: el root por defecto con Delete on termination = Yes.","Advanced details › User data: pega el script. Create launch template."],
+    m:["En el detalle del template: sin subnet, con public IP, SG dcl-dev-sg-app y el user data guardado."]},
+  "l2.tg": {p:"EC2 › Target Groups › Create target group", l:LK.tg,
+    s:["Target type <b>Instances</b>, name <code>dcl-dev-tg-web</code>, HTTP : 80, VPC dcl-dev-vpc.","Health checks: HTTP, path <code>/</code>. Advanced: success codes 200, interval 10 s, healthy threshold 2.","Register targets: no registres nada. Create target group."],
+    m:["Targets (0): los agrega el ASG más adelante."]},
+  "l2.alb": {p:"EC2 › Load Balancers › Create load balancer › Application Load Balancer", l:LK.alb,
+    s:["Name <code>dcl-dev-alb</code>, <b>Internet-facing</b>, IPv4.","Network mapping: VPC dcl-dev-vpc, marca us-east-1a (subnet-a) y us-east-1b (subnet-b).","Security groups: quita <code>default</code> y deja <code>dcl-dev-sg-alb</code>."],
+    m:["State pasa de Provisioning a <b>Active</b> en 2 a 4 minutos.","Availability Zones: dos, con una subnet en cada una."]},
+  "l2.listener": {p:"(mismo asistente) Listeners and routing", l:LK.alb,
+    s:["Listener <b>HTTP : 80</b> › Default action <b>Forward to</b> dcl-dev-tg-web. Create load balancer.","En la pestaña Details del ALB copia el <b>DNS name</b>."]},
+  "l2.asg": {p:"EC2 › Auto Scaling Groups › Create Auto Scaling group", l:LK.asg,
+    s:["Name <code>dcl-dev-asg-web</code>, launch template <code>dcl-dev-lt-web</code>.","Network: VPC dcl-dev-vpc, subnets subnet-a y subnet-b.","Load balancing: <b>Attach to an existing load balancer</b> › target group dcl-dev-tg-web. Health checks: deja solo <b>EC2</b>.","Group size: Desired 2, Min 2, Max 4. Scaling: <b>No scaling policies</b>.","Tags: Name = dcl-dev-web y las del proyecto, con propagación a instancias."],
+    m:["Instance management: dos instancias InService, una por AZ."]},
+  "l2.healthy": {p:"EC2 › Target Groups › dcl-dev-tg-web › Targets", l:LK.tg,
+    m:["Health status: <b>initial</b> mientras corre el user data, luego <b>healthy</b> en los dos targets."]},
+  "l2.dns": {p:"EC2 › Load Balancers › dcl-dev-alb › Details › DNS name", l:LK.alb,
+    s:["Copia el DNS name y ábrelo con <code>http://</code> en otra pestaña. Recarga varias veces."]},
+  "l2.curl": {p:"CloudShell", l:LK.shell,
+    n:"La consola no cuenta respuestas: el conteo con <code>uniq -c</code> se hace en CloudShell. En la consola sí puedes mostrar los dos targets healthy en el Target Group."},
+  "l2.asgview": {p:"EC2 › Auto Scaling Groups › dcl-dev-asg-web › Details y Automatic scaling", l:LK.asg,
+    m:["Group details: Desired 2, Min 2, Max 4.","Automatic scaling: <b>Dynamic scaling policies (0)</b>. Max 4 es un límite, no una orden de crecer."]},
+  "l2.term": {p:"EC2 › Instances › (instancia del ASG) › Instance state › Terminate instance", l:LK.ec2("dcl-dev-web"),
+    s:["Filtra por el tag <code>aws:autoscaling:groupName = dcl-dev-asg-web</code>.","Selecciona una, anota su ID e <b>Instance state › Terminate (delete) instance</b>. No toques el ASG."]},
+  "l2.watch": {p:"EC2 › Target Groups › dcl-dev-tg-web › Targets", l:LK.tg,
+    m:["La terminada pasa a <b>draining</b> y sale de la lista; la otra sigue <b>healthy</b> y atiende todo."]},
+  "l2.activity": {p:"EC2 › Auto Scaling Groups › dcl-dev-asg-web › Activity › Activity history", l:LK.asg,
+    m:["Dos filas: «Terminating EC2 instance: i-…» y «Launching a new EC2 instance: i-…», cada una con su causa.","Es la prueba de que reemplazó el ASG y no el health check del ALB."]},
+  "l2.again": {p:"EC2 › Target Groups › dcl-dev-tg-web › Targets", l:LK.tg,
+    m:["El ID nuevo aparece como <b>initial</b> y luego <b>healthy</b>."]},
+  "l2.c1": {p:"EC2 › Auto Scaling Groups › dcl-dev-asg-web › Actions › Delete", l:LK.asg,
+    s:["La guía pide primero Edit › Desired 0 y Min 0, y esperar a que terminen las instancias.","Luego Actions › Delete y escribe <code>delete</code> para confirmar."]},
+  "l2.c2": {p:"EC2 › Load Balancers / Target Groups / Launch Templates › Actions › Delete", l:LK.alb,
+    s:["Borra el ALB y espera a que desaparezca.","Borra el Target Group.","Borra el Launch Template con sus versiones."]},
+  "l2.c3": {p:"EC2 › Security Groups › (selecciona) › Actions › Delete security groups", l:LK.sg("dcl-dev-sg"),
+    s:["Primero <code>dcl-dev-sg-app</code>, luego <code>dcl-dev-sg-alb</code>. Si la consola avisa de dependencias, espera un minuto."]},
+  "l2.c4": {p:"VPC › Route tables y Internet gateways", l:LK.rt("dcl-dev-rt-s02"),
+    s:["Route table › Subnet associations › Edit › desmarca las dos subnets. Luego Actions › Delete route table.","Internet gateways › Actions › <b>Detach from VPC</b>, y después Delete."]},
+  "l2.c5": {p:"EC2 › Load Balancers, Auto Scaling Groups, Instances · VPC › Internet gateways", l:LK.vpcs,
+    m:["Load Balancers y Auto Scaling Groups vacíos, instancias en Terminated y ningún IGW adjunto a dcl-dev-vpc."]},
+
+  // Lab 03 (capturas del 23 sep, 19:00)
+  "l3.pre": {p:"EC2 › Load Balancers · VPC › Internet gateways", l:LK.igw("dcl-dev"),
+    m:["Sin ALB y sin IGW adjunto a dcl-dev-vpc. Si queda el de S02, no podrás adjuntar el de S03."]},
+  "l3.rt": {p:"VPC › Route tables › dcl-dev-rt-s03-public › Routes", l:LK.rt("dcl-dev-rt-s03"),
+    img:[["lab3/01-vpc.png","Resource map: las dos subnets unidas a dcl-dev-rt-s03-public y esta al IGW"],["lab3/02-route-table.png","Routes de dcl-dev-rt-s03-public"]],
+    s:["VPC › Internet gateways › Create: <code>dcl-dev-igw-s03</code>. Actions › Attach to VPC › dcl-dev-vpc.","Route tables › Create: <code>dcl-dev-rt-s03-public</code> en dcl-dev-vpc.","Routes › Edit routes › Add route: <code>0.0.0.0/0</code> → Internet Gateway › dcl-dev-igw-s03.","Subnet associations › Edit subnet associations › marca subnet-a y subnet-b."],
+    m:["<code>0.0.0.0/0 → igw-…</code> Active: lo que hizo <code>create-route</code>.","<code>10.20.0.0/16 → local</code>: AWS la crea en toda route table.","Explicit subnet associations: 2 subnets (los dos <code>associate-route-table</code>). Main: No."]},
+  "l3.sgec2": {p:"EC2 › Security Groups › dcl-dev-sg-ec2-s03 › Inbound rules", l:LK.sg("dcl-dev-sg-ec2-s03"),
+    img:["lab3/03-sg-ec2.png","Inbound rules de dcl-dev-sg-ec2-s03"],
+    s:["Create security group: <code>dcl-dev-sg-ec2-s03</code>, VPC dcl-dev-vpc.","Inbound › Add rule: Type <b>SSH</b>. En Source escribe <code>ec2-instance-connect</code> y elige la prefix list <code>com.amazonaws.us-east-1.ec2-instance-connect</code>.","Outbound por defecto."],
+    m:["Una sola regla: SSH · TCP · 22.","<b>Source = pl-0e4bcff02b13bef1e</b>: el <code>$PL</code> del comando. SSH no queda abierto a 0.0.0.0/0."]},
+  "l3.sgefs": {p:"EC2 › Security Groups › dcl-dev-sg-efs-s03 › Inbound rules", l:LK.sg("dcl-dev-sg-efs-s03"),
+    img:["lab3/04-sg-efs.png","Inbound rules de dcl-dev-sg-efs-s03"],
+    s:["Create security group: <code>dcl-dev-sg-efs-s03</code>, VPC dcl-dev-vpc.","Inbound › Add rule: Type <b>NFS</b>, Source Custom › <code>dcl-dev-sg-ec2-s03</code>."],
+    m:["NFS · TCP · 2049.","<b>Source = sg-099111d9884b8641c</b>: el <code>--source-group $SG_EC2</code>. Solo las instancias con ese SG pueden montar."]},
+  "l3.efs": {p:"Amazon EFS › File systems › dcl-dev-efs-shared", l:LK.efs,
+    img:["lab3/05-efs.png","dcl-dev-efs-shared: sección General y pestaña Network"],
+    s:["Amazon EFS › <b>Create file system › Customize</b>.","Name <code>dcl-dev-efs-shared</code>, tipo <b>Regional</b>, Automatic backups desmarcado, Encryption activado.","Performance <b>General Purpose</b>, Throughput <b>Elastic</b>."],
+    m:["Los flags del CLI a la vista: General Purpose (<code>--performance-mode</code>), Elastic (<code>--throughput-mode</code>), Encrypted con <code>aws/elasticfilesystem</code> (<code>--encrypted</code>), Automatic backups Disabled (<code>--no-backup</code>).","Availability zone: <b>Regional</b>."]},
+  "l3.mt": {p:"Amazon EFS › dcl-dev-efs-shared › Network", l:LK.efs,
+    img:["lab3/05-efs.png","Pestaña Network: un mount target por AZ"],
+    s:["En el asistente (o en Network › Manage): VPC dcl-dev-vpc, un mount target en us-east-1a con subnet-a y otro en us-east-1b con subnet-b.","En ambos quita el SG default y pon <code>dcl-dev-sg-efs-s03</code>."],
+    m:["Dos filas Available: us-east-1a (use1-az1) con <b>10.20.1.30</b> y us-east-1b (use1-az2) con <b>10.20.2.25</b>.","Cada uno es una ENI con el SG <code>dcl-dev-sg-efs-s03</code>: los dos <code>create-mount-target</code>."]},
+  "l3.bucket": {p:"Amazon S3 › Create bucket", l:LK.s3,
+    s:["Nombre único (<code>dcl-s03-team01-&lt;account&gt;-&lt;sufijo&gt;</code>), región us-east-1.","Deja <b>Block all public access</b> marcado.","Bucket Versioning: <b>Enable</b>. Create bucket."],
+    m:["Properties › Bucket Versioning: <b>Enabled</b>. La vista de versiones está en el paso siguiente."]},
+  "l3.versions": {p:"S3 › Buckets › dcl-s03-team01-… › Objects › Show versions", l:LK.s3,
+    img:["lab3/06-s3-versiones.png","Objects con Show versions activado"],
+    s:["Upload de <code>estado.txt</code> con <code>estado=CREADO</code>.","Cambia el archivo a <code>estado=PROCESADO</code> y súbelo otra vez con el mismo nombre.","Activa <b>Show versions</b>."],
+    m:["Dos filas con la misma key y distinto Version ID: las dos ejecuciones de <code>aws s3 cp</code>.","La de arriba (31 B, PROCESADO) es la que el CLI marca <code>IsLatest=True</code>. La de abajo, con sangría └, es la noncurrent (28 B, CREADO).","Con Show versions apagado solo se ve un objeto: esa es la «sobrescritura aparente»."]},
+  "l3.recover": {p:"S3 › bucket › Objects › Show versions › (fila de abajo) › Download", l:LK.s3,
+    img:["lab3/06-s3-versiones.png","La fila con sangría es la versión anterior"],
+    s:["Con Show versions activado, marca la fila de abajo (la versión anterior) y pulsa <b>Download</b>."],
+    m:["Descargar esa fila equivale a <code>get-object --version-id</code>: el archivo dice CREADO."]},
+  "l3.lifecycle": {p:"S3 › bucket › Management › Lifecycle rules", l:LK.s3,
+    img:["lab3/07-s3-lifecycle.png","Management con la regla dcl-s03-noncurrent-cleanup"],
+    s:["Management › <b>Create lifecycle rule</b>: <code>dcl-s03-noncurrent-cleanup</code>.","Scope: Apply to all objects in the bucket (confirma la advertencia).","Actions: <b>Permanently delete noncurrent versions</b> a 7 días y <b>Delete expired object delete markers</b>. Sin transiciones."],
+    m:["Status <b>Enabled</b> y Scope <b>Entire bucket</b>: el <code>ID</code>, el <code>Status</code> y el <code>Filter</code> del JSON.","Noncurrent versions y Expired object delete markers: <b>Permanently delete</b>. Los 7 días se ven en View details."]},
+  "l3.mtip": {p:"Amazon EFS › dcl-dev-efs-shared › Network", l:LK.efs,
+    img:["lab3/05-efs.png","Las IP de los mount targets en la pestaña Network"],
+    m:["Anota <b>10.20.1.30</b> para client-a y <b>10.20.2.25</b> para client-b."]},
+  "l3.ec2": {p:"EC2 › Instances (filtro dcl-dev-s03)", l:LK.ec2("dcl-dev-s03"),
+    img:["lab3/08-ec2.png","client-a y client-b en Running"],
+    s:["Launch instances: <code>dcl-dev-s03-client-a</code>, Amazon Linux 2023, t3.micro, <b>Proceed without a key pair</b>.","Network settings › Edit: dcl-dev-vpc, subnet-a, Auto-assign public IP Enable, SG existente <code>dcl-dev-sg-ec2-s03</code>.","Sin rol IAM ni user data. Repite con <code>client-b</code> en subnet-b."],
+    m:["Dos t3.micro <b>Running</b> con 3/3 checks.","Availability Zone us-east-1a y us-east-1b: una por subnet.","Public IPv4 asignada: la necesita Instance Connect."]},
+  "l3.connect": {p:"EC2 › Instances › client-a › Connect › EC2 Instance Connect › Connect", l:LK.ec2("dcl-dev-s03"),
+    img:["lab3/09-efs-client-a.png","Terminal de Instance Connect abierta en client-a"],
+    s:["Selecciona la instancia › <b>Connect</b> › pestaña EC2 Instance Connect › <b>Connect using a Public IP</b>, usuario ec2-user.","Repite en otra pestaña con client-b."],
+    m:["La terminal se abre en el navegador sin key pair: la entrada la permite el SG con la prefix list de Instance Connect."]},
+  "l3.wa": {p:"Terminal de Instance Connect en client-a", l:LK.ec2("dcl-dev-s03-client-a"),
+    img:["lab3/09-efs-client-a.png","client-a: hostname, df y el archivo compartido"],
+    m:["<code>10.20.1.30:/  nfs4  8.0E  /mnt/dcl</code>: el EFS montado por el mount target de 1a.","<code>/dev/nvme0n1p1  xfs  8.0G  /</code>: el disco EBS propio. El archivo no vive ahí."]},
+  "l3.rb": {p:"Terminal de Instance Connect en client-b", l:LK.ec2("dcl-dev-s03-client-b"),
+    img:["lab3/10-efs-client-b.png","client-b: mismo archivo, otro mount target"],
+    m:["client-b monta por <b>10.20.2.25</b>, el mount target de su AZ, y ve las mismas dos líneas.","<code>writer=ip-10-20-1-63</code> es client-a y <code>reader=ip-10-20-2-92</code> es client-b."]},
+  "l3.ra": {p:"Terminal de Instance Connect en client-a", l:LK.ec2("dcl-dev-s03-client-a"),
+    img:["lab3/09-efs-client-a.png","client-a lee la línea que agregó client-b"],
+    m:["Desde A aparece la línea <code>reader=</code> que escribió B, sin copiar nada. Es el mismo namespace."]},
+  "l3.c1": {p:"EC2 › Instances › (las dos) › Instance state › Terminate instance", l:LK.ec2("dcl-dev-s03"),
+    s:["En cada terminal: <code>sudo umount /mnt/dcl</code>.","Selecciona client-a y client-b › Instance state › <b>Terminate (delete) instance</b>."]},
+  "l3.c2": {p:"Amazon EFS › dcl-dev-efs-shared › Delete", l:LK.efs,
+    s:["<b>Delete</b> y escribe el ID del file system para confirmar. Desde la consola se borran también los mount targets."]},
+  "l3.c3": {p:"S3 › bucket › Empty · luego Delete", l:LK.s3,
+    s:["Selecciona el bucket › <b>Empty</b> › escribe <code>permanently delete</code>. Borra todas las versiones.","Luego <b>Delete</b> y escribe el nombre del bucket."]},
+  "l3.c4": {p:"EC2 › Security Groups · VPC › Route tables · Internet gateways", l:LK.sg("s03"),
+    s:["Borra <code>dcl-dev-sg-efs-s03</code> y después <code>dcl-dev-sg-ec2-s03</code>.","Route table › Subnet associations › Edit › desmarca las dos subnets › Delete route table.","Internet gateway › Detach from VPC › Delete."]},
+  "l3.c5": {p:"Resource Groups & Tag Editor › Tag Editor", l:LK.tags,
+    s:["Regions us-east-1, Resource types All supported, Tag <code>dcl:project = digital-cafe-luna</code> › Search resources."],
+    m:["Solo la VPC y las dos subnets."]}
+};
+
+// Zonas clicables de los diagramas
+const HOT = {
+  "l1-region": {t:"Región us-east-1", k:K["l1.region"]},
+  "l1-vpc": {t:"VPC dcl-dev-vpc", k:K["l1.vpc"]},
+  "l1-subnets": {t:"Subnets A y B", k:K["l1.subnets"]},
+  "l2-igw": {t:"Internet gateway dcl-dev-igw-s02", k:K["l2.igw"]},
+  "l2-sgalb": {t:"Security group dcl-dev-sg-alb", k:K["l2.sgalb"]},
+  "l2-alb": {t:"ALB dcl-dev-alb", k:K["l2.alb"]},
+  "l2-tg": {t:"Target Group dcl-dev-tg-web", k:K["l2.healthy"]},
+  "l2-asg": {t:"Auto Scaling Group dcl-dev-asg-web", k:K["l2.asgview"]},
+  "l2-ec2": {t:"Instancias del ASG", k:K["l2.term"]},
+  "l3-vpc": {t:"VPC con rutas temporales del Lab 03", k:K["l3.rt"]},
+  "l3-ca": {t:"client-a (us-east-1a)", k:K["l3.wa"]},
+  "l3-cb": {t:"client-b (us-east-1b)", k:K["l3.rb"]},
+  "l3-mt": {t:"Mount targets del EFS", k:K["l3.mt"]},
+  "l3-efs": {t:"EFS dcl-dev-efs-shared", k:K["l3.efs"]},
+  "l3-s3": {t:"Bucket S3 con versiones", k:K["l3.versions"]},
+  "l3-lc": {t:"Lifecycle rule del bucket", k:K["l3.lifecycle"]}
+};
+
+// Preguntas con captura o de navegación en la consola
+const QX = {
+  lab1: [
+    {img:"lab1/02-subnets.png", s:"En esta vista del 23 sep cada subnet /24 muestra 249 IP disponibles, no 251. ¿Por qué?",
+     o:["AWS reserva 7 direcciones por subnet.","En cada subnet hay dos interfaces de red usando una IP: la EC2 cliente y el mount target del EFS del Lab 03.","Un /24 tiene 249 direcciones utilizables."],
+     a:1, x:"256 − 5 reservadas = 251. Cada ENI toma una IP: con client-a y el mount target A en la subnet A (y lo mismo en B) quedan 249."},
+    {img:"lab1/consola-region.png", s:"Un compañero abre la consola y no ve dcl-dev-vpc. ¿Qué revisas primero en esta pantalla?",
+     o:["El selector de región, arriba a la derecha: debe decir N. Virginia · us-east-1.","El botón Create VPC.","La columna Block Public Access."],
+     a:0, x:"La VPC es regional. Con el selector en otra región, la lista sale vacía aunque la VPC exista."}
+  ],
+  lab2: [
+    {s:"El profe te pide mostrar en la consola quién reemplazó la instancia que terminaste. ¿A dónde vas?",
+     o:["EC2 › Auto Scaling Groups › dcl-dev-asg-web › Activity › Activity history.","EC2 › Target Groups › dcl-dev-tg-web › Health checks.","VPC › Route tables."],
+     a:0, x:"Activity history muestra «Terminating…» y «Launching a new EC2 instance…» con la causa. El Target Group solo muestra elegibilidad."},
+    {s:"¿Dónde muestras en la consola que a las instancias solo les llega HTTP desde el ALB?",
+     o:["Load Balancers › dcl-dev-alb › Listeners.","EC2 › Security Groups › dcl-dev-sg-app › Inbound rules: HTTP 80 con Source = el SG dcl-dev-sg-alb.","EC2 › Instances › Networking › Public IPv4."],
+     a:1, x:"La regla por referencia de SG está en el SG de la app. El listener solo dice a dónde reenvía el ALB."}
+  ],
+  lab3: [
+    {img:"lab3/06-s3-versiones.png", s:"Con Show versions activado, ¿qué es la segunda fila, la que tiene sangría └?",
+     o:["Una carpeta dentro del bucket.","La versión anterior (noncurrent) de la misma key estado.txt.","Un delete marker."],
+     a:1, x:"Misma key, otro Version ID, 28 B: es la versión CREADO que sobrevivió a la segunda subida."},
+    {img:"lab3/04-sg-efs.png", s:"La regla NFS del SG del EFS tiene como Source un sg-…. ¿Qué significa?",
+     o:["Que el EFS puede salir hacia ese SG.","Que solo las interfaces con ese SG (las EC2 cliente) pueden abrir TCP 2049 hacia el EFS.","Que cualquier IP de la VPC puede montar el EFS."],
+     a:1, x:"Es la autorización por referencia de SG: la misma idea que ALB → app en el Lab 02."},
+    {img:"lab3/10-efs-client-b.png", s:"En client-b, df muestra 10.20.2.25:/ y en client-a 10.20.1.30:/. ¿Son dos filesystems distintos?",
+     o:["Sí, un EFS por AZ.","No: son los dos mount targets del mismo EFS, uno por AZ. Por eso ambos ven el mismo archivo.","Son dos volúmenes EBS compartidos."],
+     a:1, x:"Cada cliente entra por el mount target de su AZ, pero el namespace es uno solo: las dos líneas del archivo lo prueban."},
+    {img:"lab3/05-efs.png", s:"¿En qué parte de la consola del EFS compruebas que es alcanzable desde las dos AZ?",
+     o:["En la pestaña Network: un mount target Available en us-east-1a y otro en us-east-1b.","En Metered size.","En Automatic backups."],
+     a:0, x:"Sin mount target en una AZ, las instancias de esa AZ no tienen por dónde montar."}
+  ]
+};
+
+// Estado de la cuenta. Si la base de datos del artifact tiene estado/cuenta, se usa ese; si no, este.
+const ESTADO = {
+  actualizado: "23 sep 2026, 19:15 (Bogotá)",
+  items: [
+    {pill:"ok", tag:"HECHO", text:"Lab 01: dcl-dev-vpc 10.20.0.0/16 y las dos subnets (1a y 1b). Se conservan como baseline."},
+    {pill:"ok", tag:"HECHO", text:"Lab 02 corrido de punta a punta (11:02–11:16): distribución 10/10 entre 1a y 1b, terminación y reemplazo por el ASG, cleanup. Sin capturas de consola propias."},
+    {pill:"warn", tag:"CORRIENDO", text:"Lab 03 recreado a las 17:30 para la exposición: S3 con dos versiones y lifecycle, EFS compartido entre client-a y client-b. Capturas de consola en cada paso."},
+    {pill:"todo", tag:"30 SEP", text:"Lab 04 + Checkpoint Lab 1, en clase. Antes hay que hacer el cleanup del Lab 03: su preflight pide la cuenta solo con VPC y subnets."}
+  ],
+  corriendo: ["2 EC2 t3.micro (client-a, client-b)", "2 IPv4 públicas", "EFS dcl-dev-efs-shared (12 KB)", "Bucket dcl-s03-team01-… (59 B)", "IGW y route table del Lab 03 (sin costo)"],
+  costo: "≈ USD 0,03 por hora"
+};
+
+// Estructura: lab → fases → pasos {t: texto, e: explicación, c: código, r: resultado real, k: consola, d: ya hecho por defecto}
 const LABS = [
 {
   id:"lab1", name:"Lab 01", sub:"Red base", svg:"svg-lab1",
@@ -327,17 +638,17 @@ const LABS = [
   caption:"Arquitectura del Lab 01. Público o privado no depende del nombre de la subnet, sino de su route table (se ve en S04).",
   phases:[
     {h:"Verificar lo que ya existe", note:"Estos pasos ya están hechos en tu cuenta. Vuelve a correr la verificación el día del checkpoint.", steps:[
-      {d:1, t:"Abrir CloudShell en us-east-1 y confirmar identidad",
+      {d:1, k:K['l1.region'], t:"Abrir CloudShell en us-east-1 y confirmar identidad",
        c:`aws sts get-caller-identity
 aws ec2 describe-availability-zones --region us-east-1 --query 'AvailabilityZones[0].RegionName' --output text`,
        e:"<span class='k'>Qué hace:</span> <code>sts get-caller-identity</code> dice con qué cuenta e identidad estás hablando (tu Account ID y ARN). El segundo comando confirma la región. <span class='k'>Por qué:</span> los recursos de VPC son regionales; en otra región tu VPC «no existe»."},
-      {d:1, t:"VPC <code>dcl-dev-vpc</code> con 10.20.0.0/16 en estado available",
+      {d:1, k:K['l1.vpc'], t:"VPC <code>dcl-dev-vpc</code> con 10.20.0.0/16 en estado available",
        c:`aws ec2 describe-vpcs \\
   --filters 'Name=tag:dcl:project,Values=digital-cafe-luna' \\
   --query 'Vpcs[].{Name:Tags[?Key==\`Name\`]|[0].Value,VpcId:VpcId,CIDR:CidrBlock,State:State}' \\
   --output table`,
        e:"<span class='k'>Qué hace:</span> busca VPCs por la etiqueta del proyecto y muestra nombre, ID, CIDR y estado. <span class='k'>Por qué:</span> filtrar por tag es la estrategia de tagging que pidió el profe: encuentras tus recursos sin memorizar IDs. /16 = 65 536 direcciones para repartir en subnets."},
-      {d:1, t:"Subnets A (10.20.1.0/24, 1a) y B (10.20.2.0/24, 1b)",
+      {d:1, k:K['l1.subnets'], t:"Subnets A (10.20.1.0/24, 1a) y B (10.20.2.0/24, 1b)",
        c:`aws ec2 describe-subnets \\
   --filters 'Name=tag:dcl:project,Values=digital-cafe-luna' \\
   --query 'Subnets[].{Name:Tags[?Key==\`Name\`]|[0].Value,SubnetId:SubnetId,CIDR:CidrBlock,AZ:AvailabilityZone,State:State}' \\
@@ -345,7 +656,7 @@ aws ec2 describe-availability-zones --region us-east-1 --query 'AvailabilityZone
        e:"<span class='k'>Qué hace:</span> lista las subnets del proyecto con su AZ. <span class='k'>Por qué:</span> cada /24 tiene 256 direcciones, pero AWS reserva 5 (red, router, DNS, futuro y broadcast), así que quedan 251. Los rangos no se superponen y cada una está en una AZ distinta."},
       {d:1, t:"Evidencias ya guardadas en <code>evidencias/lab-evolutivo-01/</code>",
        e:"Capturas de consola (VPC, región, subnets) y salida CLI. Para el checkpoint no se entrega informe: lo que cuenta es que funcione y que lo sepas explicar."},
-      {t:"Explicar en voz alta, en menos de un minuto: qué es regional, qué es zonal",
+      {k:K['l1.map'], t:"Explicar en voz alta, en menos de un minuto: qué es regional, qué es zonal",
        e:"<span class='k'>Regional:</span> la VPC, el bucket S3, el EFS Regional y el ALB (que se extiende por varias AZ). <span class='k'>Zonal:</span> la subnet, la instancia EC2 y el volumen EBS. Si cae us-east-1a, la subnet A y lo que corre en ella caen; la VPC sigue existiendo."}
     ]}
   ],
@@ -359,7 +670,7 @@ aws ec2 describe-availability-zones --region us-east-1 --query 'AvailabilityZone
     {s:"Quieres una tercera subnet en la misma VPC. ¿Cuál de estos CIDR sirve?",
      o:["10.20.1.128/25","10.21.3.0/24","10.20.3.0/24"],
      a:2, x:"Debe caer dentro de 10.20.0.0/16 y no superponerse con 10.20.1.0/24 ni 10.20.2.0/24. 10.20.1.128/25 se superpone con la subnet A; 10.21.3.0/24 está fuera de la VPC."}
-  ]
+  ].concat(QX.lab1)
 },
 {
   id:"lab2", done:1, name:"Lab 02", sub:"ALB + ASG", svg:"svg-lab2",
@@ -368,23 +679,23 @@ aws ec2 describe-availability-zones --region us-east-1 --query 'AvailabilityZone
   caption:"Arquitectura del Lab 02. Las instancias tienen IP pública solo para descargar httpd; el puerto 80 solo acepta tráfico que venga del SG del ALB.",
   phases:[
     {h:"0 · Preparar CloudShell", note:"Pega esto al abrir CloudShell y cada vez que se reinicie la sesión (se duerme a los 20 min sin uso y las variables se pierden).", steps:[
-      {t:"Cargar variables del lab",
+      {k:K['shell'], t:"Cargar variables del lab",
        c:VARS2,
        e:"<span class='k'>Qué hace:</span> busca cada recurso por su nombre y guarda su ID en una variable de shell. Si un recurso todavía no existe, la variable queda en <code>None</code> o vacía; es normal al principio. <span class='k'>Por qué:</span> los comandos siguientes usan <code>$VPC</code>, <code>$SUBA</code>, etc. y no IDs copiados a mano."}
     ]},
     {h:"1 · Conectividad mínima", note:"Ya existe en tu cuenta (restos del lab en equipo). Se reutiliza y se corrige el nombre.", steps:[
-      {d:1, t:"IGW <code>dcl-dev-igw-s02</code> adjunto a la VPC",
+      {d:1, k:K['l2.igw'], t:"IGW <code>dcl-dev-igw-s02</code> adjunto a la VPC",
        e:"<span class='k'>Qué es:</span> la puerta entre la VPC e Internet. Una VPC solo puede tener un IGW. <span class='k'>Por qué:</span> AWS exige un IGW para crear un ALB internet-facing, y las instancias lo necesitan para descargar httpd."},
-      {d:1, t:"Route table con <code>0.0.0.0/0 → IGW</code>, asociada a las dos subnets",
+      {d:1, k:K['l2.rt'], t:"Route table con <code>0.0.0.0/0 → IGW</code>, asociada a las dos subnets",
        e:"<span class='k'>Qué es:</span> la tabla que decide a dónde va el tráfico que sale de una subnet. <code>10.20.0.0/16 → local</code> mantiene el tráfico interno; <code>0.0.0.0/0 → IGW</code> manda el resto a Internet. Esa ruta es lo que convierte una subnet en «pública», no su nombre."},
-      {t:"Corregir el nombre de la route table",
+      {k:K['l2.rtname'], t:"Corregir el nombre de la route table",
        c:`aws ec2 create-tags --resources $RT --tags Key=Name,Value=dcl-dev-rt-s02-public
 aws ec2 describe-route-tables --route-table-ids $RT \\
   --query 'RouteTables[0].{Rutas:Routes[].[DestinationCidrBlock,GatewayId],Subnets:Associations[].SubnetId}'`,
        e:"<span class='k'>Qué hace:</span> sobrescribe la etiqueta <code>Name</code> (quedó como <code>dcl-dev-rt-s02-</code>) y muestra rutas y subnets asociadas. Deberías ver la ruta local, la de 0.0.0.0/0 al IGW y tus dos subnets."}
     ]},
     {h:"2 · Security groups", steps:[
-      {t:"SG del ALB: HTTP 80 desde Internet",
+      {k:K['l2.sgalb'], t:"SG del ALB: HTTP 80 desde Internet",
        c:`SG_ALB=$(aws ec2 create-security-group --group-name dcl-dev-sg-alb \\
   --description "ALB: HTTP desde Internet" --vpc-id $VPC \\
   --tag-specifications "ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-alb},$TAGS]" \\
@@ -392,7 +703,7 @@ aws ec2 describe-route-tables --route-table-ids $RT \\
 aws ec2 authorize-security-group-ingress --group-id $SG_ALB --protocol tcp --port 80 --cidr 0.0.0.0/0
 echo $SG_ALB`,
        e:"<span class='k'>Qué hace:</span> crea un firewall virtual y le abre el puerto 80 a cualquier IP. <span class='k'>Detalle:</span> los SG son <em>stateful</em>: si entra una petición, la respuesta sale sola, sin regla de salida. Por defecto permiten toda la salida."},
-      {t:"SG de la app: HTTP 80 solo desde el SG del ALB",
+      {k:K['l2.sgapp'], t:"SG de la app: HTTP 80 solo desde el SG del ALB",
        c:`SG_APP=$(aws ec2 create-security-group --group-name dcl-dev-sg-app \\
   --description "App: HTTP solo desde el ALB" --vpc-id $VPC \\
   --tag-specifications "ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-app},$TAGS]" \\
@@ -402,10 +713,10 @@ echo $SG_APP`,
        e:"<span class='k'>Qué hace:</span> <code>--source-group</code> permite el 80 solo a interfaces que tengan <code>sg-alb</code>. <span class='k'>Por qué importa:</span> aunque la instancia tenga IP pública, nadie puede entrar directo al 80; solo el ALB. Es la pregunta clásica de causalidad: «¿por qué no abre la IP de la instancia en el navegador?». Tampoco hay regla SSH: no hace falta."}
     ]},
     {h:"3 · Launch Template", steps:[
-      {t:"Buscar la AMI de Amazon Linux 2023 (x86_64)",
+      {k:K['l2.ami'], t:"Buscar la AMI de Amazon Linux 2023 (x86_64)",
        c:AMI,
        e:"<span class='k'>Qué hace:</span> AWS publica el ID de la AMI más reciente en un parámetro público de SSM. Así no copias un <code>ami-…</code> que cambia por región y por fecha."},
-      {t:"Escribir el user data (script de arranque)",
+      {k:K['l2.ud'], t:"Escribir el user data (script de arranque)",
        c:`cat > userdata.sh <<'EOF'
 #!/bin/bash
 set -euxo pipefail
@@ -417,7 +728,7 @@ echo "Digital Café Luna | instance=\${INSTANCE_ID} | az=\${AZ}" > /var/www/html
 systemctl enable --now httpd
 EOF`,
        e:"<span class='k'>Qué hace:</span> corre como root en el primer arranque. Instala Apache, le pregunta al <em>metadata service</em> (169.254.169.254) su ID y su AZ con un token IMDSv2, y los escribe en la página. <span class='k'>Por qué:</span> cada respuesta del ALB dice qué instancia contestó; eso es la evidencia de distribución. Y un reemplazo nace idéntico sin que nadie entre a configurarlo."},
-      {t:"Crear <code>dcl-dev-lt-web</code>",
+      {k:K['l2.lt'], t:"Crear <code>dcl-dev-lt-web</code>",
        c:`aws ec2 create-launch-template --launch-template-name dcl-dev-lt-web \\
   --tag-specifications "ResourceType=launch-template,Tags=[{Key=Name,Value=dcl-dev-lt-web},$TAGS]" \\
   --launch-template-data "{
@@ -429,7 +740,7 @@ EOF`,
        e:"<span class='k'>Qué hace:</span> guarda la «receta» de cada instancia: AMI, tipo, SG, IP pública y user data (en base64). No fija subnet: el ASG decide en cuál nace cada una. Sin key pair: no hay SSH. <span class='k'>Por qué:</span> la recuperación solo sirve si el reemplazo se reconstruye igual, sin pasos manuales."}
     ]},
     {h:"4 · Target Group y ALB", steps:[
-      {t:"Crear Target Group con health check rápido",
+      {k:K['l2.tg'], t:"Crear Target Group con health check rápido",
        c:`TG_ARN=$(aws elbv2 create-target-group --name dcl-dev-tg-web \\
   --protocol HTTP --port 80 --vpc-id $VPC --target-type instance \\
   --health-check-path / --matcher HttpCode=200 \\
@@ -437,7 +748,7 @@ EOF`,
   --tags Key=Name,Value=dcl-dev-tg-web $TAGS_KV \\
   --query 'TargetGroups[0].TargetGroupArn' --output text); echo $TG_ARN`,
        e:"<span class='k'>Qué hace:</span> define el grupo de destinos y cómo se decide si están sanos: cada 10 s pide <code>GET /</code>; con 2 respuestas 200 seguidas, el target pasa a healthy. <span class='k'>Por qué:</span> el health check responde una sola pregunta: ¿este target puede atender HTTP ahora? No reemplaza nada. No registres instancias a mano: lo hará el ASG."},
-      {t:"Crear el ALB internet-facing en las dos subnets",
+      {k:K['l2.alb'], t:"Crear el ALB internet-facing en las dos subnets",
        c:`ALB_ARN=$(aws elbv2 create-load-balancer --name dcl-dev-alb --type application \\
   --scheme internet-facing --ip-address-type ipv4 \\
   --subnets $SUBA $SUBB --security-groups $SG_ALB \\
@@ -445,7 +756,7 @@ EOF`,
   --query 'LoadBalancers[0].LoadBalancerArn' --output text)
 aws elbv2 wait load-balancer-available --load-balancer-arns $ALB_ARN && echo "ALB activo"`,
        e:"<span class='k'>Qué hace:</span> crea el balanceador de capa 7 con un nodo en cada AZ y espera a que esté <code>active</code> (2 a 4 min). <span class='k'>Costo:</span> el ALB cobra por hora desde este momento (unos USD 0,02/h + LCU). Créalo tarde y bórralo al terminar."},
-      {t:"Listener HTTP :80 → Target Group y copiar el DNS",
+      {k:K['l2.listener'], t:"Listener HTTP :80 → Target Group y copiar el DNS",
        c:`aws elbv2 create-listener --load-balancer-arn $ALB_ARN --protocol HTTP --port 80 \\
   --default-actions Type=forward,TargetGroupArn=$TG_ARN
 ALB_DNS=$(aws elbv2 describe-load-balancers --load-balancer-arns $ALB_ARN --query 'LoadBalancers[0].DNSName' --output text)
@@ -453,7 +764,7 @@ echo http://$ALB_DNS`,
        e:"<span class='k'>Qué hace:</span> el listener es la regla «lo que llegue al puerto 80, reenvíalo a este Target Group». El DNS del ALB es el endpoint estable: las instancias cambian, él no."}
     ]},
     {h:"5 · Auto Scaling Group", steps:[
-      {t:"Crear <code>dcl-dev-asg-web</code> (2/2/4, health type EC2)",
+      {k:K['l2.asg'], t:"Crear <code>dcl-dev-asg-web</code> (2/2/4, health type EC2)",
        c:`aws autoscaling create-auto-scaling-group --auto-scaling-group-name dcl-dev-asg-web \\
   --launch-template 'LaunchTemplateName=dcl-dev-lt-web,Version=$Latest' \\
   --min-size 2 --desired-capacity 2 --max-size 4 \\
@@ -463,42 +774,42 @@ echo http://$ALB_DNS`,
          "ResourceId=dcl-dev-asg-web,ResourceType=auto-scaling-group,Key=dcl:project,Value=digital-cafe-luna,PropagateAtLaunch=true" \\
          "ResourceId=dcl-dev-asg-web,ResourceType=auto-scaling-group,Key=dcl:owner-team,Value=team-01,PropagateAtLaunch=true"`,
        e:"<span class='k'>Qué hace:</span> lanza 2 instancias desde el Launch Template, una por subnet, y las registra solas en el Target Group. <span class='k'>min/desired/max:</span> desired es lo que el grupo intenta mantener; min y max son límites. <em>max=4 no escala solo</em>: sin scaling policy no hay nada que decida crecer. <span class='k'>Health type EC2:</span> el ASG solo mira si la instancia está running, no el health del ALB. Es deliberado para ver la causalidad limpia."},
-      {t:"Esperar 2 targets <code>healthy</code> (unos 3 min)",
+      {k:K['l2.healthy'], t:"Esperar 2 targets <code>healthy</code> (unos 3 min)",
        r:"11:04:57 healthy=0   (initial: arrancando, user data instalando httpd)\n...\n11:06:46 healthy=2\n|  i-062e3a461f4ebac71 |  healthy  |\n|  i-0f977899c4df950ce |  healthy  |",
        c:`aws elbv2 describe-target-health --target-group-arn $TG_ARN \\
   --query 'TargetHealthDescriptions[].{Instancia:Target.Id,Estado:TargetHealth.State}' --output table`,
        e:"<span class='k'>Qué verás:</span> <code>initial</code> mientras arranca y corre el user data, luego <code>healthy</code>. Si queda en <code>unhealthy</code>, revisa que <code>sg-app</code> permita el 80 desde <code>sg-alb</code> y que la instancia tenga IP pública (sin ella no descarga httpd)."}
     ]},
     {h:"6 · Prueba A: distribución", steps:[
-      {t:"Abrir <code>http://$ALB_DNS</code> en el navegador",
+      {k:K['l2.dns'], t:"Abrir <code>http://$ALB_DNS</code> en el navegador",
        e:"Verás <code>Digital Café Luna | instance=i-… | az=us-east-1a</code>. Recarga varias veces: debería cambiar."},
-      {t:"20 peticiones y contar respuestas por instancia",
+      {k:K['l2.curl'], t:"20 peticiones y contar respuestas por instancia",
        r:"  10 Digital Café Luna | instance=i-062e3a461f4ebac71 | az=us-east-1b\n  10 Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a\n\ncurl directo a la IP pública de una instancia:\ntimeout contra 3.237.100.42:80 -> sg-app solo acepta 80 desde sg-alb",
        c:`for i in {1..20}; do curl -s "http://$ALB_DNS"; echo; done | sort | uniq -c`,
        e:"<span class='k'>Qué hace:</span> <code>sort | uniq -c</code> agrupa respuestas iguales y las cuenta. <span class='k'>Evidencia:</span> dos líneas con dos instance IDs distintos (y dos AZ) prueban que el mismo endpoint reparte entre instancias diferentes. No tiene que ser 50/50. Esta es exactamente la pregunta oral de ejemplo del profe."},
-      {t:"Ver el ASG en 2/2/4 y sin scaling policy",
+      {k:K['l2.asgview'], t:"Ver el ASG en 2/2/4 y sin scaling policy",
        c:`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names dcl-dev-asg-web \\
   --query 'AutoScalingGroups[0].{Min:MinSize,Desired:DesiredCapacity,Max:MaxSize,Instancias:Instances[].[InstanceId,AvailabilityZone,LifecycleState]}'
 aws autoscaling describe-policies --auto-scaling-group-name dcl-dev-asg-web --query 'ScalingPolicies' # debe dar []`,
        e:"Captura esto: prueba min=2, desired=2, max=4, las dos AZ y que no hay políticas."}
     ]},
     {h:"7 · Prueba B: terminar una instancia", note:"Deja abiertas en la consola: Target Group › Targets, ASG › Activity y EC2 › Instances.", steps:[
-      {t:"Terminar una instancia del ASG (sin tocar desired)",
+      {k:K['l2.term'], t:"Terminar una instancia del ASG (sin tocar desired)",
        c:`VICTIMA=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names dcl-dev-asg-web \\
   --query 'AutoScalingGroups[0].Instances[0].InstanceId' --output text)
 echo "Termino $VICTIMA"
 aws ec2 terminate-instances --instance-ids $VICTIMA`,
        e:"<span class='k'>Qué hace:</span> simula un fallo: apaga y destruye una instancia. Anota el ID: es evidencia."},
-      {t:"Seguir pidiendo al ALB mientras se recupera",
+      {k:K['l2.watch'], t:"Seguir pidiendo al ALB mientras se recupera",
        r:"11:07:24 | instance=i-062e…(1b) | TG: i-062e:healthy i-0f97:healthy   ← aún responde mientras se apaga\n11:07:36 | instance=i-0f97…(1a) | TG: i-062e:healthy i-0f97:healthy\n11:07:58 | instance=i-0f97…(1a) | TG: i-0f97:healthy                  ← la terminada sale del TG\n11:09:06 | instance=i-0f97…(1a) | TG: i-0f97:healthy i-07f9:initial   ← llega el reemplazo\n11:09:17 | instance=i-0f97…(1a) | TG: i-0f97:healthy i-07f9:unhealthy ← httpd aún no instalado\n11:10:03 | instance=i-07f9…(1b) | TG: i-0f97:healthy i-07f9:healthy   ← reemplazo recibe tráfico",
        c:`for i in {1..40}; do echo "$(date +%T) $(curl -s -m 3 http://$ALB_DNS)"; sleep 3; done`,
        e:"<span class='k'>Qué verás:</span> el servicio no se cae: responde siempre la instancia que queda, porque la terminada dejó de ser elegible (puede verse <code>draining</code>). Unos minutos después aparece un ID nuevo."},
-      {t:"Ver la actividad de reemplazo del ASG",
+      {k:K['l2.activity'], t:"Ver la actividad de reemplazo del ASG",
        r:"Terminating EC2 instance: i-062e3a461f4ebac71\n  Causa: \"an instance was taken out of service in response to an EC2 health check\n          indicating it has been terminated or stopped.\"\nLaunching a new EC2 instance: i-07f9d1d4d672826e8\n  Causa: \"an instance was launched in response to an unhealthy instance needing to be replaced.\" ",
        c:`aws autoscaling describe-scaling-activities --auto-scaling-group-name dcl-dev-asg-web --max-items 3 \\
   --query 'Activities[].{Hora:StartTime,Estado:StatusCode,Que:Description}' --output table`,
        e:"Verás «Terminating EC2 instance: i-…» y luego «Launching a new EC2 instance: i-…». Esa es la prueba de quién reemplazó: el <em>ASG</em>, porque quedó por debajo de desired=2. <strong>No digas</strong> «el health check del ALB provocó el reemplazo»: en esta configuración no es fuente de salud del ASG."},
-      {t:"Repetir la Prueba A: el ID nuevo ya recibe tráfico",
+      {k:K['l2.again'], t:"Repetir la Prueba A: el ID nuevo ya recibe tráfico",
        r:"Min 2 / Desired 2 / Max 4\n  10 Digital Café Luna | instance=i-07f9d1d4d672826e8 | az=us-east-1b\n  10 Digital Café Luna | instance=i-0f977899c4df950ce | az=us-east-1a",
        c:`aws elbv2 describe-target-health --target-group-arn $TG_ARN \\
   --query 'TargetHealthDescriptions[].{Instancia:Target.Id,Estado:TargetHealth.State}' --output table
@@ -506,29 +817,29 @@ for i in {1..20}; do curl -s "http://$ALB_DNS"; echo; done | sort | uniq -c`,
        e:"Cierra la secuencia: el reemplazo pasa de <code>initial</code> a <code>healthy</code>, el ALB le manda tráfico, el grupo vuelve a 2."}
     ]},
     {h:"8 · Cleanup (el ALB y las EC2 cobran)", cleanup:1, note:"Ojo: si vas a practicar para el checkpoint del 30/09, puedes recrearlo luego con estos mismos comandos. No lo dejes corriendo días.", steps:[
-      {t:"Borrar el ASG y sus instancias",
+      {k:K['l2.c1'], t:"Borrar el ASG y sus instancias",
        c:`aws autoscaling delete-auto-scaling-group --auto-scaling-group-name dcl-dev-asg-web --force-delete
 aws ec2 wait instance-terminated --filters Name=tag:aws:autoscaling:groupName,Values=dcl-dev-asg-web && echo "instancias terminadas"`,
        e:"<code>--force-delete</code> termina las instancias y borra el grupo en un paso (equivale a bajar a 0/0 y borrar). El root EBS se borra con cada instancia (Delete on termination)."},
-      {t:"Borrar ALB, Target Group y Launch Template",
+      {k:K['l2.c2'], t:"Borrar ALB, Target Group y Launch Template",
        c:`aws elbv2 delete-load-balancer --load-balancer-arn $ALB_ARN
 aws elbv2 wait load-balancers-deleted --load-balancer-arns $ALB_ARN && echo "ALB borrado"
 aws elbv2 delete-target-group --target-group-arn $TG_ARN
 aws ec2 delete-launch-template --launch-template-name dcl-dev-lt-web`,
        e:"El Target Group no se puede borrar mientras un listener lo use; por eso va después del ALB."},
-      {t:"Borrar los SG (primero app, luego alb)",
+      {k:K['l2.c3'], t:"Borrar los SG (primero app, luego alb)",
        c:`sleep 60   # las interfaces del ALB tardan en liberarse
 aws ec2 delete-security-group --group-id $SG_APP
 aws ec2 delete-security-group --group-id $SG_ALB`,
        e:"<code>sg-app</code> referencia a <code>sg-alb</code>, así que va primero. Si sale <code>DependencyViolation</code>, espera otro minuto y repite: aún hay una ENI usando el SG."},
-      {t:"Quitar la route table y el IGW",
+      {k:K['l2.c4'], t:"Quitar la route table y el IGW",
        c:`for A in $(aws ec2 describe-route-tables --route-table-ids $RT --query 'RouteTables[0].Associations[].RouteTableAssociationId' --output text); do
   aws ec2 disassociate-route-table --association-id $A; done
 aws ec2 delete-route-table --route-table-id $RT
 aws ec2 detach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC
 aws ec2 delete-internet-gateway --internet-gateway-id $IGW`,
        e:"Las subnets vuelven a la main route table (solo ruta local). Así la cuenta queda en el baseline de S01, que es lo que pide el Lab 03 antes de empezar."},
-      {t:"Verificar que solo quedan VPC y subnets",
+      {k:K['l2.c5'], t:"Verificar que solo quedan VPC y subnets",
        c:`aws elbv2 describe-load-balancers --query 'LoadBalancers[].LoadBalancerName'
 aws autoscaling describe-auto-scaling-groups --query 'AutoScalingGroups[].AutoScalingGroupName'
 aws ec2 describe-instances --filters Name=instance-state-name,Values=pending,running --query 'Reservations[].Instances[].InstanceId'
@@ -549,7 +860,7 @@ aws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC 
     {s:"El Target Group muestra los dos targets en unhealthy justo después de crear el ASG, y a los 5 minutos siguen así. ¿Qué revisas primero?",
      o:["Que sg-app permita TCP 80 desde sg-alb y que el user data haya instalado httpd (IP pública + ruta al IGW).","Que el ALB tenga max=4.","Que el bucket S3 exista."],
      a:0, x:"Un target unhealthy casi siempre es: el health check no llega (SG) o no hay servidor que responda (user data falló, típicamente por no tener salida a Internet)."}
-  ],
+  ].concat(QX.lab2),
   oral:[
     ["Acabas de mostrar que el tráfico llega a dos instancias detrás del mismo endpoint. ¿Qué componente distribuye y qué evidencia muestra que son instancias distintas?","El ALB, a través de su listener :80 que reenvía al Target Group. La evidencia: la salida del curl con uniq -c muestra dos instance IDs distintos (y dos AZ), escritos por cada instancia desde su metadata."],
     ["Terminaste una instancia y apareció otra. ¿Quién la creó y por qué?","El ASG. Su health type es EC2: detectó una instancia no running, quedó en 1 con desired=2 y lanzó un reemplazo desde el Launch Template. Se ve en Activity history. El ALB solo dejó de enviarle tráfico."],
@@ -563,16 +874,16 @@ aws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC 
   caption:"Arquitectura del Lab 03. Se monta EFS por la IP del mount target para no depender del DNS de la VPC.",
   phases:[
     {h:"0 · Preflight", note:"El Lab 03 pide empezar sin restos del Lab 02. Si hiciste el cleanup del Lab 02, estás listo.", steps:[
-      {t:"Cargar variables del lab",
+      {k:K['shell'], t:"Cargar variables del lab",
        c:VARS3,
        e:"Igual que en el Lab 02: busca por nombre. Al principio casi todo sale <code>None</code>."},
-      {t:"Confirmar que no quedan ALB, ASG ni IGW del Lab 02",
+      {k:K['l3.pre'], t:"Confirmar que no quedan ALB, ASG ni IGW del Lab 02",
        c:`aws elbv2 describe-load-balancers --query 'LoadBalancers[].LoadBalancerName'
 aws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC --query 'InternetGateways[].Tags'`,
        e:"Ambos deben salir vacíos. Una VPC solo admite un IGW: si queda el de S02, no podrás adjuntar el de S03."}
     ]},
     {h:"1 · Conectividad temporal y SG", steps:[
-      {t:"IGW <code>dcl-dev-igw-s03</code> + route table pública en las dos subnets",
+      {k:K['l3.rt'], t:"IGW <code>dcl-dev-igw-s03</code> + route table pública en las dos subnets",
        c:`IGW=$(aws ec2 create-internet-gateway \\
   --tag-specifications "ResourceType=internet-gateway,Tags=[{Key=Name,Value=dcl-dev-igw-s03},$TAGS]" \\
   --query InternetGateway.InternetGatewayId --output text)
@@ -584,7 +895,7 @@ aws ec2 create-route --route-table-id $RT --destination-cidr-block 0.0.0.0/0 --g
 aws ec2 associate-route-table --route-table-id $RT --subnet-id $SUBA
 aws ec2 associate-route-table --route-table-id $RT --subnet-id $SUBB`,
        e:"<span class='k'>Por qué:</span> las EC2 necesitan Internet para instalar <code>nfs-utils</code> y para que entres con EC2 Instance Connect. No es el tema del lab y se borra al final. Sin NAT Gateway (cuesta por hora)."},
-      {t:"SG de las EC2: SSH solo desde EC2 Instance Connect",
+      {k:K['l3.sgec2'], t:"SG de las EC2: SSH solo desde EC2 Instance Connect",
        c:`SG_EC2=$(aws ec2 create-security-group --group-name dcl-dev-sg-ec2-s03 \\
   --description "EC2 S03: SSH solo desde EC2 Instance Connect" --vpc-id $VPC \\
   --tag-specifications "ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-ec2-s03},$TAGS]" \\
@@ -594,7 +905,7 @@ PL=$(aws ec2 describe-managed-prefix-lists --filters Name=prefix-list-name,Value
 aws ec2 authorize-security-group-ingress --group-id $SG_EC2 \\
   --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,PrefixListIds=[{PrefixListId=$PL}]"`,
        e:"<span class='k'>Qué hace:</span> abre el 22 solo a los rangos de IP que usa el servicio EC2 Instance Connect (una <em>prefix list</em> administrada por AWS), no a todo Internet. Entras desde el navegador sin key pair."},
-      {t:"SG de EFS: NFS 2049 solo desde el SG de las EC2",
+      {k:K['l3.sgefs'], t:"SG de EFS: NFS 2049 solo desde el SG de las EC2",
        c:`SG_EFS=$(aws ec2 create-security-group --group-name dcl-dev-sg-efs-s03 \\
   --description "EFS S03: NFS solo desde sg-ec2-s03" --vpc-id $VPC \\
   --tag-specifications "ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-efs-s03},$TAGS]" \\
@@ -603,20 +914,20 @@ aws ec2 authorize-security-group-ingress --group-id $SG_EFS --protocol tcp --por
        e:"Mismo patrón que el ALB→app del Lab 02: se permite por referencia de SG, no por IP. Nada fuera de tus dos EC2 puede montar el filesystem."}
     ]},
     {h:"2 · EFS (créalo temprano: tarda)", steps:[
-      {t:"Crear <code>dcl-dev-efs-shared</code> (Regional, Elastic, cifrado, sin backup)",
+      {k:K['l3.efs'], t:"Crear <code>dcl-dev-efs-shared</code> (Regional, Elastic, cifrado, sin backup)",
        c:`FS=$(aws efs create-file-system --performance-mode generalPurpose --throughput-mode elastic \\
   --encrypted --no-backup \\
   --tags Key=Name,Value=dcl-dev-efs-shared $TAGS_KV \\
   --query FileSystemId --output text); echo $FS
 sleep 20; aws efs describe-file-systems --file-system-id $FS --query 'FileSystems[0].LifeCycleState'`,
        e:"<span class='k'>Regional</span> = los datos se guardan redundantes en varias AZ. <span class='k'>Elastic throughput</span> = pagas por lo que lees/escribes, sin aprovisionar. Sin backups automáticos porque es temporal. Espera <code>available</code>."},
-      {t:"Crear un mount target por subnet",
+      {k:K['l3.mt'], t:"Crear un mount target por subnet",
        c:`aws efs create-mount-target --file-system-id $FS --subnet-id $SUBA --security-groups $SG_EFS
 aws efs create-mount-target --file-system-id $FS --subnet-id $SUBB --security-groups $SG_EFS`,
        e:"<span class='k'>Qué es:</span> una interfaz de red (IP privada) del EFS dentro de cada AZ. Cada cliente monta por el mount target de su propia AZ. Tardan unos minutos: sigue con S3 mientras tanto."}
     ]},
     {h:"3 · S3: el objeto guarda su historia", steps:[
-      {t:"Crear bucket único y activar versioning",
+      {k:K['l3.bucket'], t:"Crear bucket único y activar versioning",
        c:`ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 BUCKET="dcl-s03-team01-$ACCOUNT-$RANDOM"; echo $BUCKET
 aws s3api create-bucket --bucket $BUCKET
@@ -624,7 +935,7 @@ aws s3api put-bucket-versioning --bucket $BUCKET --versioning-configuration Stat
 aws s3api put-bucket-tagging --bucket $BUCKET --tagging "TagSet=[$TAGS]"
 aws s3api get-bucket-versioning --bucket $BUCKET`,
        e:"<span class='k'>Qué hace:</span> los nombres de bucket son únicos en todo el mundo, por eso lleva tu Account ID y un número aleatorio. En us-east-1 no se pasa <code>LocationConstraint</code>. Block Public Access viene activado por defecto. Debe decir <code>\"Status\": \"Enabled\"</code>."},
-      {t:"Subir dos versiones de <code>estado.txt</code>",
+      {k:K['l3.versions'], t:"Subir dos versiones de <code>estado.txt</code>",
        r:"| IsLatest | Size |             VersionId              |\n|  True    |  31  |  zc_.GOw6fdKoRV_Wl36bLUR6OecsxNhf  |\n|  False   |  28  |  VuNh1YK2gkO4Kk2yJoQzvEjAuWBGWpuU  |",
        c:`printf 'pedido=1001 | estado=CREADO\\n' > estado.txt
 aws s3 cp estado.txt "s3://$BUCKET/estado.txt"
@@ -633,7 +944,7 @@ aws s3 cp estado.txt "s3://$BUCKET/estado.txt"
 aws s3api list-object-versions --bucket $BUCKET --prefix estado.txt \\
   --query 'Versions[].{VersionId:VersionId,IsLatest:IsLatest,Size:Size}' --output table`,
        e:"<span class='k'>Qué pasa:</span> la misma key recibe dos escrituras. Con versioning la segunda no sobrescribe: crea un VersionId nuevo y la anterior queda como <em>noncurrent</em>. Solo una tiene <code>IsLatest=True</code>."},
-      {t:"Recuperar la versión anterior",
+      {k:K['l3.recover'], t:"Recuperar la versión anterior",
        r:"Versión anterior recuperada (VuNh1YK2…):\npedido=1001 | estado=CREADO\nVersión actual:\npedido=1001 | estado=PROCESADO",
        c:`OLD=$(aws s3api list-object-versions --bucket $BUCKET --prefix estado.txt \\
   --query 'Versions[?IsLatest==\`false\`]|[0].VersionId' --output text)
@@ -641,7 +952,7 @@ aws s3api get-object --bucket $BUCKET --key estado.txt --version-id $OLD estado-
 cat estado-v1-recuperado.txt
 aws s3 cp s3://$BUCKET/estado.txt - # versión actual`,
        e:"<span class='k'>Evidencia:</span> el recuperado dice <code>CREADO</code> y la actual dice <code>PROCESADO</code>. Eso es lo que «sobrevivió a una sobrescritura aparente»."},
-      {t:"Lifecycle: borrar noncurrent a los 7 días",
+      {k:K['l3.lifecycle'], t:"Lifecycle: borrar noncurrent a los 7 días",
        c:`aws s3api put-bucket-lifecycle-configuration --bucket $BUCKET --lifecycle-configuration '{
   "Rules":[{"ID":"dcl-s03-noncurrent-cleanup","Status":"Enabled","Filter":{"Prefix":""},
     "NoncurrentVersionExpiration":{"NoncurrentDays":7},
@@ -650,11 +961,11 @@ aws s3api get-bucket-lifecycle-configuration --bucket $BUCKET`,
        e:"<span class='k'>Por qué:</span> cada versión ocupa espacio y cuesta. La regla convierte «no quiero guardar historia para siempre» en una política automática. No hay que esperar a que corra: la evidencia es la regla en <code>Enabled</code>."}
     ]},
     {h:"4 · Dos clientes EC2", steps:[
-      {t:"Ver que los mount targets estén <code>available</code> y anotar sus IP",
+      {k:K['l3.mtip'], t:"Ver que los mount targets estén <code>available</code> y anotar sus IP",
        c:`aws efs describe-mount-targets --file-system-id $FS \\
   --query 'MountTargets[].{AZ:AvailabilityZoneName,IP:IpAddress,Estado:LifeCycleState}' --output table`,
        e:"Anota la IP de 1a (para client-a) y la de 1b (para client-b)."},
-      {t:"Lanzar <code>client-a</code> en subnet A y <code>client-b</code> en subnet B",
+      {k:K['l3.ec2'], t:"Lanzar <code>client-a</code> en subnet A y <code>client-b</code> en subnet B",
        c:AMI + `
 for X in a b; do
   if [ $X = a ]; then S=$SUBA; else S=$SUBB; fi
@@ -664,11 +975,11 @@ for X in a b; do
     --query 'Instances[0].InstanceId' --output text
 done`,
        e:"<span class='k'>Qué hace:</span> dos t3.micro, sin key pair, sin rol IAM, sin user data, con IP pública temporal. Cada una en un failure domain distinto. Su root EBS se borra al terminarlas."},
-      {t:"Conectarte a cada una: EC2 › Instances › Connect › EC2 Instance Connect",
+      {k:K['l3.connect'], t:"Conectarte a cada una: EC2 › Instances › Connect › EC2 Instance Connect",
        e:"Espera <code>Running</code> y status checks 2/2. Abre dos pestañas, una por instancia. Amazon Linux 2023 ya trae el agente de Instance Connect."}
     ]},
     {h:"5 · EFS compartido: write A → read B → read A", steps:[
-      {t:"En <b>client-a</b>: montar por la IP del mount target A y escribir",
+      {k:K['l3.wa'], t:"En <b>client-a</b>: montar por la IP del mount target A y escribir",
        r:"writer=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00\n/mnt/dcl is a mountpoint\n$ df -hT /mnt/dcl /\n10.20.1.167:/  nfs4  8.0E     0  8.0E   0% /mnt/dcl    ← el EFS\n/dev/nvme0n1p1 xfs   8.0G  1.7G  6.3G  22% /           ← el disco EBS de la instancia",
        c:`sudo dnf install -y nfs-utils
 sudo mkdir -p /mnt/dcl
@@ -678,7 +989,7 @@ sudo mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retr
 printf 'writer=%s | created=%s\\n' "$(hostname)" "$(date -Iseconds)" | sudo tee /mnt/dcl/estado-compartido.txt
 mountpoint /mnt/dcl`,
        e:"<span class='k'>Qué hace:</span> instala el cliente NFS y monta el EFS en <code>/mnt/dcl</code>. Las opciones son las recomendadas por AWS (bloques de 1 MB, <code>hard</code> para reintentar sin corromper). Lo que escribas ahí va al EFS, no al disco EBS de la instancia. Si <code>mount</code> se cuelga: revisa que sg-efs permita 2049 desde sg-ec2."},
-      {t:"En <b>client-b</b>: montar por la IP del mount target B, leer y agregar",
+      {k:K['l3.rb'], t:"En <b>client-b</b>: montar por la IP del mount target B, leer y agregar",
        r:"writer=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00   ← escrito por A\nreader=ip-10-20-2-219.ec2.internal | observed=2026-09-23T16:21:51+00:00  ← agregado por B",
        c:`sudo dnf install -y nfs-utils
 sudo mkdir -p /mnt/dcl
@@ -688,32 +999,32 @@ sudo mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retr
 sudo cat /mnt/dcl/estado-compartido.txt
 printf 'reader=%s | observed=%s\\n' "$(hostname)" "$(date -Iseconds)" | sudo tee -a /mnt/dcl/estado-compartido.txt`,
        e:"<span class='k'>Evidencia:</span> B, en otra AZ y con otro disco, lee la línea que escribió A. Luego agrega la suya (<code>tee -a</code> = append)."},
-      {t:"De vuelta en <b>client-a</b>: leer otra vez",
+      {k:K['l3.ra'], t:"De vuelta en <b>client-a</b>: leer otra vez",
        r:"$ hostname\nip-10-20-1-67.ec2.internal\nwriter=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00\nreader=ip-10-20-2-219.ec2.internal | observed=2026-09-23T16:21:51+00:00",
        c:`sudo cat /mnt/dcl/estado-compartido.txt`,
        e:"Aparecen las dos líneas: <code>writer=</code> de A y <code>reader=</code> de B. A ve un cambio hecho por B sin copiar nada: es el mismo namespace. Si terminas A, el archivo sigue en EFS."}
     ]},
     {h:"6 · Cleanup (todo lo del Lab 03 es temporal)", cleanup:1, steps:[
-      {t:"Desmontar en ambos clientes y terminarlos",
+      {k:K['l3.c1'], t:"Desmontar en ambos clientes y terminarlos",
        c:`# en cada instancia: sudo umount /mnt/dcl
 IDS=$(aws ec2 describe-instances --filters Name=tag:Name,Values=dcl-dev-s03-client-a,dcl-dev-s03-client-b Name=instance-state-name,Values=running,stopped \\
   --query 'Reservations[].Instances[].InstanceId' --output text)
 aws ec2 terminate-instances --instance-ids $IDS
 aws ec2 wait instance-terminated --instance-ids $IDS && echo "clientes terminados"`,
        e:"Al terminar, sus root EBS se borran solos (Delete on termination)."},
-      {t:"Borrar mount targets y luego el EFS",
+      {k:K['l3.c2'], t:"Borrar mount targets y luego el EFS",
        c:`for M in $(aws efs describe-mount-targets --file-system-id $FS --query 'MountTargets[].MountTargetId' --output text); do
   aws efs delete-mount-target --mount-target-id $M; done
 sleep 90; aws efs describe-mount-targets --file-system-id $FS --query 'length(MountTargets)'  # debe dar 0
 aws efs delete-file-system --file-system-id $FS`,
        e:"Un EFS no se puede borrar mientras tenga mount targets. Si sale error, espera otro minuto."},
-      {t:"Vaciar el bucket (todas las versiones) y borrarlo",
+      {k:K['l3.c3'], t:"Vaciar el bucket (todas las versiones) y borrarlo",
        c:`aws s3api list-object-versions --bucket $BUCKET \\
   --query '{Objects: [Versions, DeleteMarkers][][].{Key: Key, VersionId: VersionId}}' --output json > borrar.json
 aws s3api delete-objects --bucket $BUCKET --delete file://borrar.json
 aws s3api delete-bucket --bucket $BUCKET`,
        e:"<span class='k'>Por qué no basta <code>aws s3 rm</code>:</span> con versioning, borrar solo crea un <em>delete marker</em> y las versiones siguen ahí. Hay que borrar cada VersionId. En consola es el botón <b>Empty</b>."},
-      {t:"Borrar SGs, route table e IGW",
+      {k:K['l3.c4'], t:"Borrar SGs, route table e IGW",
        c:`sleep 30
 aws ec2 delete-security-group --group-id $SG_EFS
 aws ec2 delete-security-group --group-id $SG_EC2
@@ -723,7 +1034,7 @@ aws ec2 delete-route-table --route-table-id $RT
 aws ec2 detach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC
 aws ec2 delete-internet-gateway --internet-gateway-id $IGW`,
        e:"sg-efs primero, porque referencia a sg-ec2. Al final la cuenta queda otra vez en el baseline de S01, lista para el Lab 04."},
-      {t:"Revisión final por tags",
+      {k:K['l3.c5'], t:"Revisión final por tags",
        c:`aws resourcegroupstaggingapi get-resources --tag-filters Key=dcl:project,Values=digital-cafe-luna \\
   --query 'ResourceTagMappingList[].ResourceARN'`,
        e:"Deben quedar solo la VPC y las dos subnets. (Recursos recién borrados pueden aparecer unos minutos más en esta vista.)"}
@@ -742,7 +1053,7 @@ aws ec2 delete-internet-gateway --internet-gateway-id $IGW`,
     {s:"Una base de datos en una sola EC2 necesita baja latencia y acceso por bloques. ¿Qué opción encaja?",
      o:["S3, porque es el más durable.","EFS, porque es compartido.","EBS: disco de bloques adjunto a la instancia, en su misma AZ."],
      a:2, x:"Bloques + un solo consumidor + baja latencia = EBS. El trade-off: es zonal y no se comparte como EFS."}
-  ],
+  ].concat(QX.lab3),
   oral:[
     ["¿Qué evidencia demuestra que el archivo de EFS no pertenece al disco raíz de client-a?","Que client-b, con su propio disco y en otra AZ, lee la línea que escribió A, y que A después ve la línea que escribió B sin copiar nada. Además, mountpoint confirma que /mnt/dcl es un montaje NFS."],
     ["¿Qué estado de S3 sobrevivió a la sobrescritura?","La versión anterior de estado.txt (CREADO). Versioning guardó un VersionId distinto; la recuperé con get-object --version-id mientras la actual dice PROCESADO."],
@@ -936,6 +1247,86 @@ function codeBlock(text) {
   w.append(pre, b); return w;
 }
 
+// ---------- consola: bloques, visor, modo, estado ----------
+const IMG = "img/";
+const imgList = k => !k.img ? [] : Array.isArray(k.img[0]) ? k.img : [k.img];
+const zoom = document.getElementById("zoom");
+function openZoom({title, path, text, src, alt, link}) {
+  document.getElementById("ztitle").textContent = title || "";
+  const zp = document.getElementById("zpath"); zp.textContent = path || ""; zp.hidden = !path;
+  const zt = document.getElementById("ztext"); zt.innerHTML = text || ""; zt.hidden = !text;
+  const zi = document.getElementById("zimg"); zi.hidden = !src; if (src) { zi.src = src; zi.alt = alt || title || ""; }
+  const zl = document.getElementById("zlink"); zl.hidden = !link; if (link) zl.href = link;
+  try { zoom.showModal(); } catch (e) { zoom.setAttribute("open", ""); }
+}
+document.getElementById("zclose").addEventListener("click", () => zoom.close());
+zoom.addEventListener("click", e => { if (e.target === zoom) zoom.close(); });
+
+function shot(file, cap, title) {
+  const f = el("figure", "shot"), b = el("button"), im = el("img");
+  im.src = IMG + file; im.alt = cap || title || ""; im.loading = "lazy";
+  b.type = "button"; b.setAttribute("aria-label", "Ampliar captura: " + (cap || title || ""));
+  b.append(im); b.addEventListener("click", () => openZoom({title: title || cap, text: cap, src: IMG + file}));
+  f.append(b); if (cap) f.append(el("figcaption", null, cap));
+  return f;
+}
+
+function consoleBlock(k) {
+  const d = el("details", "blk con"), inn = el("div", "in");
+  d.append(el("summary", null, "En la consola"), inn);
+  if (k.p) inn.append(el("div", "crumb", k.p));
+  if (k.s) { const ol = el("ol"); k.s.forEach(x => ol.append(el("li", null, x))); inn.append(ol); }
+  if (k.n) inn.append(el("p", "noimg", k.n));
+  imgList(k).forEach(([f, cap]) => inn.append(shot(f, cap, k.p)));
+  if (k.m) { inn.append(el("div", "lk", "Qué mirar")); const ul = el("ul", "look"); k.m.forEach(x => ul.append(el("li", null, x))); inn.append(ul); }
+  if (k.l) { const a = el("a", "golink", "Abrir en la consola ↗"); a.href = k.l; a.target = "_blank"; a.rel = "noopener"; inn.append(a); }
+  return d;
+}
+
+function openHot(key) {
+  const h = HOT[key]; if (!h) return;
+  const k = h.k, im = imgList(k)[0];
+  openZoom({title: h.t, path: k.p, text: im ? im[1] : (k.m || k.n ? (k.m ? k.m[0] : k.n) : "Sin captura: este lab ya no está desplegado."), src: im ? IMG + im[0] : null, link: k.l});
+}
+
+const MODE_KEY = KEY + "-mode";
+function storedMode() { try { return localStorage.getItem(MODE_KEY) === "console" ? "console" : "cli"; } catch (e) { return "cli"; } }
+function setMode(m) {
+  document.documentElement.classList.toggle("mode-console", m === "console");
+  document.querySelectorAll(".mode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === m));
+  document.querySelectorAll("details.cli").forEach(d => d.open = m === "cli");
+  document.querySelectorAll("details.con").forEach(d => d.open = m === "console");
+  try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
+}
+document.querySelectorAll(".mode button").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+function renderState(st, live) {
+  const box = document.getElementById("state"); box.textContent = "";
+  box.append(el("strong", null, "")); box.lastChild.textContent = "Estado de tu cuenta 278835524469 · us-east-1 · " + (st.actualizado || "");
+  const ul = el("ul");
+  (st.items || []).forEach(it => {
+    const li = el("li"), p = el("span", "pill " + (["ok", "warn", "todo"].includes(it.pill) ? it.pill : "todo"));
+    p.textContent = it.tag || ""; li.append(p, document.createTextNode(" " + (it.text || ""))); ul.append(li);
+  });
+  box.append(ul);
+  if (st.corriendo && st.corriendo.length) {
+    const r = el("div", "run"), t = el("strong"); t.textContent = "Corriendo ahora · " + (st.costo || "");
+    const l = el("ul"); st.corriendo.forEach(x => { const li = el("li"); li.textContent = x; l.append(li); });
+    r.append(t, l); box.append(r);
+  }
+  const foot = el("p", "live"); foot.textContent = live ? "Estado en vivo: lo actualiza /mostrarenaws en cada corrida." : "Estado guardado en la página. /mostrarenaws lo actualiza en vivo cuando la base de datos está disponible.";
+  box.append(foot);
+  box.append(el("p", null, "Los bloques verdes <b>«Resultado real»</b> muestran lo que salió al correr los comandos; los bloques <b>«En la consola»</b>, cómo se ve cada recurso."));
+}
+
+async function loadEstado() {
+  try {
+    const db = await window.claude?.use?.("db");
+    if (!db) return;
+    db.doc("estado/cuenta").onSnapshot(snap => { if (snap.exists) renderState(snap.data(), true); }, () => {});
+  } catch (e) {}
+}
+
 // ---------- render ----------
 const tabs = document.getElementById("tabs"), panes = document.getElementById("panes");
 const allBodies = [];
@@ -949,6 +1340,9 @@ LABS.forEach(lab => {
   const fig = el("figure");
   fig.append(document.getElementById(lab.svg).content.cloneNode(true), el("figcaption", null, lab.caption));
   fig.append(el("div", "legend", "<span><i style='background:var(--net)'></i>red</span><span><i style='background:var(--cmp)'></i>cómputo</span><span><i style='background:var(--dat)'></i>datos</span><span><i style='background:var(--sec)'></i>security group</span>"));
+  if (fig.querySelector(".hot")) fig.append(el("p", "fighint", "Toca una caja del diagrama para ver ese recurso en la consola."));
+  fig.addEventListener("click", e => { const h = e.target.closest(".hot"); if (h) openHot(h.dataset.hot); });
+  fig.addEventListener("keydown", e => { const h = e.target.closest(".hot"); if (h && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openHot(h.dataset.hot); } });
   pane.append(fig);
 
   lab.phases.forEach((ph, pi) => {
@@ -962,11 +1356,17 @@ LABS.forEach(lab => {
       const li = el("li", "step");
       const cb = el("input"); cb.type = "checkbox"; cb.id = "cb-" + id; cb.checked = isDone(id, st.d || lab.done);
       cb.setAttribute("aria-label", "Hecho");
-      const t = el("button", "t", st.t + (st.e || st.c ? "<span class='q'>¿qué hace?</span>" : ""));
+      const t = el("button", "t", st.t + (st.e || st.c || st.k ? "<span class='q'>¿qué hace?</span>" : ""));
       t.type = "button";
       const body = el("div", "body"); body.hidden = true;
-      if (st.c) body.append(codeBlock(st.c));
-      if (st.r) { const r = el("div", "res"), p = el("pre"); p.textContent = st.r; r.append(el("span", null, "Resultado real · 23 sep"), p); body.append(r); }
+      if (st.c || st.r) {
+        const cli = el("details", "blk cli"), inn = el("div", "in");
+        cli.append(el("summary", null, "Comando CLI"), inn);
+        if (st.c) inn.append(codeBlock(st.c));
+        if (st.r) { const r = el("div", "res"), p = el("pre"); p.textContent = st.r; r.append(el("span", null, "Resultado real · 23 sep"), p); inn.append(r); }
+        body.append(cli);
+      }
+      if (st.k) body.append(consoleBlock(st.k));
       if (st.e) body.append(el("div", "exp", st.e));
       allBodies.push(body);
       t.addEventListener("click", () => { body.hidden = !body.hidden; t.setAttribute("aria-expanded", !body.hidden); });
@@ -986,7 +1386,8 @@ rep.append(el("div", "why", "<strong>Cómo se califica:</strong> 50% que tu impl
 const quiz = el("div", "quiz");
 LABS.forEach(lab => lab.quiz.forEach((q, qi) => {
   const card = el("div", "qcard");
-  card.append(el("span", "tag", lab.name + " · pregunta " + (qi + 1)), el("p", "sc", q.s));
+  card.append(el("span", "tag", lab.name + " · pregunta " + (qi + 1) + (q.img ? " · consola" : "")), el("p", "sc", q.s));
+  if (q.img) card.append(shot(q.img, q.cap || "", q.s));
   const opts = el("div", "opts"), exp = el("p", "qexp", "<strong>" + "ABC"[q.a] + ".</strong> " + q.x); exp.hidden = true;
   q.o.forEach((o, oi) => {
     const b = el("button", null, "<b>" + "ABC"[oi] + ".</b> " + o); b.type = "button";
@@ -1045,6 +1446,9 @@ function refresh() {
   document.getElementById("fill").style.width = (total ? 100 * done / total : 0) + "%";
 }
 refresh();
+setMode(storedMode());
+renderState(ESTADO);
+loadEstado();
 
 let open = false;
 document.getElementById("toggleAll").addEventListener("click", e => {
