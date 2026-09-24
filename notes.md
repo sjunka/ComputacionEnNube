@@ -26,6 +26,7 @@ Tareas, fechas y entregas van en `board.md`.
 - Objetivo: saber explicar y sustentar a través de la implementación.
 - Pregunta: ¿cuántos Internet Gateway puede tener una VPC? Uno solo (1 IGW por VPC, y un IGW se asocia a una sola VPC).
 - Línea base: no incluye el Internet Gateway; sí están las 2 AZ.
+- Línea base: la VPC, las 2 subnets y que están repartidas en 2 AZ.
 - La instancia tiene un security group: yo le doy acceso y le digo quién (el EC2).
   - Si la regla es por IP y cambia la IP del EC2, pierde acceso. Si la regla es por SG y la instancia está en ese SG, sigue teniendo acceso.
 - Versionamiento no es respaldo.
