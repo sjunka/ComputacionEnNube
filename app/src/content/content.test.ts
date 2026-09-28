@@ -22,9 +22,9 @@ describe.skipIf(!existsSync(GUIA_PATH))('migración desde el artifact', () => {
   })
 
   test('bloques de consola y capturas', () => {
-    expect(pasos(labs).filter(s => s.k).length).toBe(pasos(orig).filter(s => s.k).length)
+    expect(pasos(labs).filter(s => s.k).length).toBeGreaterThanOrEqual(pasos(orig).filter(s => s.k).length)
     const caps = (ps: { k?: OrigK | Consola }[]) => ps.reduce((n, s) => n + nImgs(s.k), 0)
-    expect(caps(pasos(labs))).toBe(caps(pasos(orig)))
+    expect(caps(pasos(labs))).toBeGreaterThanOrEqual(caps(pasos(orig)))
     expect(labs.flatMap(l => l.quiz ?? []).filter(q => q.img).length).toBe(orig.flatMap(l => l.quiz).filter(q => q.img).length)
   })
 
