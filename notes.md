@@ -32,6 +32,9 @@ Tareas, fechas y entregas van en `board.md`.
 - Versionamiento no es respaldo.
 - El puerto 22 es TCP, para SSH.
 - Trabajo final: complejidad diferente. Esperar el envío por el channel (probable que no cambie, porque cambiaría todo el evaluativo). El entregable diseña la arquitectura y la implementación.
+- El storage más caro es el FS (file storage). La diferencia es tiempo y velocidad.
+- Es el que menos se ve en el mercado porque es muy costoso.
+- S3 es diferente: muy usado, muy demandado.
 
 ---
 
