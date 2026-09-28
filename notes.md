@@ -8,6 +8,15 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-09-23 — Clase (S03 — Datos y almacenamiento)
+
+**Notas:**
+- El storage más caro es el FS (file storage). La diferencia es tiempo y velocidad.
+- Es el que menos se ve en el mercado porque es muy costoso.
+- S3 es diferente: muy usado, muy demandado.
+
+---
+
 ## Correo evaluaciones individuales (Ing. Luis Lunar, fecha no indicada)
 
 **Notas:**
