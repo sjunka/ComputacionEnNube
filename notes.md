@@ -175,6 +175,7 @@ Tareas, fechas y entregas van en `board.md`.
   2. CIDR y subnet ordenan ubicación y camino.
   3. Route table decide el siguiente salto.
   4. SG y NACL filtran en lugares distintos.
+- Nuestra área exige ego bajito, estudiar todos los días, estar abierto a aprender, hacer skills y cambiar de roles. Eso hoy en día es normal.
   - DRS es donde duele la plata: los sistemas del negocio.
   - RPO (Recovery Point Objective): cuántos datos puedo perder, medido hacia atrás desde el desastre. Depende de la frecuencia de backup/réplica.
   - RTO (Recovery Time Objective): cuánto tiempo puede estar caído, medido hacia adelante. Depende del modelo de DR.
