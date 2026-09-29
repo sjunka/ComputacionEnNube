@@ -1,0 +1,245 @@
+{
+  "id": "01",
+  "name": "Lab 01",
+  "sub": "Red base",
+  "lead": "Región → VPC → AZ → subnet. Es el esqueleto sobre el que se construye todo lo demás. Ya existe en tu cuenta: solo hay que verificarlo y saber explicarlo.",
+  "why": "<strong>Idea clave:</strong> la VPC es regional; cada subnet vive en una sola AZ. Dos subnets en dos AZ <em>preparan</em> la alta disponibilidad, pero no la dan: hasta que no haya cómputo repartido, balanceo y reemplazo automático, no hay nada que proteger.",
+  "caption": "Arquitectura del Lab 01. Público o privado no depende del nombre de la subnet, sino de su route table (se ve en S04).",
+  "fecha": "23 sep",
+  "hot": {
+    "l1-region": {
+      "t": "Región us-east-1",
+      "k": {
+        "p": "Selector de región (arriba a la derecha) › United States (N. Virginia)",
+        "s": [
+          "Inicia sesión y mira el selector de región, arriba a la derecha.",
+          "Elige <b>N. Virginia · us-east-1</b>.",
+          "Busca «VPC» en la barra de búsqueda y abre el servicio. El selector no debe cambiar."
+        ],
+        "img": [
+          {
+            "src": "lab01/consola-region.png",
+            "cap": "Selector de región con N. Virginia · us-east-1 marcado, 16 sep"
+          }
+        ],
+        "m": [
+          "La región resaltada es la que devuelve <code>describe-availability-zones … RegionName</code>.",
+          "El usuario y la cuenta ({{ACCOUNT_ID}}) salen arriba a la derecha: es lo que responde <code>sts get-caller-identity</code>."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:search=dcl-dev-vpc"
+      }
+    },
+    "l1-vpc": {
+      "t": "VPC dcl-dev-vpc",
+      "k": {
+        "p": "VPC › Your VPCs › dcl-dev-vpc",
+        "s": [
+          "En VPC dashboard abre <b>Your VPCs</b> y busca <code>dcl-dev-vpc</code>.",
+          "Si existe con 10.20.0.0/16, valida State = Available y no crees otra.",
+          "Si no existe: Create VPC › VPC only, Name tag <code>dcl-dev-vpc</code>, IPv4 CIDR manual <code>10.20.0.0/16</code>, las etiquetas del estándar y Create."
+        ],
+        "img": [
+          {
+            "src": "lab01/01-vpcs.png",
+            "cap": "Your VPCs filtrado por dcl-dev, 23 sep"
+          }
+        ],
+        "m": [
+          "Name, VPC ID, State y IPv4 CIDR son las mismas columnas que pide el <code>--query</code> del CLI.",
+          "<b>Main route table</b> es la tabla que usan las subnets mientras nadie les asocie otra."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:search=dcl-dev-vpc"
+      }
+    },
+    "l1-subnets": {
+      "t": "Subnets A y B",
+      "k": {
+        "p": "VPC › Subnets (filtra por dcl-dev-vpc)",
+        "s": [
+          "Abre <b>Subnets</b> y busca <code>dcl-dev-subnet-a</code> y <code>dcl-dev-subnet-b</code>.",
+          "Si faltan: Create subnet › VPC dcl-dev-vpc › subnet-a en us-east-1a con 10.20.1.0/24 y subnet-b en us-east-1b con 10.20.2.0/24, con sus etiquetas."
+        ],
+        "img": [
+          {
+            "src": "lab01/consola-subnets.png",
+            "cap": "Subnets con su Availability Zone y 251 IP libres, 16 sep"
+          },
+          {
+            "src": "lab01/02-subnets.png",
+            "cap": "Las mismas subnets el 23 sep con el Lab 03 corriendo: 249 IP libres"
+          }
+        ],
+        "m": [
+          "<b>Availability Zone</b>: <code>use1-az1 (us-east-1a)</code> y <code>use1-az2 (us-east-1b)</code>. El AZ ID (use1-az1) es la ubicación física; la letra puede cambiar entre cuentas.",
+          "<b>Available IPv4</b> = 251: 256 menos las 5 que reserva AWS. Con el Lab 03 corriendo baja a 249, porque la EC2 y el mount target ocupan una IP cada uno.",
+          "La lista también trae las subnets 172.31.x de la VPC default: filtra por VPC."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#subnets:search=dcl-dev-subnet"
+      }
+    }
+  },
+  "phases": [
+    {
+      "h": "Verificar lo que ya existe",
+      "note": "Estos pasos ya están hechos en tu cuenta. Vuelve a correr la verificación el día del checkpoint.",
+      "steps": [
+        {
+          "t": "Abrir CloudShell en us-east-1 y confirmar identidad",
+          "e": "<span class='k'>Qué hace:</span> <code>sts get-caller-identity</code> dice con qué cuenta e identidad estás hablando (tu Account ID y ARN). El segundo comando confirma la región. <span class='k'>Por qué:</span> los recursos de VPC son regionales; en otra región tu VPC «no existe».",
+          "c": "aws sts get-caller-identity\naws ec2 describe-availability-zones --region us-east-1 --query 'AvailabilityZones[0].RegionName' --output text",
+          "k": {
+            "p": "Selector de región (arriba a la derecha) › United States (N. Virginia)",
+            "s": [
+              "Inicia sesión y mira el selector de región, arriba a la derecha.",
+              "Elige <b>N. Virginia · us-east-1</b>.",
+              "Busca «VPC» en la barra de búsqueda y abre el servicio. El selector no debe cambiar."
+            ],
+            "img": [
+              {
+                "src": "lab01/consola-region.png",
+                "cap": "Selector de región con N. Virginia · us-east-1 marcado, 16 sep"
+              }
+            ],
+            "m": [
+              "La región resaltada es la que devuelve <code>describe-availability-zones … RegionName</code>.",
+              "El usuario y la cuenta ({{ACCOUNT_ID}}) salen arriba a la derecha: es lo que responde <code>sts get-caller-identity</code>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:search=dcl-dev-vpc"
+          },
+          "d": true
+        },
+        {
+          "t": "VPC <code>dcl-dev-vpc</code> con 10.20.0.0/16 en estado available",
+          "e": "<span class='k'>Qué hace:</span> busca VPCs por la etiqueta del proyecto y muestra nombre, ID, CIDR y estado. <span class='k'>Por qué:</span> filtrar por tag es la estrategia de tagging que pidió el profe: encuentras tus recursos sin memorizar IDs. /16 = 65 536 direcciones para repartir en subnets.",
+          "c": "aws ec2 describe-vpcs \\\n  --filters 'Name=tag:dcl:project,Values=digital-cafe-luna' \\\n  --query 'Vpcs[].{Name:Tags[?Key==`Name`]|[0].Value,VpcId:VpcId,CIDR:CidrBlock,State:State}' \\\n  --output table",
+          "k": {
+            "p": "VPC › Your VPCs › dcl-dev-vpc",
+            "s": [
+              "En VPC dashboard abre <b>Your VPCs</b> y busca <code>dcl-dev-vpc</code>.",
+              "Si existe con 10.20.0.0/16, valida State = Available y no crees otra.",
+              "Si no existe: Create VPC › VPC only, Name tag <code>dcl-dev-vpc</code>, IPv4 CIDR manual <code>10.20.0.0/16</code>, las etiquetas del estándar y Create."
+            ],
+            "img": [
+              {
+                "src": "lab01/01-vpcs.png",
+                "cap": "Your VPCs filtrado por dcl-dev, 23 sep"
+              }
+            ],
+            "m": [
+              "Name, VPC ID, State y IPv4 CIDR son las mismas columnas que pide el <code>--query</code> del CLI.",
+              "<b>Main route table</b> es la tabla que usan las subnets mientras nadie les asocie otra."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:search=dcl-dev-vpc"
+          },
+          "d": true
+        },
+        {
+          "t": "Subnets A (10.20.1.0/24, 1a) y B (10.20.2.0/24, 1b)",
+          "e": "<span class='k'>Qué hace:</span> lista las subnets del proyecto con su AZ. <span class='k'>Por qué:</span> cada /24 tiene 256 direcciones, pero AWS reserva 5 (red, router, DNS, futuro y broadcast), así que quedan 251. Los rangos no se superponen y cada una está en una AZ distinta.",
+          "c": "aws ec2 describe-subnets \\\n  --filters 'Name=tag:dcl:project,Values=digital-cafe-luna' \\\n  --query 'Subnets[].{Name:Tags[?Key==`Name`]|[0].Value,SubnetId:SubnetId,CIDR:CidrBlock,AZ:AvailabilityZone,State:State}' \\\n  --output table",
+          "k": {
+            "p": "VPC › Subnets (filtra por dcl-dev-vpc)",
+            "s": [
+              "Abre <b>Subnets</b> y busca <code>dcl-dev-subnet-a</code> y <code>dcl-dev-subnet-b</code>.",
+              "Si faltan: Create subnet › VPC dcl-dev-vpc › subnet-a en us-east-1a con 10.20.1.0/24 y subnet-b en us-east-1b con 10.20.2.0/24, con sus etiquetas."
+            ],
+            "img": [
+              {
+                "src": "lab01/consola-subnets.png",
+                "cap": "Subnets con su Availability Zone y 251 IP libres, 16 sep"
+              },
+              {
+                "src": "lab01/02-subnets.png",
+                "cap": "Las mismas subnets el 23 sep con el Lab 03 corriendo: 249 IP libres"
+              }
+            ],
+            "m": [
+              "<b>Availability Zone</b>: <code>use1-az1 (us-east-1a)</code> y <code>use1-az2 (us-east-1b)</code>. El AZ ID (use1-az1) es la ubicación física; la letra puede cambiar entre cuentas.",
+              "<b>Available IPv4</b> = 251: 256 menos las 5 que reserva AWS. Con el Lab 03 corriendo baja a 249, porque la EC2 y el mount target ocupan una IP cada uno.",
+              "La lista también trae las subnets 172.31.x de la VPC default: filtra por VPC."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#subnets:search=dcl-dev-subnet"
+          },
+          "d": true
+        },
+        {
+          "t": "Evidencias ya guardadas en <code>evidencias/lab-evolutivo-01/</code>",
+          "e": "Capturas de consola (VPC, región, subnets) y salida CLI. Para el checkpoint no se entrega informe: lo que cuenta es que funcione y que lo sepas explicar.",
+          "d": true
+        },
+        {
+          "t": "Explicar en voz alta, en menos de un minuto: qué es regional, qué es zonal",
+          "e": "<span class='k'>Regional:</span> la VPC, el bucket S3, el EFS Regional y el ALB (que se extiende por varias AZ). <span class='k'>Zonal:</span> la subnet, la instancia EC2 y el volumen EBS. Si cae us-east-1a, la subnet A y lo que corre en ella caen; la VPC sigue existiendo.",
+          "k": {
+            "p": "VPC › Your VPCs › dcl-dev-vpc › Resource map",
+            "img": [
+              {
+                "src": "lab03/01-vpc.png",
+                "cap": "Resource map del 23 sep: la route table y el IGW son temporales del Lab 03"
+              }
+            ],
+            "m": [
+              "La VPC (regional) contiene subnets agrupadas por AZ (zonales): úsalo para explicar regional frente a zonal en voz alta.",
+              "Si hay un lab corriendo, aparecen sus route tables e IGW. Con la cuenta en baseline solo quedan la VPC, las dos subnets y la main route table."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:search=dcl-dev-vpc"
+          }
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "s": "Un compañero dice: «como tenemos dos subnets en dos AZ, la app ya es altamente disponible». ¿Qué responde mejor?",
+      "o": [
+        "Correcto: dos AZ garantizan HA porque AWS replica las subnets.",
+        "Falta cómputo en ambas AZ, un balanceador que reparta y algo que reemplace instancias caídas; las subnets solo preparan el terreno.",
+        "Solo sería HA si las subnets fueran públicas."
+      ],
+      "a": 1,
+      "x": "Una subnet es un rango de direcciones en una AZ, no ejecuta nada. La HA aparece en el Lab 02 con ALB + ASG repartidos en las dos AZ."
+    },
+    {
+      "s": "Creas la VPC en us-east-1, pero al día siguiente la consola no la muestra. No hay nada borrado. ¿Qué es lo más probable?",
+      "o": [
+        "La consola está en otra región.",
+        "La VPC expiró por no tener instancias.",
+        "La VPC se movió a otra AZ."
+      ],
+      "a": 0,
+      "x": "La VPC es regional. La consola muestra una región a la vez; si el selector está en us-east-2, tus recursos de us-east-1 no aparecen."
+    },
+    {
+      "s": "Quieres una tercera subnet en la misma VPC. ¿Cuál de estos CIDR sirve?",
+      "o": [
+        "10.20.1.128/25",
+        "10.21.3.0/24",
+        "10.20.3.0/24"
+      ],
+      "a": 2,
+      "x": "Debe caer dentro de 10.20.0.0/16 y no superponerse con 10.20.1.0/24 ni 10.20.2.0/24. 10.20.1.128/25 se superpone con la subnet A; 10.21.3.0/24 está fuera de la VPC."
+    },
+    {
+      "s": "En esta vista del 23 sep cada subnet /24 muestra 249 IP disponibles, no 251. ¿Por qué?",
+      "o": [
+        "AWS reserva 7 direcciones por subnet.",
+        "En cada subnet hay dos interfaces de red usando una IP: la EC2 cliente y el mount target del EFS del Lab 03.",
+        "Un /24 tiene 249 direcciones utilizables."
+      ],
+      "a": 1,
+      "x": "256 − 5 reservadas = 251. Cada ENI toma una IP: con client-a y el mount target A en la subnet A (y lo mismo en B) quedan 249.",
+      "img": "lab01/02-subnets.png"
+    },
+    {
+      "s": "Un compañero abre la consola y no ve dcl-dev-vpc. ¿Qué revisas primero en esta pantalla?",
+      "o": [
+        "El selector de región, arriba a la derecha: debe decir N. Virginia · us-east-1.",
+        "El botón Create VPC.",
+        "La columna Block Public Access."
+      ],
+      "a": 0,
+      "x": "La VPC es regional. Con el selector en otra región, la lista sale vacía aunque la VPC exista.",
+      "img": "lab01/consola-region.png"
+    }
+  ]
+}

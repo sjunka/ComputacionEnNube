@@ -1,6 +1,6 @@
 ---
 name: mostrarenaws
-description: Documento y guía interactiva que ponen cada comando CLI de un lab junto a su captura en la consola AWS (Chrome), con la ruta para hacerlo en consola.
+description: Documento y app de labs que ponen cada comando CLI de un lab junto a su captura en la consola AWS (Chrome), con la ruta para hacerlo en consola.
 disable-model-invocation: true
 ---
 
@@ -36,14 +36,17 @@ Objetivo: que Sergio entienda en la consola lo que se hizo por CLI y pueda defen
 
    Cerrar con un párrafo sobre el cleanup: qué recursos siguen corriendo y con qué costo.
 
-5. **Guía interactiva.** Llevar lo mismo al artifact <https://claude.ai/artifact/9uVzAyNiJb8B2CFF7PdPeP>, cuya fuente es `guia-labs-01-04.html`:
-   - En el objeto `K` del script, una entrada por paso: `p` (ruta de clics), `s` (pasos en consola), `img` (`["labNN/archivo.png", "pie"]` o una lista de esas), `m` (qué mirar), `l` (enlace de `LK`, por nombre y no por ID, para que sobreviva a una recreación). El paso la referencia con `k:K['clave']`.
-   - Zonas clicables del diagrama: `<rect class="hot" data-hot="…">` en la plantilla SVG del lab y su entrada en `HOT`. Preguntas con captura: en `QX.labN`.
-   - Republicar con `url` y `files` que mapeen `img/labNN/<archivo>.png` a `evidencias/lab-evolutivo-NN/consola/<archivo>.png`. Los archivos que no cambian se conservan solos.
-   - Estado vivo: `ArtifactData` `set` en `estado/cuenta` con `actualizado`, `items` (`pill` ok|warn|todo, `tag`, `text`), `corriendo` (lista) y `costo`. La página lo muestra sin republicar.
-   Listo cuando: el lab tiene bloque «En la consola» en cada paso con recurso y el estado dice lo que devolvió el inventario del paso 1.
+5. **App de labs.** Llevar lo mismo a la app en `app/` (tipos en `app/src/content/types.ts`):
+   - En `app/src/content/labNN.json`, en cada paso con recurso, agregar o actualizar su bloque `k`: `p` (ruta de clics), `s` (pasos en consola), `img` (`[{"src": "labNN/archivo.png", "cap": "pie"}]`), `m` (qué mirar), `n` (nota) y `l` (enlace de la tabla de abajo, por nombre y no por ID, para que sobreviva a una recreación).
+   - Nunca valores de cuenta en el JSON: el Account ID, el bucket (lo lleva), las IP públicas y los IDs de recursos van como marcadores (`{{ACCOUNT_ID}}`, `{{BUCKET}}`, `{{IP_CLIENT_A}}`…). Un marcador nuevo se agrega a `app/.env.example` (vacío), a `app/.env.local` (con el valor) y a `ETIQUETAS` en `app/src/lib/placeholders.ts`.
+   - Zonas clicables del diagrama: `<rect className="hot" data-hot="…" tabIndex={0} role="button" aria-label="…"/>` en `app/src/diagramas/LabNN.tsx` y su entrada en `hot` del JSON. Preguntas con captura: en `quiz`, con `img`.
+   - Registrar cada captura nueva en `app/src/content/redact.json`: `"labNN/archivo.png": {"from": "evidencias/lab-evolutivo-NN/consola/archivo.png", "zonas": [[x, y, ancho, alto]]}`, en porcentajes de la imagen. Mirar la imagen con Read y tapar la insignia de cuenta (arriba a la derecha, sin tapar el selector de región), Owner ID, ARNs, el nombre del bucket (también en la barra de URL y el breadcrumb) y las IP públicas (lista de EC2, pie de Instance Connect). Solo se publica lo que está en `redact.json`.
+   - Correr `node app/scripts/sync-img.mjs` y mirar con Read el PNG tapado en `app/public/img/labNN/`.
+   - Estado de la cuenta: reescribir `app/src/content/estado.json` con el inventario del paso 1: `actualizado`, `items` (`pill` ok|warn|todo, `tag`, `text`), `corriendo` (lista) y `costo`.
+   - Verificar: `cd app && npm test && npm run build`. El build corre `check-leaks`, que falla si algo publicable contiene el Account ID, un valor de `.env.local` o una access key.
+   Listo cuando: el lab tiene bloque `k` en cada paso con recurso, toda captura referenciada está en `redact.json` (lo prueba `npm test`), `estado.json` dice lo que devolvió el inventario y el build pasa.
 
-6. Abrir el documento con `open` y darle a Sergio la ruta y el enlace del artifact.
+6. Abrir el documento con `open` y la app con `cd app && npm run dev` (lee `app/.env.local`). Darle a Sergio la ruta del documento. El sitio público (https://sjunka.github.io/ComputacionEnNube/) se actualiza con el push a `main`, que solo se hace cuando Sergio lo pide.
 
 ## Enlaces directos (us-east-1)
 

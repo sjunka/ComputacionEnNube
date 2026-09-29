@@ -194,6 +194,27 @@ Tareas, fechas y entregas van en `board.md`.
 ## 2026-09-23 — Clase (S03 — Datos y almacenamiento)
 
 **Notas:**
+- Configurar un SG con una entrada vacía.
+- Configurar el Auto Scaling.
+- **Preguntas tipo parcial:** las dos anteriores (SG con entrada vacía, configurar Auto Scaling).
+- Profesor habla de cómo va a ser el examen final:
+  - Lo importante es el checkpoint; hay que prepararse para eso.
+- ¿Quién distribuye (el tráfico entre) las instancias? El balanceador.
+  - **ALB**: reparte el tráfico. Recibe peticiones en un solo endpoint y las envía a instancias sanas del Target Group.
+  - **ASG**: lanza, termina y reparte las instancias entre AZ para mantener la desired capacity.
+  - Evidencia de instancias distintas: recargar el endpoint del ALB y ver cambiar instance ID, IP privada o AZ.
+  - En el test: "distribuir tráfico" es el ALB; "reemplazar o lanzar instancias" es el ASG.
+- El test son 5 preguntas de selección. No es tipo certificación: solo verifica que hayan hecho los labs.
+- La actividad hay que hacerla 8–9 veces.
+- Objetivo: saber explicar y sustentar a través de la implementación.
+- Pregunta: ¿cuántos Internet Gateway puede tener una VPC? Uno solo (1 IGW por VPC, y un IGW se asocia a una sola VPC).
+- Línea base: no incluye el Internet Gateway; sí están las 2 AZ.
+- Línea base: la VPC, las 2 subnets y que están repartidas en 2 AZ.
+- La instancia tiene un security group: yo le doy acceso y le digo quién (el EC2).
+  - Si la regla es por IP y cambia la IP del EC2, pierde acceso. Si la regla es por SG y la instancia está en ese SG, sigue teniendo acceso.
+- Versionamiento no es respaldo.
+- El puerto 22 es TCP, para SSH.
+- Trabajo final: complejidad diferente. Esperar el envío por el channel (probable que no cambie, porque cambiaría todo el evaluativo). El entregable diseña la arquitectura y la implementación.
 - El storage más caro es el FS (file storage). La diferencia es tiempo y velocidad.
 - Es el que menos se ve en el mercado porque es muy costoso.
 - S3 es diferente: muy usado, muy demandado.

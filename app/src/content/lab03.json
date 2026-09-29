@@ -1,0 +1,730 @@
+{
+  "id": "03",
+  "name": "Lab 03",
+  "sub": "S3 + EFS",
+  "lead": "Si una instancia puede desaparecer, el estado no puede vivir solo en ella. S3 guarda versiones de un objeto; EFS da un sistema de archivos que dos instancias en AZ distintas ven igual.",
+  "why": "<strong>Idea clave:</strong> object, block y file responden a patrones distintos. <em>S3 (object)</em>: API HTTP, bucket/key, versiones; no es un disco. <em>EBS (block)</em>: disco zonal de una instancia. <em>EFS (file)</em>: NFS compartido por muchos clientes, regional. No son intercambiables.",
+  "caption": "Arquitectura del Lab 03. Se monta EFS por la IP del mount target para no depender del DNS de la VPC.",
+  "fecha": "23 sep",
+  "done": true,
+  "hot": {
+    "l3-vpc": {
+      "t": "VPC con rutas temporales del Lab 03",
+      "k": {
+        "p": "VPC › Route tables › dcl-dev-rt-s03-public › Routes",
+        "s": [
+          "VPC › Internet gateways › Create: <code>dcl-dev-igw-s03</code>. Actions › Attach to VPC › dcl-dev-vpc.",
+          "Route tables › Create: <code>dcl-dev-rt-s03-public</code> en dcl-dev-vpc.",
+          "Routes › Edit routes › Add route: <code>0.0.0.0/0</code> → Internet Gateway › dcl-dev-igw-s03.",
+          "Subnet associations › Edit subnet associations › marca subnet-a y subnet-b."
+        ],
+        "img": [
+          {
+            "src": "lab03/01-vpc.png",
+            "cap": "Resource map: las dos subnets unidas a dcl-dev-rt-s03-public y esta al IGW"
+          },
+          {
+            "src": "lab03/02-route-table.png",
+            "cap": "Routes de dcl-dev-rt-s03-public"
+          }
+        ],
+        "m": [
+          "<code>0.0.0.0/0 → igw-…</code> Active: lo que hizo <code>create-route</code>.",
+          "<code>10.20.0.0/16 → local</code>: AWS la crea en toda route table.",
+          "Explicit subnet associations: 2 subnets (los dos <code>associate-route-table</code>). Main: No."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#RouteTables:search=dcl-dev-rt-s03"
+      }
+    },
+    "l3-ca": {
+      "t": "client-a (us-east-1a)",
+      "k": {
+        "p": "Terminal de Instance Connect en client-a",
+        "img": [
+          {
+            "src": "lab03/09-efs-client-a.png",
+            "cap": "client-a: hostname, df y el archivo compartido"
+          }
+        ],
+        "m": [
+          "<code>10.20.1.30:/  nfs4  8.0E  /mnt/dcl</code>: el EFS montado por el mount target de 1a.",
+          "<code>/dev/nvme0n1p1  xfs  8.0G  /</code>: el disco EBS propio. El archivo no vive ahí."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03-client-a"
+      }
+    },
+    "l3-cb": {
+      "t": "client-b (us-east-1b)",
+      "k": {
+        "p": "Terminal de Instance Connect en client-b",
+        "img": [
+          {
+            "src": "lab03/10-efs-client-b.png",
+            "cap": "client-b: mismo archivo, otro mount target"
+          }
+        ],
+        "m": [
+          "client-b monta por <b>10.20.2.25</b>, el mount target de su AZ, y ve las mismas dos líneas.",
+          "<code>writer=ip-10-20-1-63</code> es client-a y <code>reader=ip-10-20-2-92</code> es client-b."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03-client-b"
+      }
+    },
+    "l3-mt": {
+      "t": "Mount targets del EFS",
+      "k": {
+        "p": "Amazon EFS › dcl-dev-efs-shared › Network",
+        "s": [
+          "En el asistente (o en Network › Manage): VPC dcl-dev-vpc, un mount target en us-east-1a con subnet-a y otro en us-east-1b con subnet-b.",
+          "En ambos quita el SG default y pon <code>dcl-dev-sg-efs-s03</code>."
+        ],
+        "img": [
+          {
+            "src": "lab03/05-efs.png",
+            "cap": "Pestaña Network: un mount target por AZ"
+          }
+        ],
+        "m": [
+          "Dos filas Available: us-east-1a (use1-az1) con <b>10.20.1.30</b> y us-east-1b (use1-az2) con <b>10.20.2.25</b>.",
+          "Cada uno es una ENI con el SG <code>dcl-dev-sg-efs-s03</code>: los dos <code>create-mount-target</code>."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/efs/home?region=us-east-1#/file-systems"
+      }
+    },
+    "l3-efs": {
+      "t": "EFS dcl-dev-efs-shared",
+      "k": {
+        "p": "Amazon EFS › File systems › dcl-dev-efs-shared",
+        "s": [
+          "Amazon EFS › <b>Create file system › Customize</b>.",
+          "Name <code>dcl-dev-efs-shared</code>, tipo <b>Regional</b>, Automatic backups desmarcado, Encryption activado.",
+          "Performance <b>General Purpose</b>, Throughput <b>Elastic</b>."
+        ],
+        "img": [
+          {
+            "src": "lab03/05-efs.png",
+            "cap": "dcl-dev-efs-shared: sección General y pestaña Network"
+          }
+        ],
+        "m": [
+          "Los flags del CLI a la vista: General Purpose (<code>--performance-mode</code>), Elastic (<code>--throughput-mode</code>), Encrypted con <code>aws/elasticfilesystem</code> (<code>--encrypted</code>), Automatic backups Disabled (<code>--no-backup</code>).",
+          "Availability zone: <b>Regional</b>."
+        ],
+        "l": "https://us-east-1.console.aws.amazon.com/efs/home?region=us-east-1#/file-systems"
+      }
+    },
+    "l3-s3": {
+      "t": "Bucket S3 con versiones",
+      "k": {
+        "p": "S3 › Buckets › dcl-s03-team01-… › Objects › Show versions",
+        "s": [
+          "Upload de <code>estado.txt</code> con <code>estado=CREADO</code>.",
+          "Cambia el archivo a <code>estado=PROCESADO</code> y súbelo otra vez con el mismo nombre.",
+          "Activa <b>Show versions</b>."
+        ],
+        "img": [
+          {
+            "src": "lab03/06-s3-versiones.png",
+            "cap": "Objects con Show versions activado"
+          }
+        ],
+        "m": [
+          "Dos filas con la misma key y distinto Version ID: las dos ejecuciones de <code>aws s3 cp</code>.",
+          "La de arriba (31 B, PROCESADO) es la que el CLI marca <code>IsLatest=True</code>. La de abajo, con sangría └, es la noncurrent (28 B, CREADO).",
+          "Con Show versions apagado solo se ve un objeto: esa es la «sobrescritura aparente»."
+        ],
+        "l": "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1"
+      }
+    },
+    "l3-lc": {
+      "t": "Lifecycle rule del bucket",
+      "k": {
+        "p": "S3 › bucket › Management › Lifecycle rules",
+        "s": [
+          "Management › <b>Create lifecycle rule</b>: <code>dcl-s03-noncurrent-cleanup</code>.",
+          "Scope: Apply to all objects in the bucket (confirma la advertencia).",
+          "Actions: <b>Permanently delete noncurrent versions</b> a 7 días y <b>Delete expired object delete markers</b>. Sin transiciones."
+        ],
+        "img": [
+          {
+            "src": "lab03/07-s3-lifecycle.png",
+            "cap": "Management con la regla dcl-s03-noncurrent-cleanup"
+          }
+        ],
+        "m": [
+          "Status <b>Enabled</b> y Scope <b>Entire bucket</b>: el <code>ID</code>, el <code>Status</code> y el <code>Filter</code> del JSON.",
+          "Noncurrent versions y Expired object delete markers: <b>Permanently delete</b>. Los 7 días se ven en View details."
+        ],
+        "l": "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1"
+      }
+    }
+  },
+  "phases": [
+    {
+      "h": "0 · Preflight",
+      "note": "El Lab 03 pide empezar sin restos del Lab 02. Si hiciste el cleanup del Lab 02, estás listo.",
+      "steps": [
+        {
+          "t": "Cargar variables del lab",
+          "e": "Igual que en el Lab 02: busca por nombre. Al principio casi todo sale <code>None</code>.",
+          "c": "export AWS_REGION=us-east-1\nVPC=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=dcl-dev-vpc --query 'Vpcs[0].VpcId' --output text)\nSUBA=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-a --query 'Subnets[0].SubnetId' --output text)\nSUBB=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-b --query 'Subnets[0].SubnetId' --output text)\nTAGS='{Key=dcl:project,Value=digital-cafe-luna},{Key=dcl:environment,Value=dev},{Key=dcl:owner-team,Value=team-01},{Key=dcl:managed-by,Value=cli}'\nTAGS_KV='Key=dcl:project,Value=digital-cafe-luna Key=dcl:environment,Value=dev Key=dcl:owner-team,Value=team-01 Key=dcl:managed-by,Value=cli'\necho \"VPC=$VPC SUBA=$SUBA SUBB=$SUBB\"\nIGW=$(aws ec2 describe-internet-gateways --filters Name=tag:Name,Values=dcl-dev-igw-s03 --query 'InternetGateways[0].InternetGatewayId' --output text)\nRT=$(aws ec2 describe-route-tables --filters Name=tag:Name,Values=dcl-dev-rt-s03-public --query 'RouteTables[0].RouteTableId' --output text)\nSG_EC2=$(aws ec2 describe-security-groups --filters Name=group-name,Values=dcl-dev-sg-ec2-s03 --query 'SecurityGroups[0].GroupId' --output text)\nSG_EFS=$(aws ec2 describe-security-groups --filters Name=group-name,Values=dcl-dev-sg-efs-s03 --query 'SecurityGroups[0].GroupId' --output text)\nFS=$(aws efs describe-file-systems --query \"FileSystems[?Name=='dcl-dev-efs-shared'].FileSystemId | [0]\" --output text)\nBUCKET=$(aws s3api list-buckets --query \"Buckets[?starts_with(Name,'dcl-s03-team01-')].Name | [0]\" --output text)\necho \"IGW=$IGW RT=$RT SG_EC2=$SG_EC2 SG_EFS=$SG_EFS FS=$FS BUCKET=$BUCKET\"",
+          "k": {
+            "p": "Barra superior › ícono >_ (CloudShell)",
+            "s": [
+              "Abre CloudShell desde el ícono <b>>_</b> de la barra superior. Se abre en la región que tenga el selector.",
+              "Pega las variables. En la consola no hay equivalente: los IDs los ves en cada lista."
+            ],
+            "n": "Este paso es de terminal. La consola lo reemplaza buscando cada recurso por su nombre.",
+            "l": "https://us-east-1.console.aws.amazon.com/cloudshell/home?region=us-east-1"
+          }
+        },
+        {
+          "t": "Confirmar que no quedan ALB, ASG ni IGW del Lab 02",
+          "e": "Ambos deben salir vacíos. Una VPC solo admite un IGW: si queda el de S02, no podrás adjuntar el de S03.",
+          "c": "aws elbv2 describe-load-balancers --query 'LoadBalancers[].LoadBalancerName'\naws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC --query 'InternetGateways[].Tags'",
+          "k": {
+            "p": "EC2 › Load Balancers · VPC › Internet gateways",
+            "m": [
+              "Sin ALB y sin IGW adjunto a dcl-dev-vpc. Si queda el de S02, no podrás adjuntar el de S03."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#igws:search=dcl-dev"
+          }
+        }
+      ]
+    },
+    {
+      "h": "1 · Conectividad temporal y SG",
+      "steps": [
+        {
+          "t": "IGW <code>dcl-dev-igw-s03</code> + route table pública en las dos subnets",
+          "e": "<span class='k'>Por qué:</span> las EC2 necesitan Internet para instalar <code>nfs-utils</code> y para que entres con EC2 Instance Connect. No es el tema del lab y se borra al final. Sin NAT Gateway (cuesta por hora).",
+          "c": "IGW=$(aws ec2 create-internet-gateway \\\n  --tag-specifications \"ResourceType=internet-gateway,Tags=[{Key=Name,Value=dcl-dev-igw-s03},$TAGS]\" \\\n  --query InternetGateway.InternetGatewayId --output text)\naws ec2 attach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC\nRT=$(aws ec2 create-route-table --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=route-table,Tags=[{Key=Name,Value=dcl-dev-rt-s03-public},$TAGS]\" \\\n  --query RouteTable.RouteTableId --output text)\naws ec2 create-route --route-table-id $RT --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW\naws ec2 associate-route-table --route-table-id $RT --subnet-id $SUBA\naws ec2 associate-route-table --route-table-id $RT --subnet-id $SUBB",
+          "k": {
+            "p": "VPC › Route tables › dcl-dev-rt-s03-public › Routes",
+            "s": [
+              "VPC › Internet gateways › Create: <code>dcl-dev-igw-s03</code>. Actions › Attach to VPC › dcl-dev-vpc.",
+              "Route tables › Create: <code>dcl-dev-rt-s03-public</code> en dcl-dev-vpc.",
+              "Routes › Edit routes › Add route: <code>0.0.0.0/0</code> → Internet Gateway › dcl-dev-igw-s03.",
+              "Subnet associations › Edit subnet associations › marca subnet-a y subnet-b."
+            ],
+            "img": [
+              {
+                "src": "lab03/01-vpc.png",
+                "cap": "Resource map: las dos subnets unidas a dcl-dev-rt-s03-public y esta al IGW"
+              },
+              {
+                "src": "lab03/02-route-table.png",
+                "cap": "Routes de dcl-dev-rt-s03-public"
+              }
+            ],
+            "m": [
+              "<code>0.0.0.0/0 → igw-…</code> Active: lo que hizo <code>create-route</code>.",
+              "<code>10.20.0.0/16 → local</code>: AWS la crea en toda route table.",
+              "Explicit subnet associations: 2 subnets (los dos <code>associate-route-table</code>). Main: No."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#RouteTables:search=dcl-dev-rt-s03"
+          }
+        },
+        {
+          "t": "SG de las EC2: SSH solo desde EC2 Instance Connect",
+          "e": "<span class='k'>Qué hace:</span> abre el 22 solo a los rangos de IP que usa el servicio EC2 Instance Connect (una <em>prefix list</em> administrada por AWS), no a todo Internet. Entras desde el navegador sin key pair.",
+          "c": "SG_EC2=$(aws ec2 create-security-group --group-name dcl-dev-sg-ec2-s03 \\\n  --description \"EC2 S03: SSH solo desde EC2 Instance Connect\" --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-ec2-s03},$TAGS]\" \\\n  --query GroupId --output text)\nPL=$(aws ec2 describe-managed-prefix-lists --filters Name=prefix-list-name,Values=com.amazonaws.us-east-1.ec2-instance-connect \\\n  --query 'PrefixLists[0].PrefixListId' --output text)\naws ec2 authorize-security-group-ingress --group-id $SG_EC2 \\\n  --ip-permissions \"IpProtocol=tcp,FromPort=22,ToPort=22,PrefixListIds=[{PrefixListId=$PL}]\"",
+          "k": {
+            "p": "EC2 › Security Groups › dcl-dev-sg-ec2-s03 › Inbound rules",
+            "s": [
+              "Create security group: <code>dcl-dev-sg-ec2-s03</code>, VPC dcl-dev-vpc.",
+              "Inbound › Add rule: Type <b>SSH</b>. En Source escribe <code>ec2-instance-connect</code> y elige la prefix list <code>com.amazonaws.us-east-1.ec2-instance-connect</code>.",
+              "Outbound por defecto."
+            ],
+            "img": [
+              {
+                "src": "lab03/03-sg-ec2.png",
+                "cap": "Inbound rules de dcl-dev-sg-ec2-s03"
+              }
+            ],
+            "m": [
+              "Una sola regla: SSH · TCP · 22.",
+              "<b>Source = pl-0e4bcff02b13bef1e</b>: el <code>$PL</code> del comando. SSH no queda abierto a 0.0.0.0/0."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:search=dcl-dev-sg-ec2-s03"
+          }
+        },
+        {
+          "t": "SG de EFS: NFS 2049 solo desde el SG de las EC2",
+          "e": "Mismo patrón que el ALB→app del Lab 02: se permite por referencia de SG, no por IP. Nada fuera de tus dos EC2 puede montar el filesystem.",
+          "c": "SG_EFS=$(aws ec2 create-security-group --group-name dcl-dev-sg-efs-s03 \\\n  --description \"EFS S03: NFS solo desde sg-ec2-s03\" --vpc-id $VPC \\\n  --tag-specifications \"ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-efs-s03},$TAGS]\" \\\n  --query GroupId --output text)\naws ec2 authorize-security-group-ingress --group-id $SG_EFS --protocol tcp --port 2049 --source-group $SG_EC2",
+          "k": {
+            "p": "EC2 › Security Groups › dcl-dev-sg-efs-s03 › Inbound rules",
+            "s": [
+              "Create security group: <code>dcl-dev-sg-efs-s03</code>, VPC dcl-dev-vpc.",
+              "Inbound › Add rule: Type <b>NFS</b>, Source Custom › <code>dcl-dev-sg-ec2-s03</code>."
+            ],
+            "img": [
+              {
+                "src": "lab03/04-sg-efs.png",
+                "cap": "Inbound rules de dcl-dev-sg-efs-s03"
+              }
+            ],
+            "m": [
+              "NFS · TCP · 2049.",
+              "<b>Source = {{SG_EC2_S03}}</b>: el <code>--source-group $SG_EC2</code>. Solo las instancias con ese SG pueden montar."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:search=dcl-dev-sg-efs-s03"
+          }
+        }
+      ]
+    },
+    {
+      "h": "2 · EFS (créalo temprano: tarda)",
+      "steps": [
+        {
+          "t": "Crear <code>dcl-dev-efs-shared</code> (Regional, Elastic, cifrado, sin backup)",
+          "e": "<span class='k'>Regional</span> = los datos se guardan redundantes en varias AZ. <span class='k'>Elastic throughput</span> = pagas por lo que lees/escribes, sin aprovisionar. Sin backups automáticos porque es temporal. Espera <code>available</code>.",
+          "c": "FS=$(aws efs create-file-system --performance-mode generalPurpose --throughput-mode elastic \\\n  --encrypted --no-backup \\\n  --tags Key=Name,Value=dcl-dev-efs-shared $TAGS_KV \\\n  --query FileSystemId --output text); echo $FS\nsleep 20; aws efs describe-file-systems --file-system-id $FS --query 'FileSystems[0].LifeCycleState'",
+          "k": {
+            "p": "Amazon EFS › File systems › dcl-dev-efs-shared",
+            "s": [
+              "Amazon EFS › <b>Create file system › Customize</b>.",
+              "Name <code>dcl-dev-efs-shared</code>, tipo <b>Regional</b>, Automatic backups desmarcado, Encryption activado.",
+              "Performance <b>General Purpose</b>, Throughput <b>Elastic</b>."
+            ],
+            "img": [
+              {
+                "src": "lab03/05-efs.png",
+                "cap": "dcl-dev-efs-shared: sección General y pestaña Network"
+              }
+            ],
+            "m": [
+              "Los flags del CLI a la vista: General Purpose (<code>--performance-mode</code>), Elastic (<code>--throughput-mode</code>), Encrypted con <code>aws/elasticfilesystem</code> (<code>--encrypted</code>), Automatic backups Disabled (<code>--no-backup</code>).",
+              "Availability zone: <b>Regional</b>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/efs/home?region=us-east-1#/file-systems"
+          }
+        },
+        {
+          "t": "Crear un mount target por subnet",
+          "e": "<span class='k'>Qué es:</span> una interfaz de red (IP privada) del EFS dentro de cada AZ. Cada cliente monta por el mount target de su propia AZ. Tardan unos minutos: sigue con S3 mientras tanto.",
+          "c": "aws efs create-mount-target --file-system-id $FS --subnet-id $SUBA --security-groups $SG_EFS\naws efs create-mount-target --file-system-id $FS --subnet-id $SUBB --security-groups $SG_EFS",
+          "k": {
+            "p": "Amazon EFS › dcl-dev-efs-shared › Network",
+            "s": [
+              "En el asistente (o en Network › Manage): VPC dcl-dev-vpc, un mount target en us-east-1a con subnet-a y otro en us-east-1b con subnet-b.",
+              "En ambos quita el SG default y pon <code>dcl-dev-sg-efs-s03</code>."
+            ],
+            "img": [
+              {
+                "src": "lab03/05-efs.png",
+                "cap": "Pestaña Network: un mount target por AZ"
+              }
+            ],
+            "m": [
+              "Dos filas Available: us-east-1a (use1-az1) con <b>10.20.1.30</b> y us-east-1b (use1-az2) con <b>10.20.2.25</b>.",
+              "Cada uno es una ENI con el SG <code>dcl-dev-sg-efs-s03</code>: los dos <code>create-mount-target</code>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/efs/home?region=us-east-1#/file-systems"
+          }
+        }
+      ]
+    },
+    {
+      "h": "3 · S3: el objeto guarda su historia",
+      "steps": [
+        {
+          "t": "Crear bucket único y activar versioning",
+          "e": "<span class='k'>Qué hace:</span> los nombres de bucket son únicos en todo el mundo, por eso lleva tu Account ID y un número aleatorio. En us-east-1 no se pasa <code>LocationConstraint</code>. Block Public Access viene activado por defecto. Debe decir <code>\"Status\": \"Enabled\"</code>.",
+          "c": "ACCOUNT=$(aws sts get-caller-identity --query Account --output text)\nBUCKET=\"dcl-s03-team01-$ACCOUNT-$RANDOM\"; echo $BUCKET\naws s3api create-bucket --bucket $BUCKET\naws s3api put-bucket-versioning --bucket $BUCKET --versioning-configuration Status=Enabled\naws s3api put-bucket-tagging --bucket $BUCKET --tagging \"TagSet=[$TAGS]\"\naws s3api get-bucket-versioning --bucket $BUCKET",
+          "k": {
+            "p": "Amazon S3 › Create bucket",
+            "s": [
+              "Nombre único (<code>dcl-s03-team01-&lt;account&gt;-&lt;sufijo&gt;</code>), región us-east-1.",
+              "Deja <b>Block all public access</b> marcado.",
+              "Bucket Versioning: <b>Enable</b>. Create bucket."
+            ],
+            "m": [
+              "Properties › Bucket Versioning: <b>Enabled</b>. La vista de versiones está en el paso siguiente."
+            ],
+            "l": "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1"
+          }
+        },
+        {
+          "t": "Subir dos versiones de <code>estado.txt</code>",
+          "e": "<span class='k'>Qué pasa:</span> la misma key recibe dos escrituras. Con versioning la segunda no sobrescribe: crea un VersionId nuevo y la anterior queda como <em>noncurrent</em>. Solo una tiene <code>IsLatest=True</code>.",
+          "c": "printf 'pedido=1001 | estado=CREADO\\n' > estado.txt\naws s3 cp estado.txt \"s3://$BUCKET/estado.txt\"\nprintf 'pedido=1001 | estado=PROCESADO\\n' > estado.txt\naws s3 cp estado.txt \"s3://$BUCKET/estado.txt\"\naws s3api list-object-versions --bucket $BUCKET --prefix estado.txt \\\n  --query 'Versions[].{VersionId:VersionId,IsLatest:IsLatest,Size:Size}' --output table",
+          "r": "| IsLatest | Size |             VersionId              |\n|  True    |  31  |  zc_.GOw6fdKoRV_Wl36bLUR6OecsxNhf  |\n|  False   |  28  |  VuNh1YK2gkO4Kk2yJoQzvEjAuWBGWpuU  |",
+          "k": {
+            "p": "S3 › Buckets › dcl-s03-team01-… › Objects › Show versions",
+            "s": [
+              "Upload de <code>estado.txt</code> con <code>estado=CREADO</code>.",
+              "Cambia el archivo a <code>estado=PROCESADO</code> y súbelo otra vez con el mismo nombre.",
+              "Activa <b>Show versions</b>."
+            ],
+            "img": [
+              {
+                "src": "lab03/06-s3-versiones.png",
+                "cap": "Objects con Show versions activado"
+              }
+            ],
+            "m": [
+              "Dos filas con la misma key y distinto Version ID: las dos ejecuciones de <code>aws s3 cp</code>.",
+              "La de arriba (31 B, PROCESADO) es la que el CLI marca <code>IsLatest=True</code>. La de abajo, con sangría └, es la noncurrent (28 B, CREADO).",
+              "Con Show versions apagado solo se ve un objeto: esa es la «sobrescritura aparente»."
+            ],
+            "l": "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1"
+          }
+        },
+        {
+          "t": "Recuperar la versión anterior",
+          "e": "<span class='k'>Evidencia:</span> el recuperado dice <code>CREADO</code> y la actual dice <code>PROCESADO</code>. Eso es lo que «sobrevivió a una sobrescritura aparente».",
+          "c": "OLD=$(aws s3api list-object-versions --bucket $BUCKET --prefix estado.txt \\\n  --query 'Versions[?IsLatest==`false`]|[0].VersionId' --output text)\naws s3api get-object --bucket $BUCKET --key estado.txt --version-id $OLD estado-v1-recuperado.txt\ncat estado-v1-recuperado.txt\naws s3 cp s3://$BUCKET/estado.txt - # versión actual",
+          "r": "Versión anterior recuperada (VuNh1YK2…):\npedido=1001 | estado=CREADO\nVersión actual:\npedido=1001 | estado=PROCESADO",
+          "k": {
+            "p": "S3 › bucket › Objects › Show versions › (fila de abajo) › Download",
+            "s": [
+              "Con Show versions activado, marca la fila de abajo (la versión anterior) y pulsa <b>Download</b>."
+            ],
+            "img": [
+              {
+                "src": "lab03/06-s3-versiones.png",
+                "cap": "La fila con sangría es la versión anterior"
+              }
+            ],
+            "m": [
+              "Descargar esa fila equivale a <code>get-object --version-id</code>: el archivo dice CREADO."
+            ],
+            "l": "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1"
+          }
+        },
+        {
+          "t": "Lifecycle: borrar noncurrent a los 7 días",
+          "e": "<span class='k'>Por qué:</span> cada versión ocupa espacio y cuesta. La regla convierte «no quiero guardar historia para siempre» en una política automática. No hay que esperar a que corra: la evidencia es la regla en <code>Enabled</code>.",
+          "c": "aws s3api put-bucket-lifecycle-configuration --bucket $BUCKET --lifecycle-configuration '{\n  \"Rules\":[{\"ID\":\"dcl-s03-noncurrent-cleanup\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"\"},\n    \"NoncurrentVersionExpiration\":{\"NoncurrentDays\":7},\n    \"Expiration\":{\"ExpiredObjectDeleteMarker\":true}}]}'\naws s3api get-bucket-lifecycle-configuration --bucket $BUCKET",
+          "k": {
+            "p": "S3 › bucket › Management › Lifecycle rules",
+            "s": [
+              "Management › <b>Create lifecycle rule</b>: <code>dcl-s03-noncurrent-cleanup</code>.",
+              "Scope: Apply to all objects in the bucket (confirma la advertencia).",
+              "Actions: <b>Permanently delete noncurrent versions</b> a 7 días y <b>Delete expired object delete markers</b>. Sin transiciones."
+            ],
+            "img": [
+              {
+                "src": "lab03/07-s3-lifecycle.png",
+                "cap": "Management con la regla dcl-s03-noncurrent-cleanup"
+              }
+            ],
+            "m": [
+              "Status <b>Enabled</b> y Scope <b>Entire bucket</b>: el <code>ID</code>, el <code>Status</code> y el <code>Filter</code> del JSON.",
+              "Noncurrent versions y Expired object delete markers: <b>Permanently delete</b>. Los 7 días se ven en View details."
+            ],
+            "l": "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1"
+          }
+        }
+      ]
+    },
+    {
+      "h": "4 · Dos clientes EC2",
+      "steps": [
+        {
+          "t": "Ver que los mount targets estén <code>available</code> y anotar sus IP",
+          "e": "Anota la IP de 1a (para client-a) y la de 1b (para client-b).",
+          "c": "aws efs describe-mount-targets --file-system-id $FS \\\n  --query 'MountTargets[].{AZ:AvailabilityZoneName,IP:IpAddress,Estado:LifeCycleState}' --output table",
+          "k": {
+            "p": "Amazon EFS › dcl-dev-efs-shared › Network",
+            "img": [
+              {
+                "src": "lab03/05-efs.png",
+                "cap": "Las IP de los mount targets en la pestaña Network"
+              }
+            ],
+            "m": [
+              "Anota <b>10.20.1.30</b> para client-a y <b>10.20.2.25</b> para client-b."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/efs/home?region=us-east-1#/file-systems"
+          }
+        },
+        {
+          "t": "Lanzar <code>client-a</code> en subnet A y <code>client-b</code> en subnet B",
+          "e": "<span class='k'>Qué hace:</span> dos t3.micro, sin key pair, sin rol IAM, sin user data, con IP pública temporal. Cada una en un failure domain distinto. Su root EBS se borra al terminarlas.",
+          "c": "AMI=$(aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 --query Parameter.Value --output text); echo $AMI\nfor X in a b; do\n  if [ $X = a ]; then S=$SUBA; else S=$SUBB; fi\n  aws ec2 run-instances --image-id $AMI --instance-type t3.micro --subnet-id $S \\\n    --security-group-ids $SG_EC2 --associate-public-ip-address \\\n    --tag-specifications \"ResourceType=instance,Tags=[{Key=Name,Value=dcl-dev-s03-client-$X},$TAGS]\" \\\n    --query 'Instances[0].InstanceId' --output text\ndone",
+          "k": {
+            "p": "EC2 › Instances (filtro dcl-dev-s03)",
+            "s": [
+              "Launch instances: <code>dcl-dev-s03-client-a</code>, Amazon Linux 2023, t3.micro, <b>Proceed without a key pair</b>.",
+              "Network settings › Edit: dcl-dev-vpc, subnet-a, Auto-assign public IP Enable, SG existente <code>dcl-dev-sg-ec2-s03</code>.",
+              "Sin rol IAM ni user data. Repite con <code>client-b</code> en subnet-b."
+            ],
+            "img": [
+              {
+                "src": "lab03/08-ec2.png",
+                "cap": "client-a y client-b en Running"
+              }
+            ],
+            "m": [
+              "Dos t3.micro <b>Running</b> con 3/3 checks.",
+              "Availability Zone us-east-1a y us-east-1b: una por subnet.",
+              "Public IPv4 asignada: la necesita Instance Connect."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03"
+          }
+        },
+        {
+          "t": "Conectarte a cada una: EC2 › Instances › Connect › EC2 Instance Connect",
+          "e": "Espera <code>Running</code> y status checks 2/2. Abre dos pestañas, una por instancia. Amazon Linux 2023 ya trae el agente de Instance Connect.",
+          "k": {
+            "p": "EC2 › Instances › client-a › Connect › EC2 Instance Connect › Connect",
+            "s": [
+              "Selecciona la instancia › <b>Connect</b> › pestaña EC2 Instance Connect › <b>Connect using a Public IP</b>, usuario ec2-user.",
+              "Repite en otra pestaña con client-b."
+            ],
+            "img": [
+              {
+                "src": "lab03/09-efs-client-a.png",
+                "cap": "Terminal de Instance Connect abierta en client-a"
+              }
+            ],
+            "m": [
+              "La terminal se abre en el navegador sin key pair: la entrada la permite el SG con la prefix list de Instance Connect."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03"
+          }
+        }
+      ]
+    },
+    {
+      "h": "5 · EFS compartido: write A → read B → read A",
+      "steps": [
+        {
+          "t": "En <b>client-a</b>: montar por la IP del mount target A y escribir",
+          "e": "<span class='k'>Qué hace:</span> instala el cliente NFS y monta el EFS en <code>/mnt/dcl</code>. Las opciones son las recomendadas por AWS (bloques de 1 MB, <code>hard</code> para reintentar sin corromper). Lo que escribas ahí va al EFS, no al disco EBS de la instancia. Si <code>mount</code> se cuelga: revisa que sg-efs permita 2049 desde sg-ec2.",
+          "c": "sudo dnf install -y nfs-utils\nsudo mkdir -p /mnt/dcl\nexport MT_A_IP=\"<IP-mount-target-A>\"\nsudo mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport \\\n  \"$MT_A_IP:/\" /mnt/dcl\nprintf 'writer=%s | created=%s\\n' \"$(hostname)\" \"$(date -Iseconds)\" | sudo tee /mnt/dcl/estado-compartido.txt\nmountpoint /mnt/dcl",
+          "r": "writer=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00\n/mnt/dcl is a mountpoint\n$ df -hT /mnt/dcl /\n10.20.1.167:/  nfs4  8.0E     0  8.0E   0% /mnt/dcl    ← el EFS\n/dev/nvme0n1p1 xfs   8.0G  1.7G  6.3G  22% /           ← el disco EBS de la instancia",
+          "k": {
+            "p": "Terminal de Instance Connect en client-a",
+            "img": [
+              {
+                "src": "lab03/09-efs-client-a.png",
+                "cap": "client-a: hostname, df y el archivo compartido"
+              }
+            ],
+            "m": [
+              "<code>10.20.1.30:/  nfs4  8.0E  /mnt/dcl</code>: el EFS montado por el mount target de 1a.",
+              "<code>/dev/nvme0n1p1  xfs  8.0G  /</code>: el disco EBS propio. El archivo no vive ahí."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03-client-a"
+          }
+        },
+        {
+          "t": "En <b>client-b</b>: montar por la IP del mount target B, leer y agregar",
+          "e": "<span class='k'>Evidencia:</span> B, en otra AZ y con otro disco, lee la línea que escribió A. Luego agrega la suya (<code>tee -a</code> = append).",
+          "c": "sudo dnf install -y nfs-utils\nsudo mkdir -p /mnt/dcl\nexport MT_B_IP=\"<IP-mount-target-B>\"\nsudo mount -t nfs -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport \\\n  \"$MT_B_IP:/\" /mnt/dcl\nsudo cat /mnt/dcl/estado-compartido.txt\nprintf 'reader=%s | observed=%s\\n' \"$(hostname)\" \"$(date -Iseconds)\" | sudo tee -a /mnt/dcl/estado-compartido.txt",
+          "r": "writer=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00   ← escrito por A\nreader=ip-10-20-2-219.ec2.internal | observed=2026-09-23T16:21:51+00:00  ← agregado por B",
+          "k": {
+            "p": "Terminal de Instance Connect en client-b",
+            "img": [
+              {
+                "src": "lab03/10-efs-client-b.png",
+                "cap": "client-b: mismo archivo, otro mount target"
+              }
+            ],
+            "m": [
+              "client-b monta por <b>10.20.2.25</b>, el mount target de su AZ, y ve las mismas dos líneas.",
+              "<code>writer=ip-10-20-1-63</code> es client-a y <code>reader=ip-10-20-2-92</code> es client-b."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03-client-b"
+          }
+        },
+        {
+          "t": "De vuelta en <b>client-a</b>: leer otra vez",
+          "e": "Aparecen las dos líneas: <code>writer=</code> de A y <code>reader=</code> de B. A ve un cambio hecho por B sin copiar nada: es el mismo namespace. Si terminas A, el archivo sigue en EFS.",
+          "c": "sudo cat /mnt/dcl/estado-compartido.txt",
+          "r": "$ hostname\nip-10-20-1-67.ec2.internal\nwriter=ip-10-20-1-67.ec2.internal | created=2026-09-23T16:21:28+00:00\nreader=ip-10-20-2-219.ec2.internal | observed=2026-09-23T16:21:51+00:00",
+          "k": {
+            "p": "Terminal de Instance Connect en client-a",
+            "img": [
+              {
+                "src": "lab03/09-efs-client-a.png",
+                "cap": "client-a lee la línea que agregó client-b"
+              }
+            ],
+            "m": [
+              "Desde A aparece la línea <code>reader=</code> que escribió B, sin copiar nada. Es el mismo namespace."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03-client-a"
+          }
+        }
+      ]
+    },
+    {
+      "h": "6 · Cleanup (todo lo del Lab 03 es temporal)",
+      "cleanup": true,
+      "steps": [
+        {
+          "t": "Desmontar en ambos clientes y terminarlos",
+          "e": "Al terminar, sus root EBS se borran solos (Delete on termination).",
+          "c": "# en cada instancia: sudo umount /mnt/dcl\nIDS=$(aws ec2 describe-instances --filters Name=tag:Name,Values=dcl-dev-s03-client-a,dcl-dev-s03-client-b Name=instance-state-name,Values=running,stopped \\\n  --query 'Reservations[].Instances[].InstanceId' --output text)\naws ec2 terminate-instances --instance-ids $IDS\naws ec2 wait instance-terminated --instance-ids $IDS && echo \"clientes terminados\"",
+          "k": {
+            "p": "EC2 › Instances › (las dos) › Instance state › Terminate instance",
+            "s": [
+              "En cada terminal: <code>sudo umount /mnt/dcl</code>.",
+              "Selecciona client-a y client-b › Instance state › <b>Terminate (delete) instance</b>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=dcl-dev-s03"
+          }
+        },
+        {
+          "t": "Borrar mount targets y luego el EFS",
+          "e": "Un EFS no se puede borrar mientras tenga mount targets. Si sale error, espera otro minuto.",
+          "c": "for M in $(aws efs describe-mount-targets --file-system-id $FS --query 'MountTargets[].MountTargetId' --output text); do\n  aws efs delete-mount-target --mount-target-id $M; done\nsleep 90; aws efs describe-mount-targets --file-system-id $FS --query 'length(MountTargets)'  # debe dar 0\naws efs delete-file-system --file-system-id $FS",
+          "k": {
+            "p": "Amazon EFS › dcl-dev-efs-shared › Delete",
+            "s": [
+              "<b>Delete</b> y escribe el ID del file system para confirmar. Desde la consola se borran también los mount targets."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/efs/home?region=us-east-1#/file-systems"
+          }
+        },
+        {
+          "t": "Vaciar el bucket (todas las versiones) y borrarlo",
+          "e": "<span class='k'>Por qué no basta <code>aws s3 rm</code>:</span> con versioning, borrar solo crea un <em>delete marker</em> y las versiones siguen ahí. Hay que borrar cada VersionId. En consola es el botón <b>Empty</b>.",
+          "c": "aws s3api list-object-versions --bucket $BUCKET \\\n  --query '{Objects: [Versions, DeleteMarkers][][].{Key: Key, VersionId: VersionId}}' --output json > borrar.json\naws s3api delete-objects --bucket $BUCKET --delete file://borrar.json\naws s3api delete-bucket --bucket $BUCKET",
+          "k": {
+            "p": "S3 › bucket › Empty · luego Delete",
+            "s": [
+              "Selecciona el bucket › <b>Empty</b> › escribe <code>permanently delete</code>. Borra todas las versiones.",
+              "Luego <b>Delete</b> y escribe el nombre del bucket."
+            ],
+            "l": "https://s3.console.aws.amazon.com/s3/buckets?region=us-east-1"
+          }
+        },
+        {
+          "t": "Borrar SGs, route table e IGW",
+          "e": "sg-efs primero, porque referencia a sg-ec2. Al final la cuenta queda otra vez en el baseline de S01, lista para el Lab 04.",
+          "c": "sleep 30\naws ec2 delete-security-group --group-id $SG_EFS\naws ec2 delete-security-group --group-id $SG_EC2\nfor A in $(aws ec2 describe-route-tables --route-table-ids $RT --query 'RouteTables[0].Associations[].RouteTableAssociationId' --output text); do\n  aws ec2 disassociate-route-table --association-id $A; done\naws ec2 delete-route-table --route-table-id $RT\naws ec2 detach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC\naws ec2 delete-internet-gateway --internet-gateway-id $IGW",
+          "k": {
+            "p": "EC2 › Security Groups · VPC › Route tables · Internet gateways",
+            "s": [
+              "Borra <code>dcl-dev-sg-efs-s03</code> y después <code>dcl-dev-sg-ec2-s03</code>.",
+              "Route table › Subnet associations › Edit › desmarca las dos subnets › Delete route table.",
+              "Internet gateway › Detach from VPC › Delete."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#SecurityGroups:search=s03"
+          }
+        },
+        {
+          "t": "Revisión final por tags",
+          "e": "Deben quedar solo la VPC y las dos subnets. (Recursos recién borrados pueden aparecer unos minutos más en esta vista.)",
+          "c": "aws resourcegroupstaggingapi get-resources --tag-filters Key=dcl:project,Values=digital-cafe-luna \\\n  --query 'ResourceTagMappingList[].ResourceARN'",
+          "k": {
+            "p": "Resource Groups & Tag Editor › Tag Editor",
+            "s": [
+              "Regions us-east-1, Resource types All supported, Tag <code>dcl:project = digital-cafe-luna</code> › Search resources."
+            ],
+            "m": [
+              "Solo la VPC y las dos subnets."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/resource-groups/tag-editor/find-resources?region=us-east-1"
+          }
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "s": "Subes dos veces estado.txt a un bucket con versioning. Luego haces «delete» del objeto en la consola sin «Show versions». ¿Qué queda?",
+      "o": [
+        "Nada: el objeto y sus versiones se borran.",
+        "Un delete marker como versión actual; las dos versiones siguen y se pueden recuperar.",
+        "Solo la versión más antigua."
+      ],
+      "a": 1,
+      "x": "Con versioning, un delete simple no borra datos: agrega un delete marker. Por eso el cleanup debe borrar cada VersionId (o usar Empty)."
+    },
+    {
+      "s": "client-a escribe en /mnt/dcl y client-b, en otra AZ, lee el mismo archivo. ¿Qué lo explica mejor?",
+      "o": [
+        "El archivo se replicó entre los EBS de A y B.",
+        "Ambos montan el mismo filesystem EFS por NFS; el archivo no vive en ningún disco de instancia.",
+        "S3 sincronizó el archivo."
+      ],
+      "a": 1,
+      "x": "EFS es un filesystem regional compartido. Cada cliente llega por el mount target de su AZ, pero el namespace es uno solo."
+    },
+    {
+      "s": "El comando mount en client-b se queda colgado. La instancia tiene Internet. ¿Qué es lo más probable?",
+      "o": [
+        "El SG del EFS no permite TCP 2049 desde el SG de la instancia (o la IP del mount target es incorrecta).",
+        "Falta activar versioning.",
+        "EFS no funciona en us-east-1b."
+      ],
+      "a": 0,
+      "x": "NFS usa TCP 2049. Si el SG del mount target no lo acepta, la conexión no se establece y el mount con opción hard reintenta indefinidamente."
+    },
+    {
+      "s": "Una base de datos en una sola EC2 necesita baja latencia y acceso por bloques. ¿Qué opción encaja?",
+      "o": [
+        "S3, porque es el más durable.",
+        "EFS, porque es compartido.",
+        "EBS: disco de bloques adjunto a la instancia, en su misma AZ."
+      ],
+      "a": 2,
+      "x": "Bloques + un solo consumidor + baja latencia = EBS. El trade-off: es zonal y no se comparte como EFS."
+    },
+    {
+      "s": "Con Show versions activado, ¿qué es la segunda fila, la que tiene sangría └?",
+      "o": [
+        "Una carpeta dentro del bucket.",
+        "La versión anterior (noncurrent) de la misma key estado.txt.",
+        "Un delete marker."
+      ],
+      "a": 1,
+      "x": "Misma key, otro Version ID, 28 B: es la versión CREADO que sobrevivió a la segunda subida.",
+      "img": "lab03/06-s3-versiones.png"
+    },
+    {
+      "s": "La regla NFS del SG del EFS tiene como Source un sg-…. ¿Qué significa?",
+      "o": [
+        "Que el EFS puede salir hacia ese SG.",
+        "Que solo las interfaces con ese SG (las EC2 cliente) pueden abrir TCP 2049 hacia el EFS.",
+        "Que cualquier IP de la VPC puede montar el EFS."
+      ],
+      "a": 1,
+      "x": "Es la autorización por referencia de SG: la misma idea que ALB → app en el Lab 02.",
+      "img": "lab03/04-sg-efs.png"
+    },
+    {
+      "s": "En client-b, df muestra 10.20.2.25:/ y en client-a 10.20.1.30:/. ¿Son dos filesystems distintos?",
+      "o": [
+        "Sí, un EFS por AZ.",
+        "No: son los dos mount targets del mismo EFS, uno por AZ. Por eso ambos ven el mismo archivo.",
+        "Son dos volúmenes EBS compartidos."
+      ],
+      "a": 1,
+      "x": "Cada cliente entra por el mount target de su AZ, pero el namespace es uno solo: las dos líneas del archivo lo prueban.",
+      "img": "lab03/10-efs-client-b.png"
+    },
+    {
+      "s": "¿En qué parte de la consola del EFS compruebas que es alcanzable desde las dos AZ?",
+      "o": [
+        "En la pestaña Network: un mount target Available en us-east-1a y otro en us-east-1b.",
+        "En Metered size.",
+        "En Automatic backups."
+      ],
+      "a": 0,
+      "x": "Sin mount target en una AZ, las instancias de esa AZ no tienen por dónde montar.",
+      "img": "lab03/05-efs.png"
+    }
+  ],
+  "oral": [
+    {
+      "q": "¿Qué evidencia demuestra que el archivo de EFS no pertenece al disco raíz de client-a?",
+      "a": "Que client-b, con su propio disco y en otra AZ, lee la línea que escribió A, y que A después ve la línea que escribió B sin copiar nada. Además, mountpoint confirma que /mnt/dcl es un montaje NFS."
+    },
+    {
+      "q": "¿Qué estado de S3 sobrevivió a la sobrescritura?",
+      "a": "La versión anterior de estado.txt (CREADO). Versioning guardó un VersionId distinto; la recuperé con get-object --version-id mientras la actual dice PROCESADO."
+    },
+    {
+      "q": "¿Qué trade-off introduces al guardar versiones?",
+      "a": "Más almacenamiento y costo por cada versión, y un cleanup más complejo. La lifecycle rule lo acota borrando noncurrent a los 7 días."
+    }
+  ]
+}

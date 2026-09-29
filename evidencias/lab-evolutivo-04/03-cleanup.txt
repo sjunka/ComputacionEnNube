@@ -1,0 +1,52 @@
+Mon Sep 28 16:49:58 -05 2026
++(eval):3> aws ec2 terminate-instances --instance-ids i-0dd26763c906fc540 i-05b5b0780f61b6fa6 --query 'TerminatingInstances[].CurrentState.Name'
+[
+    "shutting-down",
+    "shutting-down"
+]
++(eval):4> aws ec2 wait instance-terminated --instance-ids i-0dd26763c906fc540 i-05b5b0780f61b6fa6
++(eval):4> echo 'instancias terminadas'
+instancias terminadas
++(eval):5> aws ec2 delete-security-group --group-id sg-0965821794a0dbf7d
+{
+    "Return": true,
+    "GroupId": "sg-0965821794a0dbf7d"
+}
++(eval):6> aws ec2 delete-security-group --group-id sg-0f02cc9752b9b8c49
+{
+    "Return": true,
+    "GroupId": "sg-0f02cc9752b9b8c49"
+}
++(eval):7> aws ec2 describe-route-tables --route-table-ids rtb-07b4648c9c7ddf5c4 --query 'RouteTables[0].Associations[].RouteTableAssociationId' --output text
++(eval):7> A=rtbassoc-09a9266a4f3cca49d
++(eval):7> aws ec2 disassociate-route-table --association-id rtbassoc-09a9266a4f3cca49d
++(eval):8> aws ec2 delete-route-table --route-table-id rtb-07b4648c9c7ddf5c4
++(eval):9> aws ec2 detach-internet-gateway --internet-gateway-id igw-03534ced22cd483d2 --vpc-id vpc-05ec38fdf09ca547c
++(eval):10> aws ec2 delete-internet-gateway --internet-gateway-id igw-03534ced22cd483d2
++(eval):11> aws ec2 describe-instances --filters 'Name=instance-state-name,Values=pending,running,stopped' --query 'Reservations[].Instances[].InstanceId'
+[]
++(eval):12> aws ec2 describe-volumes --query 'Volumes[].VolumeId'
+[]
++(eval):13> aws ec2 describe-addresses --query 'Addresses[].PublicIp'
+[]
++(eval):14> aws ec2 describe-internet-gateways --filters 'Name=attachment.vpc-id,Values=vpc-05ec38fdf09ca547c' --query 'InternetGateways[].InternetGatewayId'
+[]
++(eval):15> aws ec2 describe-route-tables --filters 'Name=vpc-id,Values=vpc-05ec38fdf09ca547c' --query 'RouteTables[].{Id:RouteTableId,Main:Associations[0].Main,Rutas:Routes[].DestinationCidrBlock}'
+[
+    {
+        "Id": "rtb-030269cef8405d013",
+        "Main": true,
+        "Rutas": [
+            "10.20.0.0/16"
+        ]
+    }
+]
++(eval):16> aws ec2 describe-security-groups --filters 'Name=vpc-id,Values=vpc-05ec38fdf09ca547c' --query 'SecurityGroups[].GroupName'
+[
+    "default"
+]
++(eval):17> aws ec2 describe-subnets --filters 'Name=vpc-id,Values=vpc-05ec38fdf09ca547c' --query 'Subnets[].[Tags[?Key==`Name`]|[0].Value,CidrBlock,AvailabilityZone]' --output text
+dcl-dev-subnet-a	10.20.1.0/24	us-east-1a
+dcl-dev-subnet-b	10.20.2.0/24	us-east-1b
++(eval):18> set +x
+Mon Sep 28 16:50:41 -05 2026

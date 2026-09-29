@@ -1,0 +1,12 @@
+## PASS 1 a las 21:47:50 UTC (05-pass1.png)
+Mon Sep 28 21:48:00 UTC 2026
+## revoke
+true
+## FAIL
+evidencias/lab-evolutivo-04/consola/06-fail.png
+## authorize
+Mon Sep 28 21:48:28 UTC 2026
+true
+## PASS 2
+evidencias/lab-evolutivo-04/consola/07-pass2.png
+Mon Sep 28 21:48:55 UTC 2026

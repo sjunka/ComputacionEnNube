@@ -113,9 +113,18 @@ Cuando Sergio pegue un comentario del profe, solo anotarlo ahí sin explicar, sa
 - `assignments/` — un subdirectorio por entrega.
 - `material/` — PDFs, slides y demás material del profesor.
 - `material-md/` — los mismos PDFs convertidos a Markdown (skill `pdf2md`). Preferir estos para leer.
+- `app/` — **foco del proyecto**: la app de los labs (Vite + React + TS + Tailwind), publicada en
+<https://sjunka.github.io/ComputacionEnNube/> por `.github/workflows/deploy.yml` al empujar a `main`.
+El contenido son datos: agregar un lab, checkpoint o entrega es agregar `app/src/content/labNN.json`
+(y sus capturas vía `redact.json` + `node app/scripts/sync-img.mjs`). `/mostrarenaws` escribe ahí.
+Siguiente etapa: el juego de verificación, `scripts/PROMPT-juego-labs.md`.
+El artifact de la guía (`guia-labs-01-04.html`) está deprecado: no extenderlo.
 
 ## Repositorio
 
-`https://github.com/sjunka/ComputacionEnNube` (privado). Rama `main`.
+`https://github.com/sjunka/ComputacionEnNube` (**público**, igual que el sitio). Rama `main`.
 Commitear y empujar solo cuando Sergio lo pida.
 Nunca subir credenciales AWS, `.pem`, ni access keys.
+Datos de la cuenta AWS (Account ID, bucket, IP públicas, IDs de recursos) van en `app/.env.local`
+(ignorado); en el contenido publicable se usan marcadores `{{ACCOUNT_ID}}` y las capturas se tapan.
+`npm run build` corre `check-leaks`, que falla si se cuela alguno.
