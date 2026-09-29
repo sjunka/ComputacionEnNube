@@ -8,6 +8,189 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-09-28 — Correo Architecture Challenge (Ing. Luis Lunar)
+
+**Notas:**
+- Guía del Architecture Challenge (proyecto final) sobre el caso **Digital Café Luna**.
+- Objetivo: proponer y defender arquitectura cloud según necesidades del negocio, restricciones técnicas y condiciones de operación. Más que seleccionar servicios: justificar decisiones y explicar consecuencias.
+- Evaluación individual:
+  - Architecture Decision Brief — 40%: documento compacto con diagrama, problema y restricciones, decisiones principales, trade-offs, riesgos, supuestos, aproximación de costos y evidencia técnica cuando aporte.
+  - Defensa individual — 20%: presentación y preguntas; justificar decisiones, explicar consecuencias, cómo se comprobaría el comportamiento de la arquitectura.
+- Fecha final: miércoles 28 oct. El Brief se entrega días antes de la sesión.
+- Leer la guía desde ya; avanzar la propuesta en las sesiones restantes.
+- No es necesario desplegar completamente la arquitectura final.
+- En la sesión de cierre se presenta una restricción adicional para ver cómo adaptan decisiones. No anticiparla en el documento.
+
+---
+
+## 2026-09-28 — Correo S05 (Ing. Luis Lunar)
+
+**Notas:**
+- Sesión miércoles 7 oct: seguridad y gobernanza en AWS.
+- Idea central: que una instancia tenga conectividad con un recurso no significa que esté autorizada a usarlo.
+- Se comprueba con IAM Roles, políticas de permisos, cifrado y trazabilidad con CloudTrail.
+- Preparación: Lecturas S05 (20–24 min) y guía Lab Evolutivo 05 (arquitectura, pasos, validaciones).
+- Sugerencia: ejecutar el lab antes; se revisa en clase el 7 oct.
+- Conservar baseline S01 y hacer cleanup de recursos temporales de labs anteriores.
+
+---
+
+## 2026-09-28 — Clase (S04 — Networking y conectividad)
+
+**Notas:**
+- Conversamos un poco sobre networking.
+- El profe recomienda hacer un curso de networking; ayuda para la carrera.
+- Hay 3 flujos:
+  1. Cliente externo llega a un endpoint público y de ahí a la app. Eso es una ruta.
+  2. Aplicación, almacenamiento y estado. Eso es control.
+  3. Operador con acceso controlado a recurso privado. Eso es evidencia.
+- En networking, eso está embebido en cualquier capa.
+- El networking es clave e importante.
+- Es la más especializada, más que analítica o machine learning, porque ahí se configura lo clave: comunicación, seguridad, trazabilidad y control.
+- El CIDR define el espacio donde puede existir la red.
+- La VPC es un área lógica.
+- La VPC viene definida por el CIDR.
+- El CIDR es el rango de IP a considerar para la distribución de las subnets.
+- Si se llenan las IP, toca migrar a una VPC más grande; el CIDR no se puede editar.
+- Las funciones Lambda o serverless consumen muchas IP.
+- Si se quedan cortas de IP, las Lambdas no funcionan.
+- Al definir el CIDR:
+  - No solapar con redes externas.
+  - Dejar espacio para crecer.
+  - Facilitar el troubleshooting.
+- La estructura hay que hacerla bien.
+- El CIDR define el rango de IP para crear los recursos y la comunicación entre ellos.
+- En el trabajo hay que definir una VPC tomando decisiones.
+- Dice que es sencillo, pero toca temas importantes.
+- Pregunta: ¿cuál fue tu criterio para considerar un CIDR `10.20.0.0/16`? Responder con criterio.
+- Una plataforma bien ordenada por subnet y por AZ se ve algo similar a lo del tablero.
+- En el diagrama, cajas sin rango de IP distorsionan. Cada cajita (subnet) debe mostrar:
+  - Ubicación: AZ.
+  - Dirección: CIDR.
+  - Salida: route table.
+- La subnet empieza a ser una decisión arquitectónica cuando conecta ubicación, direccionamiento y ruta.
+- Tablas de ruteo (route tables).
+  - La primera línea de la tabla de ruteo tiene el CIDR de la VPC (local), para entender el tráfico de otras subnets o dispositivos.
+  - La siguiente tabla nace por defecto y es condicional: son las subnets privadas, porque no tienen línea hacia el gateway.
+  - La pública tiene en la 2da línea `0.0.0.0/0 → Internet Gateway`.
+  - Todo el tráfico hacia internet se va al Internet Gateway.
+  - Una subnet pasa de privada a pública porque tiene la ruta `0.0.0.0/0` al Internet Gateway.
+  - La route table decide el siguiente salto.
+  - Flujo (tablero):
+    1. Origen: `10.20.1.25`.
+    2. Destino: `10.20.2.40` o `0.0.0.0/0`.
+    3. Route table: busca coincidencia.
+    4. Siguiente salto: local, IGW u otro.
+  - `10.20.0.0/16` es el CIDR de la VPC. Ruta `local` = tráfico dentro de la VPC; no le permite salir de la VPC.
+  - `0.0.0.0/0 → IGW` = ruta por defecto a internet.
+  - Sin ruta útil, el tráfico no llega.
+- DMZ: los servidores web se ponen ahí.
+- En la nube, el servidor web se pone en una subnet privada y se expone a internet mediante una NAT (red nateada, IP nateada).
+  - La NAT está en la subnet pública.
+  - La IP privada del servidor web está en la subnet privada, no en la pública.
+  - La NAT traduce la IP privada a la pública.
+  - La NAT solo permite tráfico de salida, no de entrada.
+  - El IGW sí permite tráfico de salida y de entrada.
+- Los balanceadores tienen exposición pública. Ese es el deber ser hoy en día.
+- Servidor privado con acceso a internet: va en una subnet privada, la NAT se coloca en la pública, y es a través de la NAT que sale a internet.
+  - Todo el tráfico de esa subnet sale a la NAT (route table privada: `0.0.0.0/0 → NAT`).
+  - En la route table pública, sale de la NAT al Internet Gateway (`0.0.0.0/0 → IGW`).
+- Hay NAT que son servicios embebidos en la nube.
+- Las contraseñas y secretos tienen reglas y políticas de comunicación.
+- FQDN: para no quemar IP, se traduce la IP a dominio.
+- Típico error: creer que todo en una subnet pública sale a internet. La subnet es pública porque tiene salida a internet, pero si pongo en ella un recurso privado (sin IP pública), no sale a internet.
+- Para que un recurso salga a internet, condiciones:
+  1. IP pública.
+  2. Subnet pública.
+  3. Security group.
+- Security group: control stateful, cerca del recurso.
+  - El SG protege la conversación del recurso.
+  - Diagrama (tablero): Cliente o servicio → SG (inbound permitido 80/443) → Recurso app.
+  - Características del SG:
+    - Stateful.
+    - Reglas allow; no tiene deny explícito.
+    - Bloquean la entrada pero no la salida, a menos que se le diga allow.
+  - Pregunta: estoy en una instancia y quiero hacer ping, con un SG que no tiene entrada pero sí salida. ¿Funciona?
+- NACL: control stateless en la frontera de la subnet. Segunda puerta de seguridad.
+  - La NACL filtra el cruce de la subnet.
+  - Gráfica (tablero): Origen → inbound (se evalúa) → Subnet, frontera evaluada por NACL → outbound (también se evalúa) → Destino.
+  - Características de la NACL:
+    - Stateless.
+    - Allow y deny.
+    - Orden de reglas: se evalúan en orden, funciona como un firewall.
+    - Asociada a subnet.
+    - Se configura lo que se permite de entrada y lo que se permite de salida.
+- SG y NACL filtran en lugares distintos.
+- Siga el camino del tráfico, no la intuición.
+- La mejor práctica es tener logs.
+- Diagnosticar es ubicar dónde se rompe el camino.
+  - Hay una herramienta que permite analizar el path de punto A a punto B (VPC Reachability Analyzer).
+  - Diagrama (tablero): Origen → Ruta → NACL → SG → Destino.
+  - Tener clara la función de red de cada componente: viendo el síntoma, uno sabe cuál es.
+- En nuestro proyecto debemos tener cada uno de estos componentes.
+- El principal objetivo del ingeniero cloud: garantizar la seguridad de la plataforma.
+- Menos componentes expuestos públicamente, se duerme más tranquilo.
+- Estrategias y servicios para la no exposición pública de componentes.
+  - Decisión guiada: no todo debe ser alcanzable desde internet.
+  - Entrada pública → app privada → datos protegidos. Ese es el patrón de tres capas.
+    1. Presentación / entrada: ALB o CloudFront en subnet pública. Único expuesto a internet.
+    2. Aplicación / lógica: EC2, ECS o Lambda en subnet privada. Solo acepta tráfico del SG del ALB.
+    3. Datos: RDS o DynamoDB en subnet privada de datos. Solo acepta tráfico del SG de la app; sin ruta a internet.
+    - Cada capa solo habla con la adyacente. Si comprometen la entrada, no llegan directo a los datos (defensa en profundidad).
+- Nmap sirve para trazabilidad.
+  - Hacer Nmap en una red en la nube es difícil porque nada está expuesto.
+- En IPv6 todas las IP son públicas.
+  - Pregunta: si las IP son públicas por naturaleza y las pongo a internet, salen. ¿Cómo hago para que desde internet no lleguen a la privada?
+  - Egress-only (Internet Gateway): solamente salida, en vez de tener un IGW.
+  - No tendría sentido usar una NAT.
+- La nube es más segura que el mundo on-premise.
+  - Privado por defecto: SG nuevo bloquea toda entrada, subnet sin ruta a internet hasta agregarla, S3 bloquea acceso público. On-premise suele ser red plana.
+  - Responsabilidad compartida: AWS protege lo físico, hardware, hipervisor y red base.
+  - Todo es API: cada cambio queda en CloudTrail (trazabilidad).
+  - Identidad en todo: IAM controla cada acción, no solo la red.
+  - Cifrado nativo: KMS, en reposo y en tránsito.
+  - Microsegmentación barata: un SG por recurso, sin comprar firewalls.
+  - Automatización: IaC repetible y auditable, menos error humano.
+  - Matiz: es más segura si se configura bien. La mayoría de incidentes son errores de configuración del cliente (bucket público, SG `0.0.0.0/0:22`), no del proveedor.
+- Un servicio de recovery (DR) se analiza: elementos críticos y modelos (backup off-site, warm standby a medio tamaño), en función de tamaño y costo.
+  - RTO: puede ser 4 horas para recuperación parcial o 1 hora para total.
+  - Servicio en AWS: AWS Elastic Disaster Recovery (DRS). Replica continuamente servidores (on-premise o EC2) a staging barato en otra región; levanta instancias solo en desastre. RPO segundos, RTO minutos.
+  - Relacionados: AWS Backup (backups centralizados, copia entre regiones/cuentas) y Route 53 health checks + failover.
+  - 4 modelos de DR, de más barato a más caro:
+    1. Backup & restore: horas.
+    2. Pilot light: solo lo crítico encendido. Lo mínimo necesario para que los sistemas críticos funcionen.
+    3. Warm standby: réplica a medio tamaño (half-size).
+       - Copia completa pero reducida, siempre encendida en región de respaldo (app, DB replicada, balanceador; ej. 2 instancias en vez de 10).
+       - En desastre: escalar a tamaño completo (Auto Scaling) y cambiar DNS. No hay que construir nada.
+       - RTO minutos, RPO segundos. Más caro que pilot light (app corre 24/7), más barato que multi-site.
+       - Se puede probar en cualquier momento porque ya sirve tráfico.
+    4. Multi-site active/active: RTO casi cero.
+       - 2+ regiones completas, a tamaño total, sirviendo tráfico real al mismo tiempo.
+       - Route 53 reparte usuarios (latencia, geolocalización o peso). DB replicada en ambos sentidos (DynamoDB Global Tables, Aurora Global).
+       - Si cae una región, Route 53 manda todo a la otra. No hay que levantar ni escalar nada. RTO y RPO casi cero.
+       - El más caro (infraestructura duplicada) y el más complejo (conflictos de escritura, consistencia, latencia entre regiones).
+       - Uso: banca, pagos, e-commerce grande, donde un minuto caído cuesta más que duplicar.
+- La red determina si el tráfico puede llegar.
+  1. Origen y destino: sin ellos no hay decisión de red.
+  2. CIDR y subnet ordenan ubicación y camino.
+  3. Route table decide el siguiente salto.
+  4. SG y NACL filtran en lugares distintos.
+  - DRS es donde duele la plata: los sistemas del negocio.
+  - RPO (Recovery Point Objective): cuántos datos puedo perder, medido hacia atrás desde el desastre. Depende de la frecuencia de backup/réplica.
+  - RTO (Recovery Time Objective): cuánto tiempo puede estar caído, medido hacia adelante. Depende del modelo de DR.
+  - Más bajos ambos = más caro. El negocio los define según el costo de cada hora caída o de datos perdidos.
+    - Se asocia a recursos (ENI).
+    - Reduce la superficie del destino.
+    - Las respuestas son permitidas por estado.
+    - Primera capa de defensa en una subnet. Primera puerta de seguridad.
+    - El tráfico va por la MAC address que está en la NIC.
+      - NIC (Network Interface Card): tarjeta de red, con MAC única. En AWS es virtual: ENI (Elastic Network Interface). Lleva MAC, IP privada (y pública si hay) y los SG. Por eso el SG se asocia a la ENI, no a la subnet.
+    - Si el inbound es permitido, el outbound (la respuesta) también es permitido. Lo que dejo entrar lo dejo salir, porque es stateful.
+- Puertos efímeros: son donde responden los servicios y dispositivos; están asociados al SO.
+  - El SG gestiona eso.
+
+---
+
 ## 2026-09-23 — Clase (S03 — Datos y almacenamiento)
 
 **Notas:**
