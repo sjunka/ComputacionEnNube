@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SG vs NACL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #f5f5f5; --color-ink: #2d3142; --color-muted: #4f5d75; --color-accent: #eb6c36;
+      --font-sans: 'Geist', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400;
+      letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+    .wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · S04 Networking · Lab 04</p>
+    <h1>Camino del tráfico: la NACL evalúa ida y vuelta, el SG solo la entrada</h1>
+
+    <div class="wrap">
+    <svg viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sg-nacl-title sg-nacl-desc">
+      <title id="sg-nacl-title">Camino del tráfico: SG stateful contra NACL stateless</title>
+      <desc id="sg-nacl-desc">Petición de la EC2 A a la EC2 B por el 8080 pasando por route table, NACL y security group; la NACL evalúa la petición y la respuesta, mientras el SG solo evalúa la entrada y deja volver la respuesta sola.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- Zona: subnet B (la NACL es su frontera) -->
+      <rect x="496" y="88" width="484" height="200" rx="8" fill="rgba(235,108,54,0.03)" stroke="rgba(235,108,54,0.50)" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="512" y="108" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">SUBNET B · 10.20.2.0/24</text>
+
+      <!-- Flechas de ida (petición), y=176 -->
+      <line x1="184" y1="176" x2="228" y2="176" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+      <line x1="376" y1="176" x2="420" y2="176" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+      <line x1="568" y1="176" x2="612" y2="176" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+      <line x1="760" y1="176" x2="804" y2="176" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+
+      <!-- Flechas de vuelta (respuesta), y=212, punteadas -->
+      <line x1="804" y1="212" x2="764" y2="212" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <line x1="612" y1="212" x2="572" y2="212" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <line x1="420" y1="212" x2="380" y2="212" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <line x1="228" y1="212" x2="188" y2="212" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+      <!-- Nodo 1: Origen -->
+      <rect x="40" y="152" width="144" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="40" y="152" width="144" height="80" rx="6" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+      <text x="48" y="168" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.08em">1 · ORIGEN</text>
+      <text x="112" y="196" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">EC2 A</text>
+      <text x="112" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">10.20.1.x · sg-a</text>
+
+      <!-- Nodo 2: Ruta -->
+      <rect x="232" y="152" width="144" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="232" y="152" width="144" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="240" y="168" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.08em">2 · RUTA</text>
+      <text x="304" y="196" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Route table</text>
+      <text x="304" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">10.20.0.0/16 → local</text>
+
+      <!-- Nodo 3: NACL (focal) -->
+      <rect x="424" y="152" width="144" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="424" y="152" width="144" height="80" rx="6" fill="rgba(235,108,54,0.10)" stroke="#eb6c36" stroke-width="1.2"/>
+      <text x="432" y="168" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.08em">3 · STATELESS</text>
+      <text x="496" y="196" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">NACL</text>
+      <text x="496" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">subnet · allow + deny</text>
+
+      <!-- Nodo 4: SG (focal) -->
+      <rect x="616" y="152" width="144" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="616" y="152" width="144" height="80" rx="6" fill="rgba(235,108,54,0.10)" stroke="#eb6c36" stroke-width="1.2"/>
+      <text x="624" y="168" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.08em">4 · STATEFUL</text>
+      <text x="688" y="196" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Security group</text>
+      <text x="688" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">sg-b · 8080 ← sg-a</text>
+
+      <!-- Nodo 5: Destino -->
+      <rect x="808" y="152" width="144" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="808" y="152" width="144" height="80" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <text x="816" y="168" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.08em">5 · DESTINO</text>
+      <text x="880" y="196" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">EC2 B</text>
+      <text x="880" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">:8080 · python3</text>
+
+      <!-- Anotaciones (debajo de cada control) -->
+      <line x1="496" y1="236" x2="496" y2="320" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="304" y="340" fill="#2d3142" font-size="16" font-style="italic" font-family="'Instrument Serif', serif">NACL: revisa la ida Y la vuelta.</text>
+      <text x="304" y="360" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Necesita regla outbound para los puertos efímeros</text>
+      <text x="304" y="376" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">1024–65535. Si falta, la respuesta muere: timeout.</text>
+
+      <line x1="688" y1="236" x2="688" y2="400" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>
+      <text x="600" y="420" fill="#2d3142" font-size="16" font-style="italic" font-family="'Instrument Serif', serif">SG: solo revisa la entrada.</text>
+      <text x="600" y="440" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">Recuerda la conexión: si dejó entrar la petición,</text>
+      <text x="600" y="456" fill="#4f5d75" font-size="12" font-family="'Geist', sans-serif">la respuesta sale sola. Va en la ENI de la instancia.</text>
+
+      <!-- Leyenda -->
+      <line x1="40" y1="480" x2="960" y2="480" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="40" y="504" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEYENDA</text>
+      <line x1="120" y1="500" x2="160" y2="500" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+      <text x="168" y="504" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">PETICIÓN (IDA)</text>
+      <line x1="300" y1="500" x2="340" y2="500" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <text x="348" y="504" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">RESPUESTA (VUELTA)</text>
+      <rect x="500" y="492" width="16" height="12" rx="2" fill="rgba(235,108,54,0.10)" stroke="#eb6c36"/>
+      <text x="524" y="504" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">CONTROL (FILTRA)</text>
+      <rect x="660" y="492" width="16" height="12" rx="2" fill="rgba(235,108,54,0.03)" stroke="rgba(235,108,54,0.50)" stroke-dasharray="4,4"/>
+      <text x="684" y="504" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">FRONTERA DE SUBNET</text>
+    </svg>
+    </div>
+  </div>
+</body>
+</html>

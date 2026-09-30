@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulacro Checkpoint 1</title>
+<style>
+  body { font: 15px system-ui, sans-serif; margin: 0 auto; max-width: 820px; padding: 16px; background: #fafafa; color: #222; }
+  .q { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin: 14px 0; }
+  .q h3 { margin: 0 0 8px; font-size: 15px; }
+  .tag { font-size: 12px; color: #666; }
+  pre { background: #f4f4f4; padding: 8px; overflow-x: auto; font-size: 13px; }
+  label { display: block; padding: 6px 8px; margin: 4px 0; border-radius: 6px; cursor: pointer; }
+  label:hover { background: #f0f0f0; }
+  .ok { background: #dfd !important; }
+  .mal { background: #fdd !important; }
+  .exp { display: none; margin-top: 8px; padding: 8px; border-left: 4px solid #36c; background: #eef4ff; }
+  .done .exp { display: block; }
+  button { padding: 10px 18px; font-size: 15px; cursor: pointer; }
+  #nota { font-size: 20px; font-weight: bold; margin: 12px 0; }
+</style>
+</head>
+<body>
+<h1>Simulacro Checkpoint Lab 1</h1>
+<p>10 preguntas de escenario, cada una con 3 opciones, igual que el test real: elige la que <b>mejor explica</b> el comportamiento. Al final pulsa <b>Calificar</b>.</p>
+<div id="examen"></div>
+<button id="calificar">Calificar</button>
+<button id="reiniciar">Reiniciar</button>
+<div id="nota"></div>
+
+<script>
+// ok = índice de la respuesta correcta
+const P = [
+ { t: "S02 · ALB", q: "Recargas el endpoint del ALB 20 veces y siempre responde el mismo instance ID, aunque el ASG tiene 2 instancias. ¿Qué es lo más probable?",
+   o: ["El ALB solo funciona con una instancia", "La otra instancia está unhealthy en el Target Group, así que el ALB no le envía tráfico", "El ASG apagó la segunda instancia para ahorrar"], ok: 1,
+   e: "El ALB solo envía tráfico a targets healthy. Revisa el health check de la otra instancia (SG, Apache, path)." },
+ { t: "S04 · Síntomas", q: "A hace curl a la IP privada de B:8080 y el comando se queda esperando hasta rendirse. B está encendida y Python está escuchando. ¿Dónde está el corte?",
+   o: ["En el servicio de B", "En un control del camino: sg-b (o la NACL) no permite el 8080 desde A", "En el IGW de la subnet A"], ok: 1,
+   e: "Timeout = el paquete no llega (bloqueo). Si fuera el servicio, verías refused. A → B no usa el IGW." },
+ { t: "S02 · ASG", q: "Terminas una instancia del ASG (2/2/4) mientras haces peticiones al ALB. ¿Qué observas?",
+   o: ["La app se cae hasta que alguien lance otra instancia", "Responde solo la instancia sobreviviente y luego aparece un instance ID nuevo", "El ALB lanza la instancia de reemplazo"], ok: 1,
+   e: "El ALB sigue enviando tráfico a la instancia sana; el ASG ve 1 de 2 y lanza el reemplazo. Aparecer un ID nuevo es la evidencia." },
+ { t: "S04 · Routing", q: "B está en la subnet B, que solo tiene la ruta local. Le asignas una IP pública a B. ¿B sale a internet?",
+   o: ["Sí, la IP pública basta", "No: su subnet no tiene 0.0.0.0/0 → IGW", "Sí, si sg-b permite la salida"], ok: 1,
+   e: "Hacen falta las 3 cosas: IP pública, subnet pública (con ruta al IGW) y SG. Sin la ruta, no sale." },
+ { t: "S03 · EFS", q: "client-a escribe en el EFS y client-b, en la otra AZ, lee el mismo archivo al instante. ¿Qué demuestra esa evidencia?",
+   o: ["Que el EBS se replica entre AZ", "Que el estado vive fuera de la instancia, en un file system compartido y regional", "Que S3 está montado como disco"], ok: 1,
+   e: "EFS es file storage compartido, y cada cliente entra por el mount target de su AZ. Es la evidencia pedida para S03." },
+ { t: "S02 · Sintomas", q: "Abres el DNS del ALB y ves un error 503. Las 2 EC2 están encendidas. ¿Qué es lo más probable?",
+   o: ["El ALB no tiene ningún target healthy: Apache no responde o el SG de la app bloquea al ALB", "El IGW está caído", "Connection refused de la EC2 llegó directo al navegador"], ok: 0,
+   e: "Con un ALB en el medio, el cliente ve 502/503; nunca ve el refused de la EC2. El 503 aparece cuando no hay ningún target sano." },
+ { t: "S04 · SG", q: "sg-b permite el 8080 desde sg-a. Lanzas una EC2 nueva, C, en la subnet A, con sg-default. ¿C llega a B:8080?",
+   o: ["Sí, porque está en la misma subnet que A", "No: la regla exige llevar sg-a, no estar en una subnet", "Sí, porque la ruta local lo permite"], ok: 1,
+   e: "La regla por SG funciona como una credencial: importa qué SG lleva la instancia, no su subnet ni su IP. La ruta existe, pero el SG filtra." },
+ { t: "S03 · S3", q: "Borras por error el bucket completo. Tenía versioning activo. ¿Lo recuperas con el versioning?",
+   o: ["Sí, el versioning es un respaldo completo", "No: el versioning protege versiones de objetos, no es un respaldo del bucket", "Sí, con la lifecycle rule"], ok: 1,
+   e: "El profe dijo que «versionamiento no es respaldo». Además, un bucket con objetos ni siquiera se puede borrar sin vaciarlo antes." },
+ { t: "S01 · Baseline", q: "Al cerrar el checkpoint, ¿qué debe quedar en tu cuenta?",
+   o: ["Todo lo de los 4 labs, como evidencia", "Solo el baseline: la VPC y las 2 subnets en 2 AZ; lo temporal (IGW, ALB, ASG, EFS, EC2) se borra", "Nada, ni siquiera la VPC"], ok: 1,
+   e: "La guía evalúa el cleanup: borrar los recursos temporales y costosos y preservar el baseline S01 sin dependencias." },
+ { t: "S04 · NACL", q: "Agregas una NACL en la subnet B que permite inbound TCP 8080 desde 10.20.1.0/24, pero no tiene ninguna regla outbound. A hace curl a B. ¿Qué pasa?",
+   o: ["Funciona, porque la NACL es stateful", "Timeout: la petición llega, pero la respuesta no puede salir por los puertos efímeros", "Connection refused"], ok: 1,
+   e: "La NACL es stateless: necesita outbound TCP 1024–65535 hacia 10.20.1.0/24. Sin esa regla, la respuesta muere y ves un timeout." },
+];
+
+// Barajar opciones para que la correcta no quede siempre en la misma posición
+P.forEach(p => {
+  const orden = p.o.map((_, j) => j).sort(() => Math.random() - 0.5);
+  p.ok = orden.indexOf(p.ok);
+  p.o = orden.map(j => p.o[j]);
+});
+
+const cont = document.getElementById("examen");
+P.forEach((p, i) => {
+  const d = document.createElement("div");
+  d.className = "q";
+  d.innerHTML = `<div class="tag">${p.t}</div><h3>${i + 1}. ${p.q}</h3>` +
+    p.o.map((o, j) => `<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("") +
+    `<div class="exp">${p.e}</div>`;
+  cont.appendChild(d);
+});
+
+document.getElementById("calificar").onclick = () => {
+  let bien = 0;
+  const fallos = {};
+  document.querySelectorAll(".q").forEach((d, i) => {
+    const sel = d.querySelector("input:checked");
+    const labels = d.querySelectorAll("label");
+    labels.forEach(l => l.classList.remove("ok", "mal"));
+    labels[P[i].ok].classList.add("ok");
+    if (sel && +sel.value === P[i].ok) bien++;
+    else {
+      if (sel) labels[sel.value].classList.add("mal");
+      const tema = P[i].t.split(" · ")[0];
+      fallos[tema] = (fallos[tema] || 0) + 1;
+    }
+    d.classList.add("done");
+  });
+  const repasar = Object.entries(fallos).map(([t, n]) => `${t} (${n})`).join(", ") || "nada";
+  document.getElementById("nota").textContent =
+    `${bien}/10 · nota ${(bien / 10 * 5).toFixed(1)}/5 · repasar: ${repasar}`;
+};
+
+document.getElementById("reiniciar").onclick = () => location.reload();
+</script>
+</body>
+</html>

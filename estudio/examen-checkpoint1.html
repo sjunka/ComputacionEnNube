@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examen Checkpoint 1</title>
+<style>
+  body { font: 15px system-ui, sans-serif; margin: 0 auto; max-width: 820px; padding: 16px; background: #fafafa; color: #222; }
+  .q { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; margin: 14px 0; }
+  .q h3 { margin: 0 0 8px; font-size: 15px; }
+  .tag { font-size: 12px; color: #666; }
+  pre { background: #f4f4f4; padding: 8px; overflow-x: auto; font-size: 13px; }
+  label { display: block; padding: 6px 8px; margin: 4px 0; border-radius: 6px; cursor: pointer; }
+  label:hover { background: #f0f0f0; }
+  .ok { background: #dfd !important; }
+  .mal { background: #fdd !important; }
+  .exp { display: none; margin-top: 8px; padding: 8px; border-left: 4px solid #36c; background: #eef4ff; }
+  .done .exp { display: block; }
+  button { padding: 10px 18px; font-size: 15px; cursor: pointer; }
+  #nota { font-size: 20px; font-weight: bold; margin: 12px 0; }
+</style>
+</head>
+<body>
+<h1>Examen Checkpoint Lab 1 (S01–S04)</h1>
+<p>20 preguntas de escenario, cada una con 3 opciones, igual que el test real: elige la que <b>mejor explica</b> el comportamiento. Al final pulsa <b>Calificar</b>.</p>
+<div id="examen"></div>
+<button id="calificar">Calificar</button>
+<button id="reiniciar">Reiniciar</button>
+<div id="nota"></div>
+
+<script>
+// ok = índice de la respuesta correcta
+const P = [
+ { t: "S01 · Baseline", q: "Tu baseline tiene dcl-dev-vpc 10.20.0.0/16 con subnet-a 10.20.1.0/24 en us-east-1a y subnet-b 10.20.2.0/24 en us-east-1b. ¿Qué afirmación es correcta?",
+   o: ["Ya hay alta disponibilidad, porque hay 2 AZ", "Prepara la HA, pero no la da: falta cómputo repartido, balanceo y reemplazo", "Las subnets son públicas porque la VPC tiene CIDR privado"], ok: 1,
+   e: "Dos subnets en 2 AZ solo preparan el terreno. La HA aparece con EC2 en ambas AZ, un ALB que desvía el tráfico y un ASG que reemplaza instancias." },
+ { t: "S01 · CIDR", q: "El profe pregunta: «¿cuál fue tu criterio para elegir 10.20.0.0/16?». ¿Cuál es la mejor respuesta?",
+   o: ["Es el que viene por defecto en AWS", "No se solapa con redes externas, deja espacio para crecer y facilita el troubleshooting", "Un /16 es más barato que un /24"], ok: 1,
+   e: "Son los 3 criterios de la clase. Además, el CIDR no se puede editar: si se llena, toca migrar a otra VPC. El tamaño del CIDR no cambia el costo." },
+ { t: "S01 · Subnets", q: "Un compañero dice: «voy a crear la AZ us-east-1c para la subnet de base de datos». ¿Qué le corriges?",
+   o: ["Nada, así se hace", "Las AZ las crea AWS: tú creas la subnet y eliges en qué AZ vive", "Las bases de datos no usan subnets"], ok: 1,
+   e: "AZ = datacenter físico de AWS (se elige). Subnet = rango de IPs tuyo (se crea) y vive en una sola AZ." },
+ { t: "S01 · Subnets", q: "¿Cuántas IPs puedes asignar a instancias en subnet-a (10.20.1.0/24)?",
+   o: ["256", "254", "251"], ok: 2,
+   e: "Un /24 tiene 256 IPs y AWS reserva 5 (red, router, DNS, futuro y broadcast): quedan 251." },
+ { t: "S02 · ALB", q: "Recargas el DNS del ALB y la respuesta alterna entre dos instance ID distintos. ¿Qué componente distribuye y qué lo demuestra?",
+   o: ["El ASG distribuye; lo demuestra la desired capacity = 2", "El ALB distribuye; lo demuestra que cambian el instance ID y la AZ en la respuesta", "El Target Group distribuye; lo demuestran los health checks"], ok: 1,
+   e: "Según el profe, «distribuir tráfico» es el ALB y «lanzar o reemplazar instancias» es el ASG. La evidencia es ver cambiar instance ID, IP privada o AZ." },
+ { t: "S02 · ASG", q: "El ASG está en 2/2/4 y terminas manualmente una instancia. Minutos después aparece otra. ¿Por qué?",
+   o: ["El ALB detectó el target caído y lanzó otra instancia", "El ASG detectó capacidad por debajo de desired y lanzó un reemplazo", "El Target Group reinició la instancia terminada"], ok: 1,
+   e: "Es el ejemplo oficial del test. El ALB solo deja de enviar tráfico; el que lanza instancias es el ASG." },
+ { t: "S02 · ALB", q: "¿Por qué el ALB exige subnets en al menos 2 AZ?",
+   o: ["Para que el propio ALB no sea un SPOF: tiene un nodo en cada subnet", "Para cobrar menos", "Porque el health check necesita 2 AZ"], ok: 0,
+   e: "Si el ALB estuviera en una sola AZ y esa AZ cae, la entrada completa cae. Un SPOF es una pieza sin respaldo que tumba todo." },
+ { t: "S02 · Launch Template", q: "El ASG escala de 2 a 3. ¿De dónde saca la configuración (AMI, tipo, SG, user data) de la tercera EC2?",
+   o: ["Del Launch Template, que usa en todo lanzamiento", "Copia el disco de una instancia existente", "Solo del user data"], ok: 0,
+   e: "El Launch Template es la receta completa. El user data es solo el script de arranque que va dentro de la receta." },
+ { t: "S02 · Diagnóstico", q: "Los 2 targets aparecen unhealthy, y cada uno está en una AZ distinta. ¿Qué es lo más probable?",
+   o: ["Se cayeron las dos AZ a la vez", "Un problema de configuración compartida: sg-app, user data (Apache) o path del health check", "El ALB está en una sola AZ"], ok: 1,
+   e: "Que caigan 2 AZ a la vez es casi imposible. Lo que falla es algo que ambas instancias comparten." },
+ { t: "S02 · Health type", q: "Apache se cae, pero la EC2 sigue encendida. El ASG usa health type EC2. ¿Qué pasa?",
+   o: ["El ASG la reemplaza de inmediato", "El ALB la saca de rotación, pero el ASG no la reemplaza, porque la máquina sigue encendida", "El ALB la reinicia"], ok: 1,
+   e: "Health type EC2 solo mira la máquina. Con health type ELB, el ASG usa el health check del ALB y sí la reemplaza (necesita grace period)." },
+ { t: "S03 · EBS", q: "Café Luna guarda las fotos de pedidos en el disco EBS de cada EC2 del ASG. ¿Qué riesgo hay?",
+   o: ["Ninguno: EBS es regional", "Al reemplazar la instancia se pierde el disco, y la otra instancia tampoco ve esas fotos", "EBS no permite guardar imágenes"], ok: 1,
+   e: "EBS es zonal y de una sola instancia, y el disco raíz se borra al terminar la EC2. El estado va fuera de la instancia: en S3 o EFS." },
+ { t: "S03 · S3", q: "Subes estado.txt como CREADO y luego como PROCESADO, con versioning activo. ¿Qué demuestra la evidencia?",
+   o: ["Que el versioning es un respaldo completo del bucket", "Dos versiones de la misma key y la recuperación del estado previo", "Que S3 se montó como disco"], ok: 1,
+   e: "Esa es la evidencia pedida para S03. Ojo: el profe dijo que «versionamiento no es respaldo», porque no protege si borras el bucket o la cuenta." },
+ { t: "S03 · S3", q: "Sobrescribes menu.txt por error y DESPUÉS activas el versioning. ¿Puedes recuperar el original?",
+   o: ["Sí, el versioning es retroactivo", "No: el versioning solo protege lo que ocurre después de activarlo", "Sí, con la lifecycle rule"], ok: 1,
+   e: "Lo que se sobrescribió antes de activar el versioning ya no existe." },
+ { t: "S03 · EFS", q: "client-a (1a) escribe en /mnt/efs y client-b (1b) lee el mismo archivo. ¿Qué lo hace posible?",
+   o: ["Un EBS compartido entre AZ", "Un EFS regional, con un mount target por AZ, accedido por NFS en el 2049", "S3 montado como carpeta"], ok: 1,
+   e: "EFS es file storage compartido y regional. Cada EC2 entra por el mount target de su propia AZ. S3 no se monta." },
+ { t: "S03 · EFS", q: "client-c tiene solo sg-default e intenta montar el EFS: se queda colgado. ¿Por qué?",
+   o: ["sg-efs solo acepta el 2049 desde sg-ec2, y client-c no lo tiene", "EFS solo admite 2 clientes", "Falta una ruta al IGW"], ok: 0,
+   e: "El SG funciona como una credencial. «Colgado» (timeout) apunta a un bloqueo. La solución es agregarle sg-ec2 a client-c." },
+ { t: "S04 · Routing", q: "A (subnet pública) llega por HTTP a la IP privada de B (subnet sin IGW). ¿Por dónde va el tráfico?",
+   o: ["Por el IGW", "Por la ruta local 10.20.0.0/16, dentro de la VPC", "Por un NAT Gateway"], ok: 1,
+   e: "La ruta local conecta todas las subnets de la VPC. El IGW solo participa en el tráfico hacia o desde internet." },
+ { t: "S04 · Routing", q: "¿Qué hace pública a la subnet A del Lab 04?",
+   o: ["Que su route table tiene 0.0.0.0/0 → IGW", "Que la instancia A tiene IP pública", "Que se llama subnet pública"], ok: 0,
+   e: "Público o privado lo decide la route table. Para que un recurso salga a internet necesita las 3 cosas: IP pública, subnet pública y SG." },
+ { t: "S04 · Troubleshooting", q: "PASS → quitas la regla 8080 de sg-b → FAIL → la restauras → PASS. ¿Qué demuestra?",
+   o: ["Que el routing estaba mal", "Que el SG controla el flujo: solo cambió una variable y la ruta quedó igual", "Que B se reinició"], ok: 1,
+   e: "Cambias una sola variable, así que la causa solo puede ser el control (SG). El síntoma del FAIL es un timeout." },
+ { t: "S04 · Síntomas", q: "A hace curl directo a B:8080. sg-b permite el tráfico, pero el servicio de Python se cayó. ¿Qué ve A?",
+   o: ["Timeout", "HTTP 502", "Connection refused"], ok: 2,
+   e: "El paquete llega, pero nada escucha en ese puerto: refused. El 502 solo existe si hay un ALB en el medio. Timeout = bloqueo (SG o ruta)." },
+ { t: "S04 · SG vs NACL", q: "Una instancia tiene un SG sin reglas de entrada y con la salida por defecto. Desde ella haces ping a internet. ¿Funciona?",
+   o: ["No, porque la respuesta necesita una regla de entrada", "Sí: la salida está permitida y el SG es stateful, así que la respuesta vuelve sola", "Solo si agregas una regla en la NACL"], ok: 1,
+   e: "Es la pregunta de la clase. Una NACL, en cambio, es stateless y necesita reglas de salida y de entrada, incluidos los puertos efímeros." },
+];
+
+// Barajar opciones para que la correcta no quede siempre en la misma posición
+P.forEach(p => {
+  const orden = p.o.map((_, j) => j).sort(() => Math.random() - 0.5);
+  p.ok = orden.indexOf(p.ok);
+  p.o = orden.map(j => p.o[j]);
+});
+
+const cont = document.getElementById("examen");
+P.forEach((p, i) => {
+  const d = document.createElement("div");
+  d.className = "q";
+  d.innerHTML = `<div class="tag">${p.t}</div><h3>${i + 1}. ${p.q}</h3>` +
+    p.o.map((o, j) => `<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("") +
+    `<div class="exp">${p.e}</div>`;
+  cont.appendChild(d);
+});
+
+document.getElementById("calificar").onclick = () => {
+  let bien = 0;
+  const fallos = {};
+  document.querySelectorAll(".q").forEach((d, i) => {
+    const sel = d.querySelector("input:checked");
+    const labels = d.querySelectorAll("label");
+    labels.forEach(l => l.classList.remove("ok", "mal"));
+    labels[P[i].ok].classList.add("ok");
+    if (sel && +sel.value === P[i].ok) bien++;
+    else {
+      if (sel) labels[sel.value].classList.add("mal");
+      const tema = P[i].t.split(" · ")[0];
+      fallos[tema] = (fallos[tema] || 0) + 1;
+    }
+    d.classList.add("done");
+  });
+  const repasar = Object.entries(fallos).map(([t, n]) => `${t} (${n})`).join(", ") || "nada";
+  document.getElementById("nota").textContent =
+    `${bien}/20 · nota ${(bien / 20 * 5).toFixed(1)}/5 · repasar: ${repasar}`;
+};
+
+document.getElementById("reiniciar").onclick = () => location.reload();
+</script>
+</body>
+</html>

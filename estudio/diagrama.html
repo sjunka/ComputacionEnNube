@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagrama de estudio</title>
+<style>
+  body { font: 15px system-ui, sans-serif; margin: 0 auto; max-width: 900px; padding: 16px; background: #fafafa; color: #222; }
+  nav button { padding: 6px 12px; margin: 0 4px 8px 0; cursor: pointer; }
+  nav button.on { background: #222; color: #fff; }
+  svg { width: 100%; background: #fff; border: 1px solid #ddd; }
+  svg text { font-size: 13px; }
+  .box { fill: none; stroke: #888; }
+  .l2 { display: none; }
+  body.lab2 .l2, body.falla .l2, body.apache-ec2 .l2, body.apache-elb .l2 { display: inline; }
+  body.falla .az-a { fill: #fdd; }
+  body.falla .ec2-a { opacity: .25; }
+  body.falla .ruta-a, body.apache-ec2 .ruta-a, body.apache-elb .ruta-a { stroke: #c00; stroke-dasharray: 4; }
+  .l3 { display: none; }
+  body.lab3 .l3 { display: inline; }
+  .nuevo { display: none; }
+  body.falla .nuevo, body.apache-elb .nuevo { display: inline; }
+  .apache-x { display: none; }
+  body.apache-ec2 .apache-x, body.apache-elb .apache-x { display: inline; }
+  #tabla-almac { display: none; margin-top: 12px; border-collapse: collapse; background: #fff; }
+  body.lab3 #tabla-almac { display: table; }
+  #mt { display: none; margin-top: 12px; padding: 10px; background: #fff; border-left: 4px solid #393; }
+  body.lab3 #mt { display: block; }
+  #mt pre { background: #f4f4f4; padding: 8px; overflow-x: auto; }
+  #tabla-almac th, #tabla-almac td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  table.sint { border-collapse: collapse; background: #fff; }
+  table.sint th, table.sint td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  #nota { margin-top: 12px; padding: 10px; background: #fff; border-left: 4px solid #222; }
+</style>
+</head>
+<body>
+<h1>Lab 01 → Lab 02: de red a alta disponibilidad</h1>
+<nav>
+  <button data-modo="lab1" class="on">Lab 01: baseline</button>
+  <button data-modo="lab2">Lab 02: con HA</button>
+  <button data-modo="falla">Cae AZ 1a</button>
+  <button data-modo="apache-ec2">Cae Apache · health EC2</button>
+  <button data-modo="apache-elb">Cae Apache · health ELB</button>
+  <button data-modo="lab3">Lab 03: S3 + EFS</button>
+</nav>
+
+<svg viewBox="0 0 700 460">
+  <!-- Lab 01: región, VPC, AZ, subnets -->
+  <rect class="box" x="10" y="100" width="680" height="350" rx="8"/>
+  <text x="20" y="118">Región us-east-1</text>
+  <rect class="box" x="30" y="130" width="640" height="310" rx="8" stroke="#36c"/>
+  <text x="40" y="148" fill="#36c">dcl-dev-vpc 10.20.0.0/16</text>
+
+  <rect class="az-a" x="60" y="240" width="260" height="150" rx="6" fill="#eef" stroke="#99c"/>
+  <text x="70" y="258">AZ us-east-1a · subnet-a 10.20.1.0/24</text>
+  <rect x="380" y="240" width="260" height="150" rx="6" fill="#eef" stroke="#99c"/>
+  <text x="390" y="258">AZ us-east-1b · subnet-b 10.20.2.0/24</text>
+
+  <!-- Lab 02: IGW, ALB, EC2, ASG -->
+  <g class="l2">
+    <text x="320" y="25">Internet</text>
+    <line x1="350" y1="30" x2="350" y2="60" stroke="#222"/>
+    <rect x="300" y="60" width="100" height="30" fill="#ffd" stroke="#aa0"/>
+    <text x="335" y="80">IGW</text>
+    <line x1="350" y1="90" x2="350" y2="165" stroke="#222"/>
+    <rect x="270" y="165" width="160" height="35" fill="#dfd" stroke="#393"/>
+    <text x="280" y="187">ALB · sg-alb :80 ← 0.0.0.0/0</text>
+    <text x="440" y="187" fill="#666">(ALB = un tipo de ELB)</text>
+    <line class="ruta-a" x1="310" y1="200" x2="190" y2="290" stroke="#222"/>
+    <line x1="390" y1="200" x2="510" y2="290" stroke="#222"/>
+    <rect class="ec2-a" x="120" y="290" width="140" height="40" fill="#fed" stroke="#c63"/>
+    <text class="ec2-a" x="130" y="315">EC2 web · sg-app</text>
+    <rect x="440" y="290" width="140" height="40" fill="#fed" stroke="#c63"/>
+    <text x="450" y="315">EC2 web · sg-app</text>
+    <rect x="60" y="400" width="580" height="30" fill="none" stroke="#c63" stroke-dasharray="6"/>
+    <text x="250" y="420">ASG dcl-dev-asg-web 2/2/4</text>
+  </g>
+  <!-- Lab 03: ALB/ASG ya borrados; clientes + EFS + S3 -->
+  <g class="l3">
+    <text x="60" y="25">Internet</text>
+    <line x1="90" y1="30" x2="90" y2="60" stroke="#222"/>
+    <rect x="40" y="60" width="130" height="30" fill="#ffd" stroke="#aa0"/>
+    <text x="50" y="80">IGW dcl-dev-igw-s03</text>
+    <rect x="470" y="15" width="210" height="75" fill="#eaf4ff" stroke="#36c"/>
+    <text x="480" y="35">S3 bucket (regional, fuera de VPC)</text>
+    <text x="480" y="55">estado.txt · v1 (noncurrent)</text>
+    <text x="480" y="75">estado.txt · v2 (current)</text>
+    <rect x="120" y="275" width="140" height="35" fill="#fed" stroke="#c63"/>
+    <text x="130" y="297">client-a · sg-ec2</text>
+    <rect x="440" y="275" width="140" height="35" fill="#fed" stroke="#c63"/>
+    <text x="450" y="297">client-b · sg-ec2</text>
+    <rect x="105" y="335" width="190" height="30" fill="#efe" stroke="#393"/>
+    <text x="112" y="355">mount target A · sg-efs · IP 1a</text>
+    <rect x="425" y="335" width="190" height="30" fill="#efe" stroke="#393"/>
+    <text x="432" y="355">mount target B · sg-efs · IP 1b</text>
+    <line x1="190" y1="310" x2="190" y2="335" stroke="#393"/>
+    <line x1="510" y1="310" x2="510" y2="335" stroke="#393"/>
+    <text x="200" y="327" fill="#393">NFS 2049</text>
+    <text x="520" y="327" fill="#393">NFS 2049</text>
+    <line x1="190" y1="365" x2="190" y2="400" stroke="#393"/>
+    <line x1="510" y1="365" x2="510" y2="400" stroke="#393"/>
+    <rect x="60" y="400" width="580" height="30" fill="#dfd" stroke="#393"/>
+    <text x="150" y="420">EFS dcl-dev-efs-shared (regional) · sg-efs: 2049 ← sg-ec2</text>
+  </g>
+  <text class="apache-x" x="120" y="345" fill="#c00">EC2 encendida, Apache ✗ (health check falla)</text>
+  <g class="nuevo">
+    <rect x="440" y="340" width="140" height="40" fill="#fed" stroke="#c63" stroke-width="2"/>
+    <text x="450" y="365">EC2 nueva (ASG)</text>
+  </g>
+</svg>
+
+<div id="nota"></div>
+
+<table id="tabla-almac">
+  <tr><th></th><th>EBS</th><th>EFS</th><th>S3</th></tr>
+  <tr><th>Tipo</th><td>block (disco)</td><td>file (carpeta compartida)</td><td>object (API HTTP)</td></tr>
+  <tr><th>Alcance</th><td>1 AZ, 1 EC2</td><td>regional, muchas EC2</td><td>regional</td></tr>
+  <tr><th>Acceso</th><td>disco montado</td><td>NFS :2049 vía mount target</td><td>aws s3 / HTTPS, no se monta</td></tr>
+  <tr><th>SG</th><td>no aplica</td><td>sg-efs: 2049 ← sg-ec2</td><td>no usa SG (IAM / bucket policy)</td></tr>
+</table>
+
+<div id="mt">
+  <b>Mount target</b>: la puerta de la EC2 hacia el EFS. Es una ENI con IP privada, una por AZ.
+  <pre>client-a (sg-ec2) ──2049──▶ mount target A (sg-efs) ──▶ EFS</pre>
+  <pre>aws efs create-mount-target --file-system-id $FS --subnet-id $SUBA --security-groups $SG_EFS
+aws efs create-mount-target --file-system-id $FS --subnet-id $SUBB --security-groups $SG_EFS</pre>
+  <ol>
+    <li>Crear los SG (sg-efs: 2049 ← sg-ec2).</li>
+    <li>Crear el EFS.</li>
+    <li>Crear un mount target por subnet, con sg-efs.</li>
+    <li>Lanzar las EC2 con sg-ec2.</li>
+    <li>Montar: <code>sudo mount -t nfs4 &lt;IP del mount target de su AZ&gt;:/ /mnt/efs</code></li>
+  </ol>
+  Sin el mount target B, client-b cruza a 1a (más costo y un SPOF) o no monta.
+</div>
+
+<h2>Síntomas: ¿qué ve el cliente?</h2>
+<p><b>Regla:</b> el cliente solo ve a <b>quien tiene enfrente</b>.</p>
+<table class="sint">
+  <tr><th>¿Quién está enfrente?</th><th>Bloqueo (SG / ruta)</th><th>Servicio caído</th></tr>
+  <tr><td>EC2 directa (Lab 04: A → B)</td><td>timeout</td><td>connection refused</td></tr>
+  <tr><td>ALB (Lab 02: cliente → ALB → EC2)</td><td>502 / 503</td><td>502 / 503</td></tr>
+</table>
+<ul>
+  <li><b>Timeout</b> = tocas la puerta y nadie abre. El SG tiró el paquete en silencio.</li>
+  <li><b>Refused</b> = abren y dicen «aquí no hay nadie». Llegaste, pero nada escucha en ese puerto.</li>
+  <li><b>502 / 503</b> = el anfitrión (ALB) dice «la cocina falló». Solo existe si hay ALB.</li>
+</ul>
+<p>Ojo: si el bloqueo es en <b>sg-alb</b> (el propio ALB), el cliente ve <b>timeout</b>: el que tiene enfrente no le contesta.</p>
+
+<script>
+  const notas = {
+    lab1: "Solo red: VPC regional y dos subnets, cada una en su AZ. No hay IGW, ni cómputo, ni balanceo. La HA está preparada, pero todavía no existe.",
+    lab2: "Se añade IGW + route table 0.0.0.0/0 → IGW, el ALB en las 2 subnets, una EC2 por AZ (sg-app solo acepta tráfico desde sg-alb) y un ASG que mantiene desired=2.",
+    "apache-ec2": "Apache cae, pero la EC2 sigue encendida. El ALB la marca unhealthy y deja de enviarle tráfico. El ASG, con health type EC2, solo mira si la máquina está encendida: cree que está sana y NO la reemplaza. Te quedas con 1 instancia útil hasta que alguien intervenga.",
+    "apache-elb": "Apache cae. Con health type ELB, el ASG usa el health check del ALB: ve la instancia unhealthy, la termina y lanza una nueva desde el Launch Template. La capacidad vuelve a 2 sin que nadie intervenga.",
+    lab3: "Estado fuera de la EC2. EFS (file, NFS): un solo sistema de archivos regional, con un mount target por subnet; client-a escribe y client-b lee lo mismo. S3 (object): API HTTP, bucket/key, con versioning para recuperar v1, y una lifecycle rule que borra las noncurrent a los 7 días. EBS (block) sería un disco zonal de una sola instancia.",
+    falla: "Cae 1a: el health check del Target Group falla, el ALB deja de enviar tráfico a 1a y el ASG ve 1 de 2 instancias corriendo y lanza una EC2 nueva en 1b. Esto sí es HA."
+  };
+  const botones = document.querySelectorAll("nav button");
+  function modo(m) {
+    document.body.className = m;
+    botones.forEach(b => b.classList.toggle("on", b.dataset.modo === m));
+    document.getElementById("nota").textContent = notas[m];
+  }
+  botones.forEach(b => b.onclick = () => modo(b.dataset.modo));
+  modo("lab1");
+</script>
+</body>
