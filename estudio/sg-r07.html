@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Los dos SG del R07</title>
+<style>
+  body { font: 15px system-ui, sans-serif; margin: 0 auto; max-width: 900px; padding: 16px; background: #fafafa; color: #222; }
+  svg { width: 100%; display: block; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+  .card h3 { margin: 0 0 6px; }
+  .ok { color: #393; } .no { color: #c00; }
+  @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<h1>Dos guardias, dos puertas</h1>
+<p>Cada SG es un <b>guardia</b> que cuida una puerta. Solo deja pasar a quien está en su lista.</p>
+
+<svg viewBox="0 0 860 360" role="img" aria-label="sg-ec2 deja entrar SSH desde Instance Connect a los clientes; sg-efs deja entrar NFS 2049 desde sg-ec2 al EFS">
+  <defs>
+    <marker id="v" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#393"/></marker>
+    <marker id="r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#c00"/></marker>
+  </defs>
+
+  <!-- Columna 1: quién llega -->
+  <rect x="20" y="60" width="170" height="60" rx="8" fill="#eef4ff" stroke="#36c"/>
+  <text x="105" y="86" font-size="14" font-weight="600" text-anchor="middle">Tú</text>
+  <text x="105" y="104" font-size="11" text-anchor="middle" fill="#555">botón Connect de AWS</text>
+
+  <rect x="20" y="200" width="170" height="60" rx="8" fill="#fee" stroke="#c00"/>
+  <text x="105" y="226" font-size="14" font-weight="600" text-anchor="middle">Un extraño</text>
+  <text x="105" y="244" font-size="11" text-anchor="middle" fill="#555">cualquier IP de internet</text>
+
+  <!-- Guardia 1: sg-ec2 -->
+  <rect x="240" y="40" width="130" height="250" rx="8" fill="#fff8e1" stroke="#e0a000" stroke-width="2"/>
+  <text x="305" y="64" font-size="14" font-weight="700" text-anchor="middle">sg-ec2</text>
+  <text x="305" y="160" font-size="11" text-anchor="middle">guardia de los</text>
+  <text x="305" y="174" font-size="11" text-anchor="middle">clientes</text>
+  <text x="305" y="270" font-size="11" text-anchor="middle" fill="#555">deja: puerto 22</text>
+  <text x="305" y="284" font-size="11" text-anchor="middle" fill="#555">solo desde Connect</text>
+
+  <!-- Clientes -->
+  <rect x="420" y="60" width="150" height="60" rx="8" fill="#fed" stroke="#c63"/>
+  <text x="495" y="86" font-size="14" font-weight="600" text-anchor="middle">client-a / b</text>
+  <text x="495" y="104" font-size="11" text-anchor="middle" fill="#555">llevan el carnet sg-ec2</text>
+
+  <rect x="420" y="200" width="150" height="60" rx="8" fill="#fee" stroke="#c00"/>
+  <text x="495" y="226" font-size="14" font-weight="600" text-anchor="middle">client-c</text>
+  <text x="495" y="244" font-size="11" text-anchor="middle" fill="#555">sin carnet sg-ec2</text>
+
+  <!-- Guardia 2: sg-efs -->
+  <rect x="610" y="40" width="110" height="250" rx="8" fill="#fff8e1" stroke="#e0a000" stroke-width="2"/>
+  <text x="665" y="64" font-size="14" font-weight="700" text-anchor="middle">sg-efs</text>
+  <text x="665" y="160" font-size="11" text-anchor="middle">guardia del</text>
+  <text x="665" y="174" font-size="11" text-anchor="middle">EFS</text>
+  <text x="665" y="270" font-size="11" text-anchor="middle" fill="#555">deja: puerto 2049</text>
+  <text x="665" y="284" font-size="11" text-anchor="middle" fill="#555">solo con carnet</text>
+
+  <!-- EFS -->
+  <rect x="750" y="60" width="90" height="60" rx="8" fill="#dfd" stroke="#393"/>
+  <text x="795" y="86" font-size="14" font-weight="600" text-anchor="middle">EFS</text>
+  <text x="795" y="104" font-size="11" text-anchor="middle" fill="#555">archivos</text>
+
+  <!-- Flechas permitidas -->
+  <line x1="190" y1="90" x2="416" y2="90" stroke="#393" stroke-width="2" marker-end="url(#v)"/>
+  <text x="305" y="130" font-size="12" text-anchor="middle" fill="#393" font-weight="600">✓ SSH :22</text>
+  <line x1="570" y1="90" x2="746" y2="90" stroke="#393" stroke-width="2" marker-end="url(#v)"/>
+  <text x="665" y="130" font-size="12" text-anchor="middle" fill="#393" font-weight="600">✓ NFS :2049</text>
+
+  <!-- Flechas bloqueadas -->
+  <line x1="190" y1="230" x2="290" y2="230" stroke="#c00" stroke-width="2" stroke-dasharray="5,4"/>
+  <text x="305" y="236" font-size="22" text-anchor="middle" fill="#c00">✗</text>
+  <line x1="570" y1="230" x2="650" y2="230" stroke="#c00" stroke-width="2" stroke-dasharray="5,4"/>
+  <text x="665" y="236" font-size="22" text-anchor="middle" fill="#c00">✗</text>
+
+  <text x="430" y="335" font-size="13" text-anchor="middle" font-weight="600">Tú → (sg-ec2) → cliente → (sg-efs) → EFS</text>
+</svg>
+
+<div class="cards">
+  <div class="card">
+    <h3>sg-ec2: guardia de los clientes</h3>
+    <p>Cuida a <b>client-a</b> y <b>client-b</b>.</p>
+    <p class="ok">✓ Deja entrar: tu conexión a la terminal (SSH, puerto 22) desde el botón <b>Connect</b>.</p>
+    <p class="no">✗ Bloquea: a un extraño de internet que quiera entrar.</p>
+    <p>Además funciona como <b>carnet</b>: quien lo lleva puede pedirle archivos al EFS.</p>
+  </div>
+  <div class="card">
+    <h3>sg-efs: guardia del EFS</h3>
+    <p>Cuida los <b>mount targets</b> (las puertas del EFS).</p>
+    <p class="ok">✓ Deja entrar: a los clientes con carnet sg-ec2 que piden archivos (NFS, puerto 2049).</p>
+    <p class="no">✗ Bloquea: a client-c, que no tiene el carnet. El mount se queda colgado (timeout).</p>
+  </div>
+</div>
+
+<p><b>Para el profe:</b> «Hay dos capas. sg-ec2 protege a los clientes y solo deja SSH desde Instance Connect. sg-efs protege al EFS y solo deja el 2049 desde sg-ec2. Así, solo mis clientes pueden leer los archivos.»</p>
+</body>
+</html>

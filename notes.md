@@ -8,6 +8,15 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-09-30 — Checkpoint Lab 1 (validación práctica)
+
+**Notas:**
+- A cada estudiante se le asigna un reto (R01, R02…) sobre un lab, con tarea y criterio de éxito.
+- Retos del mismo tipo: S03 · S3 Versioning (recuperar una versión anterior por VersionId), S03 · EFS, S04 · Security Group (PASS → FAIL → PASS por TCP/8080 sin tocar routing) y S04 · Troubleshooting SG (diagnosticar la falta de inbound 8080 en el SG de destino).
+- **Mi reto: R07 · S03 · EFS.** Con dos clientes montando el mismo EFS, demostrar almacenamiento compartido: A escribe, B lee y agrega una línea, A vuelve a leer.
+  - Criterio: ambos clientes observan el mismo archivo y los cambios de B son visibles desde A.
+- Material de preparación en `estudio/` (checklist, guion de sustentación y diagramas).
+
 ## 2026-09-28 — Correo Architecture Challenge (Ing. Luis Lunar)
 
 **Notas:**

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>R07 EFS sustentación</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  body { font: 10.5px/1.4 system-ui, sans-serif; color: #222; margin: 0; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  .sub { color: #555; margin-bottom: 8px; }
+  h2 { font-size: 12px; margin: 10px 0 4px; border-bottom: 1.5px solid #222; padding-bottom: 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  pre { background: #f3f3f3; padding: 6px; font-size: 9.5px; margin: 4px 0; white-space: pre-wrap; }
+  ul, ol { margin: 2px 0; padding-left: 16px; }
+  li { margin: 1px 0; }
+  .q { margin: 4px 0; }
+  .q b { display: block; }
+  .box { border: 1.5px solid #c63; border-radius: 6px; padding: 6px 8px; background: #fff6f0; }
+  table { border-collapse: collapse; width: 100%; font-size: 10px; }
+  td, th { border: 1px solid #ccc; padding: 3px 5px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>R07 · S03 · EFS: almacenamiento compartido</h1>
+<div class="sub">Digital Café Luna · Checkpoint Lab 1 · Tarea: A escribe → B lee y agrega → A vuelve a leer y ve el cambio de B.</div>
+
+<div class="box"><b>La idea en una frase:</b> si una instancia puede desaparecer (el ASG la reemplaza), el estado no puede vivir en ella. EFS es un sistema de archivos <b>regional y compartido</b>: dos instancias en AZ distintas ven <b>el mismo archivo</b>.</div>
+
+<div class="cols">
+<div>
+<h2>1. Arquitectura</h2>
+<svg viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="client-a y client-b montan el mismo EFS por su mount target de cada AZ" style="width:100%;max-width:640px;display:block;font-family:system-ui,sans-serif">
+  <defs><marker id="fl2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#393"/></marker></defs>
+  <rect x="4" y="4" width="632" height="322" rx="8" fill="#fff" stroke="#36c"/>
+  <text x="16" y="22" font-size="12" fill="#36c" font-weight="600">dcl-dev-vpc 10.20.0.0/16 · us-east-1</text>
+  <rect x="20" y="32" width="290" height="190" rx="6" fill="#eef" stroke="#99c"/>
+  <text x="30" y="50" font-size="11">AZ us-east-1a · subnet-a 10.20.1.0/24</text>
+  <rect x="330" y="32" width="290" height="190" rx="6" fill="#eef" stroke="#99c"/>
+  <text x="340" y="50" font-size="11">AZ us-east-1b · subnet-b 10.20.2.0/24</text>
+  <rect x="60" y="62" width="210" height="50" rx="6" fill="#fed" stroke="#c63"/>
+  <text x="165" y="82" font-size="12" font-weight="600" text-anchor="middle">client-a · sg-ec2</text>
+  <text x="165" y="100" font-size="10" text-anchor="middle" fill="#555">/mnt/dcl · ① escribe  ③ vuelve a leer</text>
+  <rect x="370" y="62" width="210" height="50" rx="6" fill="#fed" stroke="#c63"/>
+  <text x="475" y="82" font-size="12" font-weight="600" text-anchor="middle">client-b · sg-ec2</text>
+  <text x="475" y="100" font-size="10" text-anchor="middle" fill="#555">/mnt/dcl · ② lee y agrega</text>
+  <line x1="165" y1="112" x2="165" y2="154" stroke="#393" stroke-width="1.5" marker-end="url(#fl2)"/>
+  <text x="172" y="138" font-size="10" fill="#393">NFS 2049</text>
+  <line x1="475" y1="112" x2="475" y2="154" stroke="#393" stroke-width="1.5" marker-end="url(#fl2)"/>
+  <text x="482" y="138" font-size="10" fill="#393">NFS 2049</text>
+  <rect x="60" y="156" width="210" height="50" rx="6" fill="#efe" stroke="#393"/>
+  <text x="165" y="176" font-size="12" font-weight="600" text-anchor="middle">mount target A · sg-efs</text>
+  <text x="165" y="194" font-size="10" text-anchor="middle" fill="#555">ENI con IP privada en 1a</text>
+  <rect x="370" y="156" width="210" height="50" rx="6" fill="#efe" stroke="#393"/>
+  <text x="475" y="176" font-size="12" font-weight="600" text-anchor="middle">mount target B · sg-efs</text>
+  <text x="475" y="194" font-size="10" text-anchor="middle" fill="#555">ENI con IP privada en 1b</text>
+  <line x1="165" y1="206" x2="165" y2="246" stroke="#393" stroke-width="1.5"/>
+  <line x1="475" y1="206" x2="475" y2="246" stroke="#393" stroke-width="1.5"/>
+  <rect x="40" y="246" width="560" height="40" rx="6" fill="#dfd" stroke="#393" stroke-width="1.5"/>
+  <text x="320" y="264" font-size="12" font-weight="600" text-anchor="middle">EFS dcl-dev-efs-shared (regional)</text>
+  <text x="320" y="279" font-size="10" text-anchor="middle" fill="#555">un solo archivo: estado-compartido.txt · cifrado · elastic</text>
+  <text x="320" y="310" font-size="10.5" text-anchor="middle" fill="#c63">sg-efs acepta 2049 solo desde sg-ec2 · cada cliente entra por el mount target de SU AZ</text>
+</svg>
+
+<ul>
+  <li><b>EFS</b> = file storage, protocolo NFS (puerto 2049), regional.</li>
+  <li><b>Mount target</b> = la puerta de la EC2 hacia el EFS: una ENI con IP privada, <b>una por AZ</b>.</li>
+  <li><b>sg-efs</b> va en los mount targets y solo acepta el 2049 desde <b>sg-ec2</b>: el SG funciona como credencial.</li>
+  <li><b>sg-ec2</b>: SSH solo desde EC2 Instance Connect.</li>
+</ul>
+
+<h2>2. La demostración (qué hace cada paso)</h2>
+<ol>
+  <li><b>client-a</b>: instala <code>nfs-utils</code>, monta por la IP del mount target <b>de su AZ</b> en <code>/mnt/dcl</code> y escribe <code>writer=…</code>.</li>
+  <li><b>client-b</b>: monta por <b>su</b> mount target, <code>cat</code> (ve la línea de A) y <code>tee -a</code> agrega <code>reader=…</code>.</li>
+  <li><b>client-a</b>: <code>cat</code> otra vez, y aparecen <b>las 2 líneas</b>.</li>
+</ol>
+<p><b>Evidencia:</b> dos hostnames distintos, en AZ distintas y por mount targets distintos, sobre el mismo archivo.</p>
+
+<h2>3. Comparación que te van a pedir</h2>
+<table>
+<tr><th></th><th>EBS</th><th>EFS</th><th>S3</th></tr>
+<tr><td>Tipo</td><td>block (disco)</td><td>file (NFS)</td><td>object (API)</td></tr>
+<tr><td>Alcance</td><td>1 AZ, 1 EC2</td><td>regional, muchas EC2</td><td>regional</td></tr>
+<tr><td>¿Se monta?</td><td>sí, en 1 EC2</td><td>sí, en muchas</td><td>no</td></tr>
+</table>
+</div>
+
+<div>
+<h2>4. Preguntas probables y respuesta</h2>
+<div class="q"><b>¿Por qué un mount target por AZ?</b>Para que cada EC2 entre por el de su propia AZ: no hay SPOF y el tráfico no cruza AZ (más lento y se cobra).</div>
+<div class="q"><b>¿Qué pasa si falta el mount target B?</b>client-b tendría que cruzar a 1a (más costo y un SPOF); por el DNS del EFS no monta.</div>
+<div class="q"><b>¿Por qué no EBS?</b>EBS es zonal y de una sola instancia, y se borra al terminar la EC2. B nunca vería lo que escribe A.</div>
+<div class="q"><b>¿Por qué no S3?</b>S3 no se monta: se usa por API. EFS sirve cuando la app necesita archivos de verdad (abrir, agregar).</div>
+<div class="q"><b>¿Cómo se protege el EFS?</b>sg-efs acepta el 2049 solo desde sg-ec2, no desde 0.0.0.0/0. Además está cifrado.</div>
+<div class="q"><b>El mount se queda colgado, ¿qué es?</b>Timeout = bloqueo: a la instancia le falta sg-ec2, o sg-efs no tiene la regla 2049. Revisa el SG antes que el servicio.</div>
+<div class="q"><b>¿Qué componente distribuye o reemplaza aquí?</b>Ninguno: no hay ALB ni ASG. El lab prueba la <strong>persistencia compartida</strong>, no la HA de cómputo.</div>
+
+<h2>5. Trade-offs (el curso evalúa decidir)</h2>
+<ul>
+  <li><b>EFS vs S3:</b> EFS es más cómodo (carpeta compartida), pero es el storage más caro (el profe lo dijo). S3 es barato, pero se usa por API.</li>
+  <li><b>Mount target por AZ:</b> no cuesta crearlo, pero hay que tener uno en cada AZ donde haya EC2.</li>
+  <li><b>SG como origen:</b> sigue funcionando aunque cambien las IPs, pero cada EC2 nueva necesita sg-ec2.</li>
+</ul>
+
+<h2>6. Cierre</h2>
+<p>Cleanup: terminar los clientes, borrar los mount targets, el EFS, los SG, la route table y el IGW. Solo queda el <b>baseline</b> (VPC + 2 subnets en 2 AZ).</p>
+<p><b>Orden para explicar:</b> qué hice → qué observé → por qué pasó.</p>
+</div>
+</div>
+</body>
+</html>

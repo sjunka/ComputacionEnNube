@@ -7,6 +7,9 @@ Archivos de esta carpeta:
 - `sg-vs-nacl.html`: camino del tráfico; la NACL evalúa ida y vuelta, el SG solo la entrada.
 - `examen-checkpoint1.html`: 20 preguntas de opción múltiple.
 - `examen-simulacro.html`: simulacro de 10 preguntas.
+- `checklist-r07-efs.html`: checklist del reto R07, con comandos, capturas, links a la consola y qué decir en cada paso.
+- `r07-efs-sustentacion.pdf`: una página para la sustentación del R07.
+- `sg-r07.html`: diagrama de los dos SG del R07 (sg-ec2 y sg-efs).
 
 ## Puntos débiles
 
@@ -54,3 +57,19 @@ La sigla es propia; los pasos salen del Lab 04. Método: PASS → cambiar una so
 - **RTO**: cuánto tiempo está caído el sistema (hacia adelante).
 - Modelos, de más barato a más caro: backup & restore, pilot light (solo la DB replicada), warm standby (app completa pero reducida, siempre corriendo), multi-site.
 - AWS DRS: replicación continua a staging; se ubica entre pilot light y warm standby.
+
+## Reto R07 · S03 · EFS (30 sep)
+
+- **Tarea:** A escribe, B lee y agrega, A vuelve a leer. **Evidencia:** 2 líneas con hostnames distintos en el mismo archivo.
+- **Idea central:** el estado vive en el EFS, no en la instancia.
+- **Mount target:** la puerta al EFS, una por AZ, con IP privada. Cada cliente entra por la de su AZ.
+- **NFS:** el protocolo del EFS, puerto 2049. `nfs-utils` es el cliente (AL2023 ya lo trae).
+- **sg-ec2:** lo llevan los clientes. Deja entrar SSH (22) solo desde EC2 Instance Connect y funciona como carnet.
+- **sg-efs:** lo llevan los mount targets. Deja entrar 2049 solo desde sg-ec2.
+- **Error que cometí:** pegué el comando con el marcador `<IP-mount-target-A>`, el mount falló y el archivo quedó en el disco local (EBS). Verificar siempre con `mountpoint /mnt/dcl`.
+- **Preguntas difíciles:**
+  - Cae 1a: B sigue viendo el archivo, porque el EFS es regional.
+  - El EFS no necesita el IGW: el NFS va por la ruta local.
+  - `0.0.0.0/0` en sg-efs no lo abre a internet (los mount targets solo tienen IP privada), pero sí a toda la VPC.
+  - Outbound vacío en sg-ec2: timeout, porque la ida necesita una regla de salida.
+- **Cleanup hecho:** solo queda el baseline.
