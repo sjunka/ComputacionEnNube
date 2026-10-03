@@ -1,0 +1,208 @@
+{
+  "id": "05",
+  "name": "Lab 05",
+  "sub": "IAM y CloudTrail",
+  "lead": "Misma EC2, mismo role, misma red. Solo cambian Action y Resource en la policy: un GetObject da PASS y dos operaciones fuera de alcance dan AccessDenied. Reachability no es authorization.",
+  "why": "<strong>Idea clave:</strong> llegar a S3 (ruta, DNS, SG) no autoriza nada. El <b>role</b> define la identidad, la <b>policy</b> limita <code>Action</code> y <code>Resource</code>, <b>SSE-S3</b> protege el dato at rest y <b>CloudTrail</b> atribuye acciones de administración. Cada control responde una pregunta distinta. Corrido en cuenta propia el <b>3 oct</b> por CLI; en clase se revisa el <b>7 oct</b>.",
+  "fecha": "3 oct",
+  "done": true,
+  "phases": [
+    {
+      "h": "0 · Preflight y variables",
+      "note": "Baseline S01 limpio: solo VPC y dos subnets. No se crean access keys ni se ejecuta aws configure en la EC2: las credenciales vienen del role.",
+      "steps": [
+        {
+          "t": "Cargar variables y confirmar baseline",
+          "e": "Sin EC2, IGW ni route tables temporales de S02 a S04, el AccessDenied solo puede ser de autorización.",
+          "c": "export AWS_REGION=us-east-1\nACC=$(aws sts get-caller-identity --query Account --output text)\nBUCKET=dcl-s05-team01-$ACC\nTAGS='{Key=dcl:project,Value=digital-cafe-luna},{Key=dcl:environment,Value=dev},{Key=dcl:owner-team,Value=team-01},{Key=dcl:managed-by,Value=cli}'\nTAGS_KV='Key=dcl:project,Value=digital-cafe-luna Key=dcl:environment,Value=dev Key=dcl:owner-team,Value=team-01 Key=dcl:managed-by,Value=cli'\nVPC=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=dcl-dev-vpc --query 'Vpcs[0].VpcId' --output text)\nSUBA=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-a --query 'Subnets[0].SubnetId' --output text)\naws ec2 describe-instances --filters Name=instance-state-name,Values=pending,running --query 'Reservations[].Instances[].InstanceId'\naws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=$VPC --query 'InternetGateways[].InternetGatewayId'",
+          "r": "[]   ← sin EC2\n[]   ← sin IGW en dcl-dev-vpc"
+        }
+      ]
+    },
+    {
+      "h": "1 · S3 privado con dos objetos",
+      "note": "El objeto restricted debe existir antes del AccessDenied; si no, un NoSuchKey se confundiría con autorización.",
+      "steps": [
+        {
+          "t": "Crear el bucket privado",
+          "e": "Block Public Access activo y sin bucket policy. SSE-S3 ya es el cifrado por defecto de S3.",
+          "c": "aws s3api create-bucket --bucket $BUCKET\naws s3api put-public-access-block --bucket $BUCKET --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true\naws s3api put-bucket-tagging --bucket $BUCKET --tagging 'TagSet=[{Key=dcl:project,Value=digital-cafe-luna},{Key=dcl:environment,Value=dev},{Key=dcl:owner-team,Value=team-01},{Key=dcl:managed-by,Value=cli}]'",
+          "r": "{\"Location\": \"/dcl-s05-team01-{{ACCOUNT_ID}}\"}"
+        },
+        {
+          "t": "Subir allowed/context.txt y restricted/secret.txt",
+          "e": "Mismo bucket, prefijos distintos. La respuesta ya muestra el cifrado SSE-S3 (AES256).",
+          "c": "echo 'Digital Café Luna — lectura autorizada' > context.txt\necho 'Digital Café Luna — recurso restringido' > secret.txt\naws s3api put-object --bucket $BUCKET --key allowed/context.txt --body context.txt --query '{SSE:ServerSideEncryption}'\naws s3api put-object --bucket $BUCKET --key restricted/secret.txt --body secret.txt --query '{SSE:ServerSideEncryption}'\naws s3api list-objects-v2 --bucket $BUCKET --query 'Contents[].Key'",
+          "r": "{\"SSE\": \"AES256\"}\n{\"SSE\": \"AES256\"}\n[\"allowed/context.txt\", \"restricted/secret.txt\"]"
+        }
+      ]
+    },
+    {
+      "h": "2 · Policy, role e instance profile",
+      "note": "Con CLI el instance profile no se crea solo: hay que crearlo y meterle el role. La consola lo hace sin avisar.",
+      "steps": [
+        {
+          "t": "Crear la policy mínima",
+          "e": "Solo s3:GetObject sobre allowed/*. Sin ListBucket, sin s3:*, sin Resource \"*\".",
+          "c": "cat > pol.json <<J\n{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"ReadAllowedPrefixOnly\",\"Effect\":\"Allow\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::$BUCKET/allowed/*\"}]}\nJ\nPOL=$(aws iam create-policy --policy-name dcl-dev-policy-s3-read-allowed-s05 --policy-document file://pol.json --tags $TAGS_KV --query Policy.Arn --output text); echo $POL",
+          "r": "arn:aws:iam::{{ACCOUNT_ID}}:policy/dcl-dev-policy-s3-read-allowed-s05"
+        },
+        {
+          "t": "Crear el role, adjuntar la policy y armar el instance profile",
+          "e": "El attach-role-policy es el management event que se busca luego en CloudTrail. La trust policy deja que ec2.amazonaws.com asuma el role.",
+          "c": "cat > trust.json <<J\n{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}\nJ\naws iam create-role --role-name dcl-dev-role-s05 --assume-role-policy-document file://trust.json --tags $TAGS_KV\naws iam attach-role-policy --role-name dcl-dev-role-s05 --policy-arn $POL\naws iam create-instance-profile --instance-profile-name dcl-dev-role-s05\naws iam add-role-to-instance-profile --instance-profile-name dcl-dev-role-s05 --role-name dcl-dev-role-s05\naws iam list-attached-role-policies --role-name dcl-dev-role-s05 --query 'AttachedPolicies[].PolicyName'",
+          "r": "[\"dcl-dev-policy-s3-read-allowed-s05\"]   ← una sola policy en el role"
+        }
+      ]
+    },
+    {
+      "h": "3 · Subnet A pública y EC2 con el role",
+      "note": "La conectividad es prerrequisito, no la variable. Se recrea solo el camino mínimo de S04.",
+      "steps": [
+        {
+          "t": "IGW, route table temporal y SG",
+          "e": "Subnet A sale a Internet solo por su route table. SSH solo desde el prefix list de EC2 Instance Connect.",
+          "c": "IGW=$(aws ec2 create-internet-gateway --tag-specifications \"ResourceType=internet-gateway,Tags=[{Key=Name,Value=dcl-dev-igw-s05},$TAGS]\" --query InternetGateway.InternetGatewayId --output text)\naws ec2 attach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC\nRT=$(aws ec2 create-route-table --vpc-id $VPC --tag-specifications \"ResourceType=route-table,Tags=[{Key=Name,Value=dcl-dev-rt-public-a-s05},$TAGS]\" --query RouteTable.RouteTableId --output text)\naws ec2 create-route --route-table-id $RT --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW\nASSOC=$(aws ec2 associate-route-table --route-table-id $RT --subnet-id $SUBA --query AssociationId --output text)\nSG=$(aws ec2 create-security-group --group-name dcl-dev-sg-ec2-s05 --description \"EC2 S05: SSH desde EC2 Instance Connect\" --vpc-id $VPC --tag-specifications \"ResourceType=security-group,Tags=[{Key=Name,Value=dcl-dev-sg-ec2-s05},$TAGS]\" --query GroupId --output text)\nPL=$(aws ec2 describe-managed-prefix-lists --filters Name=prefix-list-name,Values=com.amazonaws.us-east-1.ec2-instance-connect --query 'PrefixLists[0].PrefixListId' --output text)\naws ec2 authorize-security-group-ingress --group-id $SG --ip-permissions \"IpProtocol=tcp,FromPort=22,ToPort=22,PrefixListIds=[{PrefixListId=$PL}]\"",
+          "r": "{\"Return\": true}   ← ruta 0.0.0.0/0 → IGW\n{\"Return\": true}   ← regla SSH desde el prefix list"
+        },
+        {
+          "t": "Lanzar dcl-dev-ec2-s05 con el instance profile",
+          "e": "Sin key pair y sin access keys. En consola se entra por EC2 Instance Connect; aquí las pruebas van en user data y salen por la consola serial (ver fase 4).",
+          "c": "AMI=$(aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 --query Parameter.Value --output text)\nIID=$(aws ec2 run-instances --image-id $AMI --instance-type t3.micro --subnet-id $SUBA --security-group-ids $SG --associate-public-ip-address --iam-instance-profile Name=dcl-dev-role-s05 --block-device-mappings 'DeviceName=/dev/xvda,Ebs={DeleteOnTermination=true}' --user-data file://ud.sh --tag-specifications \"ResourceType=instance,Tags=[{Key=Name,Value=dcl-dev-ec2-s05},$TAGS]\" --query 'Instances[0].InstanceId' --output text)\naws ec2 wait instance-status-ok --instance-ids $IID",
+          "r": "i-0abc…   ← running, con role dcl-dev-role-s05"
+        }
+      ]
+    },
+    {
+      "h": "4 · Pruebas: misma identidad, distinto alcance",
+      "note": "Dentro de la EC2: aws configure list muestra access_key y secret_key de tipo iam-role, nada configurado a mano. Con consola: entrar por Instance Connect y pegar los comandos. Aquí el user data los corrió y se leyeron con get-console-output.",
+      "steps": [
+        {
+          "t": "Prueba 1: identidad del workload",
+          "e": "Antes de interpretar un Allow o un Deny hay que demostrar quién ejecuta la operación.",
+          "c": "export BUCKET=dcl-s05-team01-<account-id>\naws configure list\naws sts get-caller-identity --query '{Account:Account,Arn:Arn}' --output table",
+          "r": "access_key : ****************CRKQ : iam-role\nsecret_key : ****************t70k : iam-role\nArn: arn:aws:sts::{{ACCOUNT_ID}}:assumed-role/dcl-dev-role-s05/i-0abc…   ← sesión del role, no un IAM user"
+        },
+        {
+          "t": "Prueba 2: allowed/context.txt → PASS",
+          "e": "Action concedida sobre un Resource que coincide con allowed/*. Demuestra que red, DNS y credenciales funcionan.",
+          "c": "aws s3api get-object --bucket $BUCKET --key allowed/context.txt /tmp/context.txt\ncat /tmp/context.txt",
+          "r": "{\"ContentLength\": 42, \"ServerSideEncryption\": \"AES256\", …}\nDigital Café Luna — lectura autorizada   ← PASS"
+        },
+        {
+          "t": "Prueba 3: restricted/secret.txt → AccessDenied (Resource)",
+          "e": "Misma Action, misma red, misma identidad. Solo cambia el Resource: ya no coincide con allowed/*.",
+          "c": "aws s3api get-object --bucket $BUCKET --key restricted/secret.txt /tmp/secret.txt",
+          "r": "AccessDenied … is not authorized to perform: s3:GetObject on resource: \"arn:aws:s3:::dcl-s05-team01-{{ACCOUNT_ID}}/restricted/secret.txt\" because no identity-based policy allows the s3:GetObject action"
+        },
+        {
+          "t": "Prueba 4: PutObject en allowed/ → AccessDenied (Action)",
+          "e": "Ahora el Resource sí coincide, pero s3:PutObject no está concedida. Si esto crea el objeto, hay otro permiso ampliando el role: detener.",
+          "c": "printf 'write test\\n' > /tmp/write-test.txt\naws s3api put-object --bucket $BUCKET --key allowed/write-test.txt --body /tmp/write-test.txt",
+          "r": "AccessDenied … is not authorized to perform: s3:PutObject on resource: \"arn:aws:s3:::dcl-s05-team01-{{ACCOUNT_ID}}/allowed/write-test.txt\" because no identity-based policy allows the s3:PutObject action"
+        }
+      ]
+    },
+    {
+      "h": "5 · Cifrado y CloudTrail",
+      "note": "PutObject y GetObject son data events: no salen en Event history. El evento pertinente es de administración: AttachRolePolicy.",
+      "steps": [
+        {
+          "t": "Verificar SSE-S3 (cifrado ≠ autorización)",
+          "e": "Protege el dato at rest; no decide quién lo lee. Por eso el role sin permiso igual recibe AccessDenied sobre un objeto cifrado.",
+          "c": "aws s3api get-bucket-encryption --bucket $BUCKET --query 'ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault'\naws s3api head-object --bucket $BUCKET --key allowed/context.txt --query ServerSideEncryption",
+          "r": "{\"SSEAlgorithm\": \"AES256\"}\n\"AES256\""
+        },
+        {
+          "t": "Localizar AttachRolePolicy en CloudTrail Event history",
+          "e": "Quién, qué, cuándo y sobre qué: principal, eventName, eventTime y requestParameters. Sin crear trail.",
+          "c": "aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AttachRolePolicy --max-results 5 \\\n  --query 'Events[].CloudTrailEvent' --output text",
+          "r": "eventTime: 2026-10-03T15:39:12Z   eventSource: iam.amazonaws.com   eventName: AttachRolePolicy\nuserIdentity.arn: arn:aws:iam::{{ACCOUNT_ID}}:user/sergio-cli\nrequestParameters: {\"roleName\": \"dcl-dev-role-s05\", \"policyArn\": \"…:policy/dcl-dev-policy-s3-read-allowed-s05\"}"
+        }
+      ]
+    },
+    {
+      "h": "6 · Troubleshooting",
+      "note": "¿Qué evidencia dice que el AccessDenied es autorización y no red? El PASS de la prueba 2 desde la misma EC2, el objeto restricted existente, el mismo ARN de role y la policy visible limitada a allowed/*. No se arregla agregando s3:* ni AmazonS3FullAccess.",
+      "steps": [
+        {
+          "t": "Leer el error antes de tocar permisos",
+          "e": "Timeout o Unable to locate credentials apuntan a red o identidad; NoSuchKey a un nombre; AccessDenied con \"no identity-based policy allows\" apunta a la policy del role.",
+          "c": "aws iam list-attached-role-policies --role-name dcl-dev-role-s05\naws iam get-policy-version --policy-arn $POL --version-id v1 --query PolicyVersion.Document",
+          "r": "{\"Statement\": [{\"Action\": \"s3:GetObject\", \"Effect\": \"Allow\", \"Resource\": \"arn:aws:s3:::dcl-s05-team01-{{ACCOUNT_ID}}/allowed/*\"}]}"
+        }
+      ]
+    },
+    {
+      "h": "7 · Cleanup",
+      "cleanup": true,
+      "note": "Orden: EC2, SG, route table, IGW, bucket, policy, role. Queda solo el baseline S01.",
+      "steps": [
+        {
+          "t": "Terminar EC2 y borrar red temporal",
+          "e": "El SG solo se borra cuando la EC2 ya terminó. Subnet A vuelve a la main route table.",
+          "c": "aws ec2 terminate-instances --instance-ids $IID && aws ec2 wait instance-terminated --instance-ids $IID\naws ec2 delete-security-group --group-id $SG\naws ec2 disassociate-route-table --association-id $ASSOC\naws ec2 delete-route-table --route-table-id $RT\naws ec2 detach-internet-gateway --internet-gateway-id $IGW --vpc-id $VPC\naws ec2 delete-internet-gateway --internet-gateway-id $IGW",
+          "r": "\"shutting-down\"   ← luego terminated; sin volúmenes huérfanos"
+        },
+        {
+          "t": "Vaciar y borrar bucket, policy, instance profile y role",
+          "e": "Hay que desadjuntar la policy antes de borrarla y sacar el role del instance profile antes de borrar ambos.",
+          "c": "aws s3 rm s3://$BUCKET --recursive && aws s3api delete-bucket --bucket $BUCKET\naws iam detach-role-policy --role-name dcl-dev-role-s05 --policy-arn $POL\naws iam delete-policy --policy-arn $POL\naws iam remove-role-from-instance-profile --instance-profile-name dcl-dev-role-s05 --role-name dcl-dev-role-s05\naws iam delete-instance-profile --instance-profile-name dcl-dev-role-s05\naws iam delete-role --role-name dcl-dev-role-s05",
+          "r": "Verificación: sin EC2, volúmenes, SG, buckets, roles, instance profiles ni policies propias. Solo queda el IGW de la VPC por defecto y la main route table con 10.20.0.0/16."
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "s": "La EC2 hace GetObject sobre allowed/context.txt sin error, pero sobre restricted/secret.txt recibe AccessDenied. Misma red y mismo role. ¿Qué explica la diferencia?",
+      "o": [
+        "El SG bloquea el prefijo restricted/.",
+        "El Resource de la policy es allowed/*; el otro objeto queda fuera del alcance concedido.",
+        "SSE-S3 impide leer ese objeto."
+      ],
+      "a": 1,
+      "x": "La red es la misma y el PASS lo prueba. Cambia solo el Resource. El SG no entiende prefijos de S3 y SSE-S3 es transparente para una identidad autorizada."
+    },
+    {
+      "s": "PutObject sobre allowed/write-test.txt da AccessDenied aunque el prefijo es el permitido. ¿Cómo lo resuelves en el lab?",
+      "o": [
+        "Agregar AmazonS3FullAccess al role.",
+        "Nada: es el resultado esperado, la policy no concede s3:PutObject.",
+        "Abrir el SG a 0.0.0.0/0."
+      ],
+      "a": 1,
+      "x": "Resource coincide, Action no. Es el Deny controlado que demuestra least privilege. Ampliar permisos para \"arreglarlo\" destruye la prueba."
+    },
+    {
+      "s": "Buscas el PutObject de la prueba en CloudTrail Event history y no aparece. ¿Por qué?",
+      "o": [
+        "CloudTrail tiene entrega eventual y tardó más de una hora.",
+        "PutObject es un data event; Event history solo muestra management events como AttachRolePolicy.",
+        "El AccessDenied no se registra nunca."
+      ],
+      "a": 1,
+      "x": "Los data events de S3 requieren un trail con data events habilitados. Event history cubre 90 días de management events."
+    },
+    {
+      "s": "¿Qué ventaja da un IAM Role en EC2 frente a access keys en la instancia?",
+      "o": [
+        "Credenciales temporales entregadas por la instancia, sin secretos estáticos que filtrar o rotar a mano.",
+        "Permisos más amplios por defecto.",
+        "Cifra los objetos de S3."
+      ],
+      "a": 0,
+      "x": "El role entrega credenciales temporales vía metadata; aws configure list las muestra como iam-role. Nada persistente en disco."
+    }
+  ],
+  "oral": [
+    {
+      "q": "¿Qué evidencia demuestra que el AccessDenied es autorización y no un problema de red?",
+      "a": "El GetObject sobre allowed/ funciona desde la misma EC2 con el mismo ARN de assumed-role, así que ruta, DNS y credenciales están bien. El objeto restricted existe. El error aparece solo al cambiar Resource o Action, y el mensaje dice \"no identity-based policy allows\". La policy visible coincide con ese límite."
+    },
+    {
+      "q": "¿Por qué SSE-S3 no sustituye a IAM, y CloudTrail a los controles preventivos?",
+      "a": "SSE-S3 protege el dato en disco y es transparente para quien está autorizado; no decide quién lee. CloudTrail registra después quién hizo qué (atribución), pero no impide nada. Cada control responde una pregunta distinta: puedo llegar, quién soy, qué puedo hacer, está protegido, quién lo hizo."
+    }
+  ]
+}

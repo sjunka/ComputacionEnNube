@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest'
 import { GUIA_PATH, loadGuia } from '../../scripts/extract-guia.mjs'
 import type { Consola, Lab } from './types'
 
-const labs: Lab[] = Object.values(import.meta.glob<Lab>('./lab*.json', { eager: true, import: 'default' }))
+const todos: Lab[] = Object.values(import.meta.glob<Lab>('./lab*.json', { eager: true, import: 'default' }))
 const diagramas = import.meta.glob<string>('../diagramas/Lab*.tsx', { eager: true, query: '?raw', import: 'default' })
 
 type OrigK = { img?: unknown }
@@ -12,6 +12,8 @@ const nImgs = (k?: OrigK | Consola) => !k?.img ? 0 : Array.isArray((k.img as unk
 
 describe.skipIf(!existsSync(GUIA_PATH))('migración desde el artifact', () => {
   const g = loadGuia()
+  // El artifact solo cubre los labs 01 a 04; los posteriores nacen directamente como JSON.
+  const labs = todos.filter(l => Number(l.id) <= 4)
   const orig = g.LABS as { phases: { steps: { k?: OrigK }[] }[]; quiz: { img?: string }[]; oral?: unknown[] }[]
   const pasos = (ls: { phases: { steps: { k?: OrigK | Consola }[] }[] }[]) => ls.flatMap(l => l.phases.flatMap(p => p.steps))
 
@@ -44,6 +46,8 @@ describe.skipIf(!existsSync(GUIA_PATH))('migración desde el artifact', () => {
     expect(labs.flatMap(l => l.oral ?? []).length).toBe(orig.flatMap(l => l.oral ?? []).length)
   })
 })
+
+const labs = todos
 
 test('toda captura referenciada está en redact.json', async () => {
   const redact = (await import('./redact.json')).default as Record<string, unknown>

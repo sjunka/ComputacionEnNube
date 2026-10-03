@@ -24,9 +24,9 @@ Otros equipos:
 | 1 | Lab Evolutivo 03 — Datos y almacenamiento (práctica, no se entrega) | 2026-09-23 | Hecho en cuenta propia (`evidencias/lab-evolutivo-03/`) |
 | 2 | Lab Evolutivo 04 — Networking y conectividad (práctica) | 2026-09-30 | Pendiente |
 | 3 | **Checkpoint Lab 1** — S01–S04, individual — 20% | 2026-09-30 | Pendiente |
-| 3b | Lab Evolutivo 05 — Seguridad y gobernanza (práctica, ejecutar antes) | 2026-10-07 | Pendiente |
+| 3b | Lab Evolutivo 05 — Seguridad y gobernanza (práctica, ejecutar antes) | 2026-10-07 | Hecho en cuenta propia el 3 oct por CLI (app: `lab05.json`); cleanup verificado |
 | 4 | **Checkpoint Lab 2** — individual — 20% | 2026-10-21 | Pendiente |
-| 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Pendiente — guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
+| 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Borrador del Brief en `assignments/architecture-challenge/decision-brief.md`, pendiente de revisión; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
 
 Checkpoints 1 y 2: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
 
@@ -54,6 +54,11 @@ Checkpoints 1 y 2: 50% funcionamiento de implementación propia + 30% test (5 pr
 - Calendario actualizado (`material/calendario-operativo-actualizado-v01-cerrado.pdf`).
 - Evaluaciones pasan a individuales; pesos iguales. Guías actualizadas por llegar.
 - Labs 02 y 03 corridos en cuenta propia el 23/09 con evidencias en `evidencias/`; cuenta en baseline S01. Guía interactiva Labs 01–04: https://claude.ai/artifact/9uVzAyNiJb8B2CFF7PdPeP
+
+### 2026-10-03 — Lab 05 y borrador del Brief
+- Lab 05 corrido por CLI en la cuenta propia: PASS de GetObject en `allowed/*`, AccessDenied por Resource (`restricted/`) y por Action (PutObject), SSE-S3 verificado, AttachRolePolicy hallado en CloudTrail Event history. Las pruebas corrieron por user data y se leyeron con `get-console-output` (no por Instance Connect).
+- Cleanup hecho: sin EC2, volúmenes, SG, route table, IGW, bucket, policy, role ni instance profile de S05. Solo baseline S01.
+- Architecture Decision Brief (borrador) en `assignments/architecture-challenge/`. Costos son estimados a verificar en AWS Pricing Calculator.
 
 ## Sin clasificar
 

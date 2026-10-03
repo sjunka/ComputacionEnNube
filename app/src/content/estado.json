@@ -1,5 +1,5 @@
 {
-  "actualizado": "28 sep 2026, 16:50 (Bogotá)",
+  "actualizado": "3 oct 2026, 10:50 (Bogotá)",
   "items": [
     {
       "pill": "ok",
@@ -22,9 +22,14 @@
       "text": "Lab 04 corrido el 28 sep (16:39–16:50): subnet A pública solo por su route table, PASS → FAIL (timeout) → PASS de A a la IP privada de B:8080 quitando y restaurando la regla de sg-b. Cleanup: sin EC2, IGW, route table ni SG del lab."
     },
     {
+      "pill": "ok",
+      "tag": "HECHO",
+      "text": "Lab 05 corrido el 3 oct por CLI: GetObject PASS en allowed/*, AccessDenied por Resource y por Action, SSE-S3 y AttachRolePolicy en CloudTrail. Cleanup: solo queda el baseline S01."
+    },
+    {
       "pill": "todo",
-      "tag": "30 SEP",
-      "text": "Lab 04 en clase + Checkpoint Lab 1. La cuenta está en el baseline: solo VPC, dos subnets y la main route table."
+      "tag": "7 OCT",
+      "text": "Lab 05 en clase. Después: Checkpoint Lab 2 (21 oct) y Architecture Challenge (28 oct, Brief días antes)."
     }
   ],
   "corriendo": [],
