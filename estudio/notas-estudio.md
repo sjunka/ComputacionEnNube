@@ -73,3 +73,14 @@ La sigla es propia; los pasos salen del Lab 04. Método: PASS → cambiar una so
   - `0.0.0.0/0` en sg-efs no lo abre a internet (los mount targets solo tienen IP privada), pero sí a toda la VPC.
   - Outbound vacío en sg-ec2: timeout, porque la ida necesita una regla de salida.
 - **Cleanup hecho:** solo queda el baseline.
+
+## Costos y cleanup (1 oct)
+
+- Cobro recibido: 472,45 COP (unos 0,11 USD), por horas ya consumidas de las 2 t3.micro, el EFS y las IP públicas del R07 y de labs anteriores.
+- Revisión tras el cleanup, en las 17 regiones: 0 EC2, 0 EBS, 0 EFS, 0 Elastic IP, 0 NAT Gateway, 0 ALB/NLB, 0 ASG, 0 RDS, 0 VPC endpoints y 0 buckets S3. Solo queda el baseline (VPC + 2 subnets en 2 AZ).
+- `sergio-cli` tiene AdministratorAccess, pero Cost Explorer responde `User not enabled for cost explorer access`. No es un problema de IAM: lo activa el usuario raíz.
+  1. Account › IAM user and role access to Billing information › Activate IAM Access.
+  2. Billing and Cost Management › Cost Explorer › Launch Cost Explorer (los datos tardan unas 24 horas).
+- Sin activarlo, el desglose por servicio está en Billing › Bills con el usuario raíz.
+- Hábito: tras cada demo, correr el cleanup y verificar con el recuento por región antes de cerrar.
+- Tip del CLI: usar `AWS_PAGER=""` para que ningún comando se quede esperando en el paginador.
