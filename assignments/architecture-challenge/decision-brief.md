@@ -17,6 +17,10 @@ Digital Café Luna prepara una campaña nacional de pocos días. La demanda es i
 
 ## 2. Arquitectura propuesta
 
+![Arquitectura propuesta](arquitectura.png)
+
+Versión editable del mismo diagrama:
+
 ```mermaid
 flowchart TB
   U[Clientes] --> CF[CloudFront]
