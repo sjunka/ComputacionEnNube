@@ -120,6 +120,19 @@ El contenido son datos: agregar un lab, checkpoint o entrega es agregar `app/src
 Siguiente etapa: el juego de verificación, `scripts/PROMPT-juego-labs.md`.
 El artifact de la guía (`guia-labs-01-04.html`) está deprecado: no extenderlo.
 
+### Checklist al agregar un lab nuevo
+
+1. Crear `app/src/content/labNN.json` (el id es el número con dos dígitos). Sin diagrama ni capturas es válido.
+2. Actualizar `app/src/content/estado.json`: fecha en `actualizado`, un ítem `HECHO` para el lab y el siguiente hito como `todo`. Quitar ítems de fechas ya pasadas.
+3. Revisar textos con rangos fijos: `guia.json` (`intro` y `repaso`) y `index.html`. El título no lleva rango de labs.
+4. Si el lab tiene capturas: agregarlas a `redact.json` y correr `node app/scripts/sync-img.mjs`.
+5. Actualizar `board.md` (tabla de entregas y bitácora).
+6. Correr `npm test` y `npm run build` en `app/`. El build corre `check-leaks`.
+7. Pedir confirmación a Sergio, commitear y empujar a `main`. El deploy tarda unos 30 s: verificar con `gh run list --limit 1` y que el bundle publicado contenga el nombre del lab.
+8. Avisar a Sergio que recargue con `Cmd+Shift+R`: el navegador cachea la versión anterior.
+
+Los datos de la cuenta nunca van en el JSON: usar marcadores `{{ACCOUNT_ID}}` y similares. `content.test.ts` solo compara con el artifact los labs 01 a 04.
+
 ## Repositorio
 
 `https://github.com/sjunka/ComputacionEnNube` (**público**, igual que el sitio). Rama `main`.
