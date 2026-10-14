@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Lab 06 · IaC + observabilidad",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "template",
+      "type": "external",
+      "label": "Template YAML",
+      "sublabel": "s06-ops-cloudformation",
+      "pos": [
+        40,
+        80
+      ],
+      "size": [
+        150,
+        64
+      ],
+      "tag": "validate-template"
+    },
+    {
+      "id": "stack",
+      "type": "cloud",
+      "label": "CloudFormation",
+      "sublabel": "dcl-dev-stack-ops-s06",
+      "pos": [
+        260,
+        80
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "create · update · delete"
+    },
+    {
+      "id": "ec2",
+      "type": "backend",
+      "label": "OpsInstance",
+      "sublabel": "t3.micro · sin IP pública",
+      "pos": [
+        500,
+        80
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "user data: CPU 900 s"
+    },
+    {
+      "id": "metric",
+      "type": "database",
+      "label": "CPUUtilization",
+      "sublabel": "AWS/EC2 · 5 min",
+      "pos": [
+        740,
+        80
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "alarm",
+      "type": "security",
+      "label": "CpuHighAlarm",
+      "sublabel": "Average ≥ 70% · 2 de 2",
+      "pos": [
+        970,
+        80
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "sin acciones"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "us-east-1 · dcl-dev-vpc · subnet-a",
+      "wraps": [
+        "ec2"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "OpsSecurityGroup · 0 inbound",
+      "wraps": [
+        "ec2"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "tpl-stack",
+      "from": "template",
+      "to": "stack",
+      "label": "desired state",
+      "variant": "emphasis"
+    },
+    {
+      "id": "stack-ec2",
+      "from": "stack",
+      "to": "ec2",
+      "label": "crea"
+    },
+    {
+      "id": "ec2-metric",
+      "from": "ec2",
+      "to": "metric",
+      "label": "publica",
+      "variant": "emphasis"
+    },
+    {
+      "id": "metric-alarm",
+      "from": "metric",
+      "to": "alarm",
+      "label": "evalúa",
+      "variant": "emphasis"
+    },
+    {
+      "id": "stack-alarm",
+      "from": "stack",
+      "to": "alarm",
+      "label": "crea",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "via": [
+        [
+          340,
+          225
+        ],
+        [
+          1050,
+          225
+        ]
+      ]
+    }
+  ]
+}

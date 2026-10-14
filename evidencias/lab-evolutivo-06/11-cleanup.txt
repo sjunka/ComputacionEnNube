@@ -1,0 +1,14 @@
+== 2026-10-14T16:11:46Z delete-stack ==
+== 2026-10-14T16:12:48Z stack-delete-complete ==
+aws: [ERROR]: An error occurred (ValidationError) when calling the DescribeStacks operation: Stack with id dcl-dev-stack-ops-s06 does not exist
+DELETE_COMPLETE	2026-10-14T16:11:46.949000+00:00
+EC2: terminated
+EBS de la EC2:  (vacío = borrado)
+Volúmenes en la cuenta: 0
+SG del stack: 0
+Alarmas: 0
+Instancias pending/running: 0
+Baseline:
+dcl-dev-vpc	10.20.0.0/16
+dcl-dev-subnet-a	10.20.1.0/24	us-east-1a
+dcl-dev-subnet-b	10.20.2.0/24	us-east-1b

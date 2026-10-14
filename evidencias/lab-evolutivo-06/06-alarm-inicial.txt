@@ -1,0 +1,20 @@
+{
+    "State": "INSUFFICIENT_DATA",
+    "Reason": "Unchecked: Initial alarm creation",
+    "Metric": "CPUUtilization",
+    "Ns": "AWS/EC2",
+    "Dim": [
+        {
+            "Name": "InstanceId",
+            "Value": "i-0260e3f9055d03452"
+        }
+    ],
+    "Stat": "Average",
+    "Period": 300,
+    "Eval": 2,
+    "DTA": 2,
+    "Thr": 70.0,
+    "Op": "GreaterThanOrEqualToThreshold",
+    "Desc": "S06 v1: CPU controlada >= 70%",
+    "Actions": false
+}

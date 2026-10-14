@@ -1,0 +1,7 @@
+------------------------------------------------------------------------------------------------------
+|                                       DescribeStackResources                                       |
++------------------+---------------------------+----------------------------------+------------------+
+|  CpuHighAlarm    |  AWS::CloudWatch::Alarm   |  dcl-dev-stack-ops-s06-cpu-high  |  CREATE_COMPLETE |
+|  OpsInstance     |  AWS::EC2::Instance       |  i-0260e3f9055d03452             |  CREATE_COMPLETE |
+|  OpsSecurityGroup|  AWS::EC2::SecurityGroup  |  sg-07c1984da0189c7f5            |  CREATE_COMPLETE |
++------------------+---------------------------+----------------------------------+------------------+

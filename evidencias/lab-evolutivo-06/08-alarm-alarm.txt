@@ -1,0 +1,1 @@
+ALARM	Threshold Crossed: 2 out of the last 2 datapoints [100.0 (14/10/26 15:51:00), 74.9981859320779 (14/10/26 15:46:00)] were greater than or equal to the threshold (70.0) (minimum 2 datapoints for OK -> ALARM transition).	2026-10-14T10:56:58.323000-05:00

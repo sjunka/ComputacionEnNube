@@ -24,11 +24,13 @@ Otros equipos:
 | 1 | Lab Evolutivo 03 — Datos y almacenamiento (práctica, no se entrega) | 2026-09-23 | Hecho en cuenta propia (`evidencias/lab-evolutivo-03/`) |
 | 2 | Lab Evolutivo 04 — Networking y conectividad (práctica) | 2026-09-30 | Pendiente |
 | 3 | **Checkpoint Lab 1** — S01–S04, individual — 20% | 2026-09-30 | Pendiente |
-| 3b | Lab Evolutivo 05 — Seguridad y gobernanza (práctica, ejecutar antes) | 2026-10-07 | Hecho en cuenta propia el 3 oct por CLI (app: `lab05.json`); cleanup verificado |
-| 4 | **Checkpoint Lab 2** — individual — 20% | 2026-10-21 | Pendiente |
+| 3b | Lab Evolutivo 05 — Seguridad y gobernanza (práctica, ejecutar antes) | 2026-10-07 | Hecho en cuenta propia el 3 oct por CLI (app: `lab05.json`); cleanup verificado de nuevo el 14 oct; una página en `estudio/lab05/` |
+| 3b2 | Lab Evolutivo 06 — Operación y automatización (CloudFormation + CloudWatch) | 2026-10-14 | Hecho en cuenta propia el 14 oct por CLI (app: `lab06.json`); una página en `estudio/lab06/` |
+| 3c | Lab Evolutivo 07 — Modernización: S3 ObjectCreated → Lambda → CloudWatch Logs (ejecutar antes) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-s07-lab-evolutivo-07-modernizacion-v01.md` |
+| 4 | **Checkpoint Lab 2** — S05–S07, individual — 20% (50% funcionamiento + 50% test) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md` |
 | 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Borrador del Brief en `assignments/architecture-challenge/decision-brief.md`, pendiente de revisión; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
 
-Checkpoints 1 y 2: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
+Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Checkpoint 2: 50% funcionamiento + 50% test (sin oral, correo del 14 oct). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
 
 ## Bitácora
 
@@ -59,6 +61,11 @@ Checkpoints 1 y 2: 50% funcionamiento de implementación propia + 30% test (5 pr
 - Lab 05 corrido por CLI en la cuenta propia: PASS de GetObject en `allowed/*`, AccessDenied por Resource (`restricted/`) y por Action (PutObject), SSE-S3 verificado, AttachRolePolicy hallado en CloudTrail Event history. Las pruebas corrieron por user data y se leyeron con `get-console-output` (no por Instance Connect).
 - Cleanup hecho: sin EC2, volúmenes, SG, route table, IGW, bucket, policy, role ni instance profile de S05. Solo baseline S01.
 - Architecture Decision Brief (borrador) en `assignments/architecture-challenge/`. Costos son estimados a verificar en AWS Pricing Calculator.
+
+### 2026-10-14 — Correos Ing. Luis Lunar (S07 y Checkpoint Lab 2)
+- Material S07 (modernización) y guía del Checkpoint Lab 2 en `material/` y `material-md/`.
+- Checkpoint Lab 2 el 21 oct: 50% funcionamiento + 50% test; reemplaza el 50/30/20 de la guía.
+- Lab 07 se va ejecutando antes y se revisa en la sesión del 21 oct.
 
 ## Sin clasificar
 

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Lab 06 en una página</title>
+<style>
+  @page { size: A4; margin: 10mm; }
+  body { font: 10px/1.38 system-ui, sans-serif; color: #222; margin: 0; }
+  h1 { font-size: 17px; margin: 0 0 1px; }
+  .sub { color: #555; margin-bottom: 6px; }
+  h2 { font-size: 11.5px; margin: 8px 0 3px; border-bottom: 1.5px solid #222; padding-bottom: 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  ul, ol { margin: 2px 0; padding-left: 15px; }
+  li { margin: 1px 0; }
+  code { font-size: 9.2px; background: #f1f1f1; padding: 0 2px; border-radius: 2px; }
+  .box { border: 1.5px solid #c63; border-radius: 6px; padding: 5px 8px; background: #fff6f0; }
+  img { width: 100%; border: 1px solid #ddd; border-radius: 6px; margin-top: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 9.4px; }
+  td, th { border: 1px solid #ccc; padding: 2px 4px; text-align: left; vertical-align: top; }
+  th { background: #f4f4f4; }
+  .no { color: #b3261e; font-weight: 600; } .ok { color: #08793b; font-weight: 600; }
+  .q b { display: block; margin-top: 3px; }
+</style>
+</head>
+<body>
+<h1>Lab 06 · Operación y automatización: deployed ≠ operable</h1>
+<div class="sub">Digital Café Luna · us-east-1 · corrido por CLI el 14 oct 2026 (15:50–16:15 UTC) · stack <code>dcl-dev-stack-ops-s06</code></div>
+
+<div class="box"><b>La idea en una frase:</b> un template crea SG, EC2 y alarma como <b>una unidad</b>. <code>CREATE_COMPLETE</code> solo dice que CloudFormation terminó; el comportamiento se prueba con la cadena <b>user data → carga → CPUUtilization → threshold → evaluación → ALARM</b>, con timestamps. Update y delete también son operaciones sobre el mismo estado deseado.</div>
+
+<img src="diagrama.png" alt="Template YAML a CloudFormation, que crea OpsInstance (sin IP pública, SG sin inbound) y CpuHighAlarm; la EC2 publica CPUUtilization y la alarma la evalúa">
+
+<div class="cols">
+<div>
+<h2>1. Cadena causal con mis timestamps (UTC)</h2>
+<table>
+<tr><th>Hora</th><th>Evento</th><th>Evidencia</th></tr>
+<tr><td>15:50:20</td><td>create-stack</td><td>Events: SG → EC2 → alarma (dependencias)</td></tr>
+<tr><td>15:50:29</td><td>EC2 arranca; user data lanza 2 procesos CPU-bound (900 s)</td><td>Uno por vCPU del t3.micro</td></tr>
+<tr><td>15:50:46</td><td class="ok">CREATE_COMPLETE</td><td>26 s. Todavía no prueba comportamiento.</td></tr>
+<tr><td>15:51:58</td><td>INSUFFICIENT_DATA → OK</td><td>El primer periodo incluía minutos antes del arranque (CPU ≈ 0)</td></tr>
+<tr><td>15:50 · 15:55 · 16:00</td><td>CPUUtilization 75 · 100 · 100%</td><td>Average, periodos de 300 s</td></tr>
+<tr><td>15:56:58</td><td class="no">OK → ALARM</td><td>«2 out of the last 2 datapoints [100.0, 74.998] ≥ 70.0»</td></tr>
+<tr><td>15:58:34</td><td class="ok">UPDATE_COMPLETE (v2)</td><td>Change set: <code>Replacement: False</code>; mismo InstanceId</td></tr>
+<tr><td>16:05 · 16:10</td><td>CPUUtilization 30 · 0.2%</td><td>La carga termina a los 900 s</td></tr>
+<tr><td>16:07:30</td><td class="ok">ALARM → OK</td><td>La alarma sigue a la causa, no al recurso</td></tr>
+<tr><td>16:12:48</td><td class="ok">DELETE_COMPLETE</td><td>Sin EC2, EBS, SG ni alarma; baseline S01 intacto</td></tr>
+</table>
+
+<img src="cpu.png" alt="Gráfica de CloudWatch: CPU sube a 100% durante la banda de carga, cruza el threshold 70%, ALARM 15:56:58 y OK 16:07:30" style="margin-top:4px">
+
+<h2>2. Qué crea el template</h2>
+<table>
+<tr><th>Logical ID</th><th>Physical</th><th>Detalle</th></tr>
+<tr><td>OpsSecurityGroup</td><td>sg-07c1…</td><td>0 reglas inbound</td></tr>
+<tr><td>OpsInstance</td><td>i-0260…3452</td><td>t3.micro, sin IP pública, IMDSv2, basic monitoring, EBS gp3 cifrado</td></tr>
+<tr><td>CpuHighAlarm</td><td>…-cpu-high</td><td>Average ≥ 70, Period 300, 2 de 2, sin acciones</td></tr>
+</table>
+<p style="margin:3px 0">Parámetros: VpcId, SubnetId (baseline S01), AmiId (parámetro público de SSM), CpuThreshold, LabRevision.</p>
+</div>
+
+<div>
+<h2>3. Diagnóstico: ¿despliegue u observación?</h2>
+<ul>
+<li><b>Stack falla al crear</b> → Events del stack: template, permisos, parámetros, quota. Es <b>despliegue</b>.</li>
+<li><b>EC2 existe pero no hay métrica</b> → InstanceId, namespace <code>AWS/EC2</code>, dimensión, esperar el primer datapoint (5 min).</li>
+<li><b>Alarma en INSUFFICIENT_DATA</b> → ¿hay datapoints? Period 300 × 2 = mínimo unos 10 min.</li>
+<li><b>Métrica sobre el threshold, alarma no cambia</b> → statistic, threshold, regla M de N, tiempo de evaluación. Es <b>observación</b>.</li>
+<li><b>Update intenta replacement</b> → qué propiedad cambió; revisar el change set antes de ejecutar.</li>
+<li><b>DELETE_FAILED</b> → Events: qué recurso bloquea y qué dependencia lo retiene.</li>
+</ul>
+
+<h2>4. Detalles que suelen preguntar</h2>
+<ul>
+<li><b>ALARM ≠ instancia dañada:</b> solo dice que la condición configurada fue verdadera en suficientes datapoints.</li>
+<li><b>Sin IP pública igual hay métricas:</b> CPUUtilization básica la publica el hipervisor, sin agente ni Internet.</li>
+<li><b>Por qué pasó por OK:</b> el primer periodo evaluado incluía minutos antes del arranque (CPU ≈ 0). Es la regla de evaluación, no un error.</li>
+<li><b>Update sin replacement:</b> cambiar tags y descripción se aplica in place. Cambiar AMI, subnet o tipo de instancia sí podría reemplazar la EC2.</li>
+<li><b>Cleanup:</b> Delete stack borra en orden inverso. El EBS se va con la EC2 por <code>DeleteOnTermination</code>. Borrar a mano deja drift.</li>
+</ul>
+
+<h2>5. Preguntas tipo test</h2>
+<div class="q">
+<b>¿Qué evidencia dice que la alarma la causó la carga y no solo que existe?</b>
+Datapoints ≥ 70% en el InstanceId del stack, dentro de la ventana de la carga, y la hora de la transición coherente con esos periodos.
+<b>¿Cómo sabes que el update no reemplazó la EC2?</b>
+Mismo physical ID antes y después (y Replacement: False en el change set). UPDATE_COMPLETE solo no lo prueba.
+<b>La CPU superó 70% en un solo periodo y la alarma no cambió. ¿Por qué?</b>
+DatapointsToAlarm = 2 de 2: un periodo no basta.
+</div>
+</div>
+</div>
+</body>
+</html>

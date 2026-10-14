@@ -1,0 +1,279 @@
+{
+  "id": "06",
+  "name": "Lab 06",
+  "sub": "CloudFormation y CloudWatch",
+  "lead": "Un template crea SG, EC2 y alarma como una unidad. La EC2 se carga a sí misma 15 min, CPUUtilization sube y la alarma pasa a ALARM. Luego un update v1 → v2 sin reemplazar la instancia y un Delete stack que borra todo.",
+  "why": "<strong>Idea clave:</strong> <b>deployed ≠ operable</b>. <code>CREATE_COMPLETE</code> solo dice que CloudFormation terminó; el comportamiento se demuestra con la cadena <b>user data → carga → CPUUtilization → threshold → evaluación → ALARM</b>, con timestamps. IaC hace que create, update y delete sean operaciones sobre un estado deseado. Corrido en cuenta propia el <b>14 oct</b> por CLI.",
+  "fecha": "14 oct",
+  "done": true,
+  "phases": [
+    {
+      "h": "0 · Preflight y template",
+      "note": "La EC2 no necesita Internet, IP pública, SSH ni access keys. El stack usa la VPC y la subnet A del baseline como parámetros, sin recrearlas.",
+      "steps": [
+        {
+          "t": "Cargar variables y confirmar baseline",
+          "e": "Sin stack previo con el mismo nombre. VPC y subnet A se pasan por ID al stack.",
+          "c": "export AWS_REGION=us-east-1\nVPC=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=dcl-dev-vpc --query 'Vpcs[0].VpcId' --output text)\nSUBA=$(aws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-a --query 'Subnets[0].SubnetId' --output text)\naws cloudformation describe-stacks --stack-name dcl-dev-stack-ops-s06",
+          "r": "ValidationError: Stack with id dcl-dev-stack-ops-s06 does not exist   ← no hay stack previo"
+        },
+        {
+          "t": "Validar el template sin crear nada",
+          "e": "Template válido ≠ infraestructura desplegada. Parámetros: VpcId, SubnetId, AmiId (parámetro público de SSM), CpuThreshold, LabRevision. Recursos: OpsSecurityGroup, OpsInstance, CpuHighAlarm.",
+          "c": "aws cloudformation validate-template --template-body file://s06-ops-cloudformation.yaml",
+          "r": "Description: S06 - Operacion y automatizacion - Digital Cafe Luna\nParameters: CpuThreshold, LabRevision, VpcId, SubnetId, AmiId   ← sin ValidationError",
+          "k": {
+            "p": "CloudFormation › Create stack › Upload a template file",
+            "s": [
+              "Guarda el YAML de la guía como <code>s06-ops-cloudformation.yaml</code>.",
+              "En CloudShell: <b>Actions › Upload file</b> y corre el <code>validate-template</code>. La consola también valida al subir el archivo en Create stack."
+            ],
+            "n": "No agregar IAM capabilities: el template no crea recursos IAM.",
+            "l": "https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks"
+          }
+        }
+      ]
+    },
+    {
+      "h": "1 · Crear el stack",
+      "note": "CloudFormation convierte recursos lógicos en físicos y guarda el estado como una unidad. Orden por dependencias: SG → EC2 → alarma (la alarma referencia el InstanceId).",
+      "steps": [
+        {
+          "t": "create-stack con LabRevision=v1 y CpuThreshold=70",
+          "e": "Tarda unos 30 s. Events muestra el orden: el SG primero, la EC2 que lo usa, y la alarma que necesita el InstanceId.",
+          "c": "aws cloudformation create-stack --stack-name dcl-dev-stack-ops-s06 --template-body file://s06-ops-cloudformation.yaml \\\n  --parameters ParameterKey=VpcId,ParameterValue=$VPC ParameterKey=SubnetId,ParameterValue=$SUBA ParameterKey=CpuThreshold,ParameterValue=70 ParameterKey=LabRevision,ParameterValue=v1\naws cloudformation wait stack-create-complete --stack-name dcl-dev-stack-ops-s06",
+          "r": "15:50:20Z stack CREATE_IN_PROGRESS\n15:50:32Z OpsSecurityGroup CREATE_COMPLETE\n15:50:41Z OpsInstance CREATE_COMPLETE\n15:50:45Z CpuHighAlarm CREATE_COMPLETE\n15:50:46Z stack CREATE_COMPLETE   ← 26 s"
+        },
+        {
+          "t": "Mapear logical ID → physical ID",
+          "e": "Es la evidencia de que el stack administra esos recursos. CREATE_COMPLETE no prueba que la EC2 produzca la señal ni que la alarma haya evaluado nada.",
+          "c": "aws cloudformation describe-stack-resources --stack-name dcl-dev-stack-ops-s06 \\\n  --query 'StackResources[].[LogicalResourceId,ResourceType,PhysicalResourceId]' --output table",
+          "r": "CpuHighAlarm      AWS::CloudWatch::Alarm   dcl-dev-stack-ops-s06-cpu-high\nOpsInstance       AWS::EC2::Instance       i-0260…3452\nOpsSecurityGroup  AWS::EC2::SecurityGroup  sg-07c1…7f5",
+          "k": {
+            "p": "CloudFormation › Stacks › dcl-dev-stack-ops-s06 › Resources",
+            "s": [
+              "Create stack › With new resources › Upload a template file.",
+              "Stack name <code>dcl-dev-stack-ops-s06</code>; VpcId = dcl-dev-vpc; SubnetId = dcl-dev-subnet-a; CpuThreshold 70; LabRevision v1.",
+              "Submit y seguir la pestaña <b>Events</b> hasta CREATE_COMPLETE."
+            ],
+            "img": [
+              {
+                "src": "lab06/01-stack-resources.png",
+                "cap": "Stack en CREATE_COMPLETE y pestaña Resources: los tres logical ID con su physical ID."
+              }
+            ],
+            "m": [
+              "Logical ID = nombre en el template; Physical ID = recurso real en AWS.",
+              "Los tres en CREATE_COMPLETE.",
+              "El ID de OpsInstance es el que hay que buscar en CloudWatch."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks"
+          }
+        },
+        {
+          "t": "Confirmar EC2 sin IP pública y SG sin inbound",
+          "e": "Criterio de aceptación: la instancia no expone nada y no necesita Internet. El user data no instala paquetes.",
+          "c": "aws ec2 describe-instances --instance-ids $IID --query 'Reservations[0].Instances[0].{State:State.Name,PublicIp:PublicIpAddress,Monitoring:Monitoring.State,IMDS:MetadataOptions.HttpTokens}'\naws ec2 describe-security-groups --group-ids $SG --query 'SecurityGroups[0].IpPermissions'",
+          "r": "{\"State\": \"running\", \"PublicIp\": null, \"Monitoring\": \"disabled\", \"IMDS\": \"required\"}\n[]   ← 0 reglas inbound",
+          "k": {
+            "p": "EC2 › Instances › dcl-dev-stack-ops-s06-ec2  ·  EC2 › Security Groups › …-OpsSecurityGroup-…",
+            "img": [
+              {
+                "src": "lab06/02-ec2.png",
+                "cap": "Public IPv4 vacío, IP privada 10.20.1.x en dcl-dev-subnet-a, IMDSv2 Required."
+              },
+              {
+                "src": "lab06/03-sg.png",
+                "cap": "Inbound rules: No security group rules found. Descripción «S06 - no inbound access»."
+              }
+            ],
+            "m": [
+              "Public IPv4 address: «–».",
+              "Monitoring disabled = basic monitoring: datapoints cada 5 min.",
+              "SG creado por el stack: nombre con sufijo aleatorio de CloudFormation."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:"
+          }
+        }
+      ]
+    },
+    {
+      "h": "2 · Métrica y alarma",
+      "note": "Basic monitoring publica CPUUtilization cada 5 min. La carga dura 900 s para cubrir al menos dos periodos completos. Reservar 25–35 min desde el create.",
+      "steps": [
+        {
+          "t": "Observar CPUUtilization de la instancia del stack",
+          "e": "Una métrica es evidencia cuando se explica qué la produjo: los dos procesos <code>while :; do :; done</code> del user data, uno por vCPU.",
+          "c": "aws cloudwatch get-metric-statistics --namespace AWS/EC2 --metric-name CPUUtilization \\\n  --dimensions Name=InstanceId,Value=$IID --period 300 --statistics Average \\\n  --start-time 2026-10-14T15:45:00Z --end-time 2026-10-14T16:30:00Z",
+          "r": "15:50  74.99   ← periodo parcial: la EC2 arrancó a las 15:50:29\n15:55  100.0   ← dos procesos CPU-bound en 2 vCPU\n16:00  100.0\n16:05  29.68   ← la carga termina a los 900 s (≈16:05:29)\n16:10  0.23",
+          "k": {
+            "p": "CloudWatch › Metrics › All metrics › EC2 › Per-Instance Metrics › InstanceId › CPUUtilization",
+            "s": [
+              "Filtrar por el InstanceId que muestra Resources del stack.",
+              "Graphed metrics: Statistic Average, Period 5 minutes.",
+              "Ajustar la ventana para incluir el arranque de la instancia."
+            ],
+            "img": [
+              {
+                "src": "lab06/07-cpu-grafica.png",
+                "cap": "Gráfica generada por CloudWatch (get-metric-widget-image): banda naranja = los 900 s de carga del user data; línea roja = threshold 70%; ALARM a las 15:56:58 y OK a las 16:07:30."
+              }
+            ],
+            "m": [
+              "La elevación cae dentro de la banda de carga y baja al terminar: eso es causalidad, no coincidencia.",
+              "Cada punto es el promedio de un periodo de 5 min (basic monitoring)."
+            ],
+            "n": "La gráfica se generó por API con anotaciones; en la consola se ve la misma serie sin la banda.",
+            "l": "https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#metricsV2:"
+          }
+        },
+        {
+          "t": "Ver la alarma pasar a ALARM",
+          "e": "Average ≥ 70% en 2 de 2 periodos de 300 s. ActionsEnabled=false: la alarma declara la condición, no hace nada.",
+          "c": "aws cloudwatch describe-alarm-history --alarm-name dcl-dev-stack-ops-s06-cpu-high --history-item-type StateUpdate \\\n  --query 'AlarmHistoryItems[].[Timestamp,HistorySummary]' --output text",
+          "r": "15:51:58Z  INSUFFICIENT_DATA → OK\n15:56:58Z  OK → ALARM   «2 out of the last 2 datapoints [100.0, 74.998] were greater than or equal to the threshold (70.0)»\n16:07:30Z  ALARM → OK   ← la carga terminó",
+          "k": {
+            "p": "CloudWatch › Alarms › dcl-dev-stack-ops-s06-cpu-high",
+            "img": [
+              {
+                "src": "lab06/04-alarm.png",
+                "cap": "In alarm · No actions. Línea de tiempo: gris (INSUFFICIENT_DATA) → verde (OK) → rojo (ALARM)."
+              }
+            ],
+            "m": [
+              "«CPUUtilization >= 70 for 2 datapoints within 10 minutes» = Period 300 × 2.",
+              "No actions: ActionsEnabled=false, sin SNS.",
+              "La barra de estado muestra la transición con su hora; esa hora se compara con la carga."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#alarmsV2:"
+          }
+        }
+      ]
+    },
+    {
+      "h": "3 · Update v1 → v2 sin replacement",
+      "note": "Solo cambia LabRevision. Toca tags y la descripción de la alarma, que se actualizan in place. Si el change set dijera Replacement: True en OpsInstance, detenerse.",
+      "steps": [
+        {
+          "t": "Change set v1 → v2 y ejecutarlo",
+          "e": "El change set muestra antes de aplicar si algo se reemplaza. Registrar el InstanceId antes y comparar después: mismo physical ID = no hubo replacement.",
+          "c": "P='ParameterKey=VpcId,UsePreviousValue=true ParameterKey=SubnetId,UsePreviousValue=true ParameterKey=AmiId,UsePreviousValue=true ParameterKey=CpuThreshold,UsePreviousValue=true'\naws cloudformation create-change-set --stack-name dcl-dev-stack-ops-s06 --change-set-name v1-a-v2 --use-previous-template \\\n  --parameters $P ParameterKey=LabRevision,ParameterValue=v2\naws cloudformation describe-change-set --stack-name dcl-dev-stack-ops-s06 --change-set-name v1-a-v2 \\\n  --query 'Changes[].ResourceChange.[LogicalResourceId,Action,Replacement]' --output text\naws cloudformation execute-change-set --stack-name dcl-dev-stack-ops-s06 --change-set-name v1-a-v2\naws cloudformation wait stack-update-complete --stack-name dcl-dev-stack-ops-s06",
+          "r": "CpuHighAlarm      Modify  False\nOpsInstance       Modify  False   ← Replacement: False\nOpsSecurityGroup  Modify  False\nUPDATE_COMPLETE (15:58:34Z, 12 s)  Revision=v2  InstanceId=i-0260…3452   ← el mismo de antes\ntag dcl:lab-revision = v2 · AlarmDescription = «S06 v2: CPU controlada >= 70%»",
+          "k": {
+            "p": "CloudFormation › dcl-dev-stack-ops-s06 › Update stack › Make a direct update › Use existing template",
+            "s": [
+              "Cambiar solo LabRevision a v2.",
+              "En la revisión, mirar el resumen de cambios: Replacement debe decir False.",
+              "Submit y esperar UPDATE_COMPLETE en Events."
+            ],
+            "img": [
+              {
+                "src": "lab06/05-outputs-v2.png",
+                "cap": "UPDATE_COMPLETE. Outputs: Revision v2 y el mismo InstanceId de la creación."
+              }
+            ],
+            "m": [
+              "InstanceId igual al de la pestaña Resources antes del update.",
+              "Revision = v2."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks"
+          }
+        }
+      ]
+    },
+    {
+      "h": "4 · Troubleshooting",
+      "note": "¿Despliegue u observación? Si Events muestra fallos, es despliegue. Si el stack está completo pero la alarma no cambia, es observación: datapoints, dimensión, periodo, evaluación.",
+      "steps": [
+        {
+          "t": "Leer el StateReason antes de cambiar la alarma",
+          "e": "La alarma no pasó directo de INSUFFICIENT_DATA a ALARM: el primer periodo cubría minutos previos al arranque y mostró CPU baja, así que pasó a OK. No es error; es cómo evalúa CloudWatch.",
+          "c": "aws cloudwatch describe-alarms --alarm-names dcl-dev-stack-ops-s06-cpu-high --query 'MetricAlarms[0].[StateValue,StateReason]'",
+          "r": "OK  Threshold Crossed: 1 out of the last 2 datapoints [0.0027 (14/10/26 15:46:00)] was not greater than or equal to the threshold (70.0)"
+        }
+      ]
+    },
+    {
+      "h": "5 · Cleanup declarativo",
+      "cleanup": true,
+      "note": "Lo que se creó como stack se borra como stack. No borrar recursos a mano salvo DELETE_FAILED documentado.",
+      "steps": [
+        {
+          "t": "Delete stack y verificar",
+          "e": "CloudFormation borra en orden inverso: alarma, EC2 (y su EBS por DeleteOnTermination), SG.",
+          "c": "aws cloudformation delete-stack --stack-name dcl-dev-stack-ops-s06\naws cloudformation wait stack-delete-complete --stack-name dcl-dev-stack-ops-s06\naws ec2 describe-instances --instance-ids $IID --query 'Reservations[0].Instances[0].State.Name'\naws ec2 describe-volumes --filters Name=attachment.instance-id,Values=$IID\naws cloudwatch describe-alarms --alarm-name-prefix dcl-dev-stack-ops-s06",
+          "r": "16:11:46Z delete-stack → 16:12:48Z DELETE_COMPLETE\nEC2: terminated · EBS: 0 volúmenes · SG del stack: 0 · alarmas: 0\nBaseline: dcl-dev-vpc 10.20.0.0/16, subnet-a 10.20.1.0/24 (1a), subnet-b 10.20.2.0/24 (1b)",
+          "k": {
+            "p": "CloudFormation › Stacks › dcl-dev-stack-ops-s06 › Delete",
+            "s": [
+              "Seleccionar el stack › Delete › confirmar.",
+              "Filter status = Deleted para verlo en DELETE_COMPLETE."
+            ],
+            "img": [
+              {
+                "src": "lab06/08-stack-deleted.png",
+                "cap": "Stack en DELETE_COMPLETE (filtro Deleted)."
+              }
+            ],
+            "m": [
+              "Si fuera DELETE_FAILED: Events dice qué recurso bloquea."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks"
+          }
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "s": "El stack está en CREATE_COMPLETE, pero a los 3 minutos la alarma sigue en INSUFFICIENT_DATA. ¿Qué es lo más probable?",
+      "o": [
+        "El template quedó mal y hay que borrar el stack.",
+        "Con basic monitoring aún no hay suficientes datapoints de 5 min para evaluar 2 periodos.",
+        "La EC2 no tiene IP pública y no puede enviar métricas."
+      ],
+      "a": 1,
+      "x": "Es un tema de observación, no de despliegue. Las métricas básicas de EC2 las publica el hipervisor, sin agente ni red pública. Hay que esperar datapoints."
+    },
+    {
+      "s": "¿Qué evidencia permite afirmar que la alarma la causó la carga controlada y no que \"la alarma existe\"?",
+      "o": [
+        "La captura de CREATE_COMPLETE.",
+        "Los datapoints de CPUUtilization ≥ 70% en el InstanceId del stack, en los periodos de la carga, y el timestamp de la transición a ALARM coherente con ellos.",
+        "Que la alarma tenga ActionsEnabled=false."
+      ],
+      "a": 1,
+      "x": "Causalidad con timestamps: user data inicia carga → datapoints altos en la instancia correcta → 2 de 2 periodos sobre el threshold → transición."
+    },
+    {
+      "s": "Haces update de LabRevision v1 → v2. ¿Cómo sabes que la EC2 no fue reemplazada?",
+      "o": [
+        "El stack quedó en UPDATE_COMPLETE.",
+        "El physical ID de OpsInstance es el mismo antes y después, y el tag dcl:lab-revision dice v2.",
+        "La alarma volvió a OK."
+      ],
+      "a": 1,
+      "x": "UPDATE_COMPLETE también aparece con replacement. La prueba es comparar el InstanceId. Los tags se actualizan sin interrupción."
+    },
+    {
+      "s": "La CPU superó 70% en un solo periodo y bajó. La alarma no pasó a ALARM. ¿Por qué?",
+      "o": [
+        "La alarma exige 2 datapoints de 2 periodos (DatapointsToAlarm=2).",
+        "CloudWatch ignora picos menores a 15 minutos.",
+        "La alarma no tiene SNS."
+      ],
+      "a": 0,
+      "x": "La regla de evaluación es M de N: aquí 2 de 2 periodos de 300 s. Un periodo alto no basta. SNS solo es la acción, no la evaluación."
+    }
+  ],
+  "oral": [
+    {
+      "q": "¿Qué evidencia distingue un problema de despliegue de uno de observación?",
+      "a": "Despliegue: los Events del stack muestran CREATE_FAILED o ROLLBACK con la causa (template, permisos, parámetros, quota). Observación: el stack está completo y los recursos existen, pero la métrica no tiene datapoints, la dimensión InstanceId no coincide, o el periodo y la regla 2 de 2 aún no se cumplen."
+    },
+    {
+      "q": "¿Por qué el cleanup se hace con Delete stack y no borrando recursos uno por uno?",
+      "a": "El stack es la unidad de ciclo de vida: sabe qué creó y en qué orden borrarlo. Borrar a mano deja el stack con drift y puede llevar a DELETE_FAILED. Además el EBS se va con la EC2 por DeleteOnTermination, y el baseline S01 no se toca porque no es parte del stack."
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Lab 05 · Reachability no es authorization",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "ec2",
+      "type": "backend",
+      "label": "dcl-dev-ec2-s05",
+      "sublabel": "credenciales temporales",
+      "pos": [
+        260,
+        300
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "tag": "sin access keys"
+    },
+    {
+      "id": "role",
+      "type": "security",
+      "label": "dcl-dev-role-s05",
+      "sublabel": "instance profile",
+      "pos": [
+        260,
+        60
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "tag": "trust: ec2.amazonaws.com"
+    },
+    {
+      "id": "policy",
+      "type": "security",
+      "label": "Policy mínima",
+      "sublabel": "s3:GetObject · allowed/*",
+      "pos": [
+        520,
+        60
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "allowed",
+      "type": "database",
+      "label": "allowed/context.txt",
+      "sublabel": "GetObject → PASS",
+      "pos": [
+        800,
+        230
+      ],
+      "size": [
+        190,
+        64
+      ],
+      "tag": "SSE-S3"
+    },
+    {
+      "id": "restricted",
+      "type": "database",
+      "label": "restricted/secret.txt",
+      "sublabel": "GetObject → AccessDenied",
+      "pos": [
+        800,
+        380
+      ],
+      "size": [
+        190,
+        64
+      ],
+      "tag": "SSE-S3"
+    },
+    {
+      "id": "trail",
+      "type": "cloud",
+      "label": "CloudTrail",
+      "sublabel": "Event history",
+      "pos": [
+        520,
+        470
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "tag": "AttachRolePolicy"
+    },
+    {
+      "id": "admin",
+      "type": "external",
+      "label": "sergio-cli",
+      "sublabel": "IAM user (admin)",
+      "pos": [
+        40,
+        470
+      ],
+      "size": [
+        150,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "us-east-1 · subnet-a pública (IGW)",
+      "wraps": [
+        "ec2"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Bucket privado · Block Public Access",
+      "wraps": [
+        "allowed",
+        "restricted"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ec2-role",
+      "from": "ec2",
+      "to": "role",
+      "label": "asume (IMDS)",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -50
+    },
+    {
+      "id": "role-policy",
+      "from": "role",
+      "to": "policy",
+      "label": "attached",
+      "variant": "security"
+    },
+    {
+      "id": "ec2-allowed",
+      "from": "ec2",
+      "to": "allowed",
+      "label": "PASS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ec2-restricted",
+      "from": "ec2",
+      "to": "restricted",
+      "label": "403 AccessDenied",
+      "variant": "dashed"
+    },
+    {
+      "id": "admin-trail",
+      "from": "admin",
+      "to": "trail",
+      "label": "attach-role-policy",
+      "variant": "dashed"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+    "Name": "dcl-dev-stack-ops-s06-OpsSecurityGroup-euffFNtKZmVc",
+    "Inbound": [],
+    "Outbound": [
+        "0.0.0.0/0"
+    ]
+}

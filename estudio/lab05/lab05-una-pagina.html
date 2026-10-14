@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Lab 05 en una página</title>
+<style>
+  @page { size: A4; margin: 10mm; }
+  body { font: 10px/1.38 system-ui, sans-serif; color: #222; margin: 0; }
+  h1 { font-size: 17px; margin: 0 0 1px; }
+  .sub { color: #555; margin-bottom: 6px; }
+  h2 { font-size: 11.5px; margin: 8px 0 3px; border-bottom: 1.5px solid #222; padding-bottom: 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  ul, ol { margin: 2px 0; padding-left: 15px; }
+  li { margin: 1px 0; }
+  code { font-size: 9.2px; background: #f1f1f1; padding: 0 2px; border-radius: 2px; }
+  .box { border: 1.5px solid #c63; border-radius: 6px; padding: 5px 8px; background: #fff6f0; }
+  img { width: 100%; border: 1px solid #ddd; border-radius: 6px; margin-top: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 9.4px; }
+  td, th { border: 1px solid #ccc; padding: 2px 4px; text-align: left; vertical-align: top; }
+  th { background: #f4f4f4; }
+  .ok { color: #08793b; font-weight: 600; } .no { color: #b3261e; font-weight: 600; }
+  .q b { display: block; margin-top: 3px; }
+</style>
+</head>
+<body>
+<h1>Lab 05 · Seguridad y gobernanza: reachability no es authorization</h1>
+<div class="sub">Digital Café Luna · us-east-1 · corrido por CLI el 3 oct 2026 · cleanup verificado el 14 oct (solo queda baseline S01)</div>
+
+<div class="box"><b>La idea en una frase:</b> misma EC2, mismo role, misma red. Solo cambian <b>Action</b> y <b>Resource</b> de la policy: un GetObject da PASS y dos operaciones fuera de alcance dan <b>AccessDenied</b>. Llegar a S3 (ruta, DNS, SG) no autoriza nada.</div>
+
+<img src="diagrama.png" alt="Arquitectura Lab 05: EC2 asume role, policy GetObject sobre allowed/*, PASS y AccessDenied en S3, CloudTrail registra AttachRolePolicy">
+
+<div class="cols">
+<div>
+<h2>1. Las pruebas (misma identidad, distinto alcance)</h2>
+<table>
+<tr><th>Prueba</th><th>Resultado</th><th>Qué demuestra</th></tr>
+<tr><td><code>sts get-caller-identity</code></td><td><code>assumed-role/dcl-dev-role-s05/i-…</code></td><td>Quién ejecuta: sesión del role, credenciales temporales vía IMDS, sin access keys.</td></tr>
+<tr><td>GetObject <code>allowed/context.txt</code></td><td class="ok">PASS</td><td>Red, DNS y credenciales funcionan.</td></tr>
+<tr><td>GetObject <code>restricted/secret.txt</code></td><td class="no">AccessDenied</td><td>Falla por <b>Resource</b>: no coincide con <code>allowed/*</code>.</td></tr>
+<tr><td>PutObject en <code>allowed/</code></td><td class="no">AccessDenied</td><td>Falla por <b>Action</b>: PutObject no está concedida.</td></tr>
+</table>
+
+<h2>2. Cada control responde una pregunta</h2>
+<table>
+<tr><th>Control</th><th>Pregunta</th></tr>
+<tr><td>IAM Role + trust policy</td><td>¿Quién es el workload? (<code>ec2.amazonaws.com</code> lo asume)</td></tr>
+<tr><td>Policy de permisos</td><td>¿Qué puede hacer y sobre qué? (Action + Resource)</td></tr>
+<tr><td>SSE-S3 (AES256)</td><td>¿El dato está protegido at rest? No decide quién lo lee.</td></tr>
+<tr><td>Block Public Access</td><td>¿Puede quedar público por error? No.</td></tr>
+<tr><td>CloudTrail Event history</td><td>¿Quién cambió permisos y cuándo? (<code>AttachRolePolicy</code>)</td></tr>
+</table>
+</div>
+
+<div>
+<h2>3. Diagnóstico: leer el error antes de tocar permisos</h2>
+<ul>
+<li><b>Timeout</b> → red (ruta, SG, NACL). No es IAM.</li>
+<li><b>Unable to locate credentials</b> → identidad: falta instance profile o IMDS.</li>
+<li><b>NoSuchKey</b> → nombre del objeto. Por eso <code>restricted/</code> se crea antes.</li>
+<li><b>AccessDenied … no identity-based policy allows</b> → autorización: revisar la policy del role.</li>
+<li>Evidencia de que es autorización y no red: el PASS desde la <b>misma</b> EC2, el mismo ARN de role y la policy visible limitada a <code>allowed/*</code>.</li>
+<li>No se arregla con <code>s3:*</code> ni <code>AmazonS3FullAccess</code>: rompe least privilege.</li>
+</ul>
+
+<h2>4. Detalles que suelen preguntar</h2>
+<ul>
+<li><b>Credenciales temporales:</b> el role entrega claves que rotan solas; <code>aws configure list</code> muestra tipo <code>iam-role</code>.</li>
+<li><b>Instance profile:</b> el contenedor que pone el role en la EC2. La consola lo crea solo; por CLI hay que crearlo.</li>
+<li><b>CloudTrail:</b> GetObject y PutObject son <i>data events</i> y no salen en Event history. <code>AttachRolePolicy</code> es <i>management event</i> y sí.</li>
+<li><b>Cifrado ≠ autorización:</b> el objeto restringido estaba cifrado y el role igual recibió AccessDenied.</li>
+</ul>
+
+<h2>5. Preguntas tipo test</h2>
+<div class="q">
+<b>La EC2 lee allowed/ pero falla en restricted/ con AccessDenied. ¿Causa?</b>
+La policy del role no cubre ese Resource. No es la red: el PASS sale de la misma instancia.
+<b>¿Qué evidencia atribuye el cambio de permisos a una persona?</b>
+El evento AttachRolePolicy en CloudTrail: userIdentity, eventTime y requestParameters.
+<b>¿Activar SSE-S3 impide que el role lea restricted/?</b>
+No. El cifrado protege at rest; quien decide el acceso es la policy.
+</div>
+</div>
+</div>
+</body>
+</html>

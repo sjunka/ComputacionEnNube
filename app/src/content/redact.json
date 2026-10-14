@@ -20,5 +20,12 @@
   "lab04/04-ec2.png": {"from": "evidencias/lab-evolutivo-04/consola/04-ec2.png", "zonas": [[87.7,14.2,12.2,5]]},
   "lab04/05-pass1.png": {"from": "evidencias/lab-evolutivo-04/consola/05-pass1.png", "zonas": [[87.7,14.2,12.2,5],[5.2,88.2,5.4,3]]},
   "lab04/06-fail.png": {"from": "evidencias/lab-evolutivo-04/consola/06-fail.png", "zonas": [[87.7,14.2,12.2,5],[5.2,88.2,5.4,3]]},
-  "lab04/07-pass2.png": {"from": "evidencias/lab-evolutivo-04/consola/07-pass2.png", "zonas": [[87.7,14.2,12.2,5],[5.2,88.2,5.4,3]]}
+  "lab04/07-pass2.png": {"from": "evidencias/lab-evolutivo-04/consola/07-pass2.png", "zonas": [[87.7,14.2,12.2,5],[5.2,88.2,5.4,3]]},
+  "lab06/01-stack-resources.png": {"from": "evidencias/lab-evolutivo-06/consola/01-stack-resources.png", "zonas": [[88.2,14.2,11.8,4.8]]},
+  "lab06/02-ec2.png": {"from": "evidencias/lab-evolutivo-06/consola/02-ec2.png", "zonas": [[88.2,14.2,11.8,4.8],[44.5,66,16,2.6],[44.5,80.8,25,4.4]]},
+  "lab06/03-sg.png": {"from": "evidencias/lab-evolutivo-06/consola/03-sg.png", "zonas": [[88.2,14.2,11.8,4.8],[16.5,47.6,8.5,2.6],[78,39.8,11,2.6]]},
+  "lab06/04-alarm.png": {"from": "evidencias/lab-evolutivo-06/consola/04-alarm.png", "zonas": [[88.2,14.2,11.8,4.8]]},
+  "lab06/05-outputs-v2.png": {"from": "evidencias/lab-evolutivo-06/consola/05-outputs-v2.png", "zonas": [[88.9,14.2,11.1,4.8]]},
+  "lab06/07-cpu-grafica.png": {"from": "evidencias/lab-evolutivo-06/consola/07-cpu-grafica.png", "zonas": []},
+  "lab06/08-stack-deleted.png": {"from": "evidencias/lab-evolutivo-06/consola/08-stack-deleted.png", "zonas": [[88.2,14.2,11.8,4.8]]}
 }

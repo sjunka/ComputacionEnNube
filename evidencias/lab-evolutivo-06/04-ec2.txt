@@ -1,0 +1,10 @@
+{
+    "State": "running",
+    "Type": "t3.micro",
+    "Launch": "2026-10-14T15:50:29+00:00",
+    "PublicIp": null,
+    "PrivateIp": "10.20.1.202",
+    "Monitoring": "disabled",
+    "Az": "us-east-1a",
+    "IMDS": "required"
+}

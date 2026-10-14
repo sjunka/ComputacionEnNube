@@ -8,6 +8,33 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-10-14 — Correo Checkpoint Lab 2 (Ing. Luis Lunar)
+
+**Notas:**
+- Checkpoint Lab 2: miércoles 21 oct. Individual. Cubre Labs Evolutivos S05–S07.
+- **Distribución: 50% funcionamiento + 50% test.** Reemplaza solo los porcentajes de la guía (que decía 50/30/20). El resto de la guía sigue vigente.
+  - 50% funcionamiento: implementar y demostrar en la propia plataforma el comportamiento pedido. No basta con que el recurso exista: debe funcionar y producir la evidencia esperada.
+  - 50% test: 5 preguntas de escenario, 3 opciones, una correcta. Causalidad, diagnóstico, decisiones técnicas y mecanismos. Sin memorización de comandos ni rutas de consola.
+- Alcance técnico:
+  - S05 — Seguridad y gobernanza: IAM Role, credenciales temporales, autorización permitida/denegada, reachability vs authorization, protección del dato y trazabilidad.
+  - S06 — Operación y automatización: métricas, alarmas, evidencia operacional e Infrastructure as Code.
+  - S07 — Modernización: ejecución serverless/event-driven, activación por evento y evidencia mediante logs.
+- No se pide informe ni paquete de capturas. Preparación: comprender y poder reproducir los comportamientos de los labs.
+- Lógica: que funcione → que puedan demostrarlo → que comprendan las decisiones y comportamientos.
+- Guía: `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md`. No hace falta tener todo activo a la vez, pero sí poder levantar lo que se pida.
+
+## 2026-10-14 — Correo S07 Modernización (Ing. Luis Lunar)
+
+**Notas:**
+- Sesión miércoles 21 oct: modernización como decisión sobre el modelo de ejecución y las responsabilidades operacionales. Cuándo mantener una VM, cuándo servicios administrados o serverless, y qué trade-offs aparecen al mover esa frontera.
+- Lab: flujo orientado a eventos `S3 ObjectCreated → Lambda → CloudWatch Logs`.
+- La evidencia no es que los recursos existan: relacionar objeto creado, evento que activa la función, su ejecución y el log correspondiente.
+- Lectura estimada 20–24 min. Revisar la guía del lab con anticipación (arquitectura, recursos, validaciones).
+- Ir ejecutando el laboratorio; se revisa en la sesión.
+- Material: `material-md/cloud-computing-posgrado-s07-material-estudiante-modernizacion-v01.md` y `material-md/cloud-computing-posgrado-s07-lab-evolutivo-07-modernizacion-v01.md`.
+
+---
+
 ## 2026-09-30 — Checkpoint Lab 1 (validación práctica)
 
 **Notas:**

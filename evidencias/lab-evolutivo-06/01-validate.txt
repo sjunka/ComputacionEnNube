@@ -1,0 +1,10 @@
+{
+    "Description": "S06 - Operacion y automatizacion - Digital Cafe Luna",
+    "Parameters": [
+        "CpuThreshold",
+        "LabRevision",
+        "VpcId",
+        "SubnetId",
+        "AmiId"
+    ]
+}

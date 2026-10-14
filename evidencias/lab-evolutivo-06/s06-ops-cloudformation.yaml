@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S06 - Operacion y automatizacion - Digital Cafe Luna
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC baseline dcl-dev-vpc
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet A baseline dcl-dev-subnet-a
+  AmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  CpuThreshold:
+    Type: Number
+    Default: 70
+  LabRevision:
+    Type: String
+    Default: v1
+    AllowedValues: [v1, v2]
+Resources:
+  OpsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: S06 - no inbound access
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-sg'
+        - Key: dcl:project
+          Value: digital-cafe-luna
+        - Key: dcl:lab-revision
+          Value: !Ref LabRevision
+  OpsInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: t3.micro
+      Monitoring: false
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: false
+          DeleteOnTermination: true
+          SubnetId: !Ref SubnetId
+          GroupSet:
+            - !Ref OpsSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 8
+            Encrypted: true
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          LOG=/var/tmp/dcl-s06-cpu-load.log
+          echo "$(date -Is) start" > "$LOG"
+          for i in 1 2; do
+            timeout 900 bash -c 'while :; do :; done' &
+          done
+          wait
+          echo "$(date -Is) end" >> "$LOG"
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-ec2'
+        - Key: dcl:project
+          Value: digital-cafe-luna
+        - Key: dcl:lab-revision
+          Value: !Ref LabRevision
+  CpuHighAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-cpu-high'
+      AlarmDescription: !Sub 'S06 ${LabRevision}: CPU controlada >= ${CpuThreshold}%'
+      ActionsEnabled: false
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref OpsInstance
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      DatapointsToAlarm: 2
+      Threshold: !Ref CpuThreshold
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+      Tags:
+        - Key: dcl:project
+          Value: digital-cafe-luna
+        - Key: dcl:lab-revision
+          Value: !Ref LabRevision
+Outputs:
+  InstanceId:
+    Value: !Ref OpsInstance
+  AlarmName:
+    Value: !Ref CpuHighAlarm
+  Revision:
+    Value: !Ref LabRevision
