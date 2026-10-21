@@ -27,7 +27,7 @@ Otros equipos:
 | 3b | Lab Evolutivo 05 — Seguridad y gobernanza (práctica, ejecutar antes) | 2026-10-07 | Hecho en cuenta propia el 3 oct por CLI (app: `lab05.json`); cleanup verificado de nuevo el 14 oct; una página en `estudio/lab05/` |
 | 3b2 | Lab Evolutivo 06 — Operación y automatización (CloudFormation + CloudWatch) | 2026-10-14 | Hecho en cuenta propia el 14 oct por CLI (app: `lab06.json`); una página en `estudio/lab06/` |
 | 3c | Lab Evolutivo 07 — Modernización: S3 ObjectCreated → Lambda → CloudWatch Logs (ejecutar antes) | 2026-10-21 | Hecho en cuenta propia el 16 oct por CLI (app: `lab07.json`); cleanup verificado |
-| 4 | **Checkpoint Lab 2** — S05–S07, individual — 20% (50% funcionamiento + 50% test) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md`; examen de práctica en `estudio/examen-checkpoint2.html` |
+| 4 | **Checkpoint Lab 2** — S05–S07, individual — 20% (50% funcionamiento + 50% test) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md`; examen de práctica en `estudio/examen-checkpoint2.html`; tutor por lab en `estudio/lab05-tutor.html` (https://claude.ai/artifact/UqPgE3RSHYWAGD4iQsSnCP); montaje con `bash estudio/checkpoint2.sh up` |
 | 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Borrador del Brief en `assignments/architecture-challenge/decision-brief.md`, pendiente de revisión; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
 
 Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Checkpoint 2: 50% funcionamiento + 50% test (sin oral, correo del 14 oct). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
@@ -72,6 +72,11 @@ Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 pregunt
 - Sin permiso de invocación, S3 rechaza la notificación (`Unable to validate the following destination configurations`). Control negativo: `incoming/*.txt` y `archive/*.json` no invocan.
 - Cleanup verificado: sin bucket, función, log group ni role de S07. Solo baseline S01.
 - Examen de práctica S05–S07 (30 preguntas, simulacro de 5) y guion de demostración en `estudio/examen-checkpoint2.html`.
+
+### 2026-10-21 — Día del Checkpoint Lab 2
+- `estudio/checkpoint2.sh up|down|status [05|06|07]`: monta y desmonta los tres labs (up ≈ 1.5 min, down ≈ 1.5 min). Probado a las 10:02: la policy de S05 da allowed solo a GetObject en `allowed/*` (simulate-principal-policy), el stack de S06 queda en CREATE_COMPLETE en 32 s y el log de S07 aparece. Cleanup verificado.
+- Tutor web con pestañas por lab (cadena, corrida real, test de 35 preguntas, orales): `estudio/lab05-tutor.html`, publicado en https://claude.ai/artifact/UqPgE3RSHYWAGD4iQsSnCP
+- Plan de la tarde: `up` a las 17:10 para que la alarma de S06 esté en ALARM a las 17:40; las pruebas se hacen a mano en la demo; `down` al terminar la sesión.
 
 ## Sin clasificar
 
