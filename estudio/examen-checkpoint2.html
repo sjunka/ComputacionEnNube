@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examen Checkpoint 2</title>
+<style>
+  :root { --bg: #fafafa; --card: #fff; --ink: #222; --muted: #666; --line: #ddd; --hover: #f0f0f0; --ok: #dfd; --mal: #fdd; --exp: #eef4ff; --code: #f4f4f4; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #16181b; --card: #1f2226; --ink: #e6e6e6; --muted: #9aa0a6; --line: #343a40; --hover: #2a2e33; --ok: #1e3a24; --mal: #45201f; --exp: #1c2a40; --code: #2a2e33; }
+  }
+  body { font: 15px system-ui, sans-serif; margin: 0 auto; max-width: 820px; padding: 16px; background: var(--bg); color: var(--ink); }
+  .q, details { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin: 14px 0; }
+  .q h3 { margin: 0 0 8px; font-size: 15px; }
+  .tag { font-size: 12px; color: var(--muted); }
+  code { background: var(--code); padding: 1px 4px; border-radius: 4px; font-size: 13px; }
+  label { display: block; padding: 6px 8px; margin: 4px 0; border-radius: 6px; cursor: pointer; }
+  label:hover { background: var(--hover); }
+  .ok { background: var(--ok) !important; }
+  .mal { background: var(--mal) !important; }
+  .exp { display: none; margin-top: 8px; padding: 8px; border-left: 4px solid #36c; background: var(--exp); }
+  .done .exp { display: block; }
+  summary { cursor: pointer; font-weight: 600; }
+  details ol, details ul { padding-left: 20px; }
+  details li { margin: 4px 0; }
+  button { padding: 10px 18px; font-size: 15px; cursor: pointer; margin: 4px 4px 4px 0; }
+  #nota { font-size: 20px; font-weight: bold; margin: 12px 0; }
+</style>
+</head>
+<body>
+<h1>Examen Checkpoint Lab 2 (S05–S07)</h1>
+<p>21 oct · individual · <b>50% funcionamiento + 50% test</b> (correo del 14 oct; sin oral). El test real son 5 preguntas de escenario con 3 opciones: elige la que <b>mejor explica</b> el comportamiento, el diagnóstico o la decisión. Aquí hay 30 del mismo estilo, sacadas de los labs, las lecturas y las notas.</p>
+
+<h2>1. Funcionamiento (50%): qué demostrar</h2>
+<p>El profe elige un comportamiento y lo muestras en tu cuenta. Que el recurso exista no cuenta: hay que mostrar la respuesta, el cambio de estado o el flujo. Los comandos de cada paso están en la app (<a href="https://sjunka.github.io/ComputacionEnNube/">sjunka.github.io/ComputacionEnNube</a>).</p>
+
+<details>
+<summary>S05 · Permitido / denegado con IAM Role (montaje ≈ 10 min)</summary>
+<ol>
+  <li><code>get-caller-identity</code> desde la EC2 muestra <code>assumed-role/dcl-dev-role-s05/i-…</code>: la EC2 usa credenciales temporales del role, sin access keys.</li>
+  <li><b>PASS</b>: GetObject de <code>allowed/context.txt</code> muestra el contenido. Esto prueba la red, el DNS y la identidad.</li>
+  <li><b>AccessDenied por Resource</b>: GetObject de <code>restricted/secret.txt</code>, que existe pero está fuera de <code>allowed/*</code>.</li>
+  <li><b>AccessDenied por Action</b>: PutObject en <code>allowed/</code>, porque la policy no concede <code>s3:PutObject</code>.</li>
+  <li>SSE-S3: <code>head-object</code> da <code>ServerSideEncryption: AES256</code>. Protege el dato, no decide quién lo lee.</li>
+  <li>CloudTrail Event history: <code>AttachRolePolicy</code> con userIdentity, eventTime y requestParameters.</li>
+</ol>
+<p><b>Frase para defenderlo:</b> «misma red, mismo role, cambia solo Resource o Action: es autorización, no reachability».</p>
+</details>
+
+<details>
+<summary>S06 · IaC + métrica + alarma (reservar 25–35 min: crear el stack temprano)</summary>
+<ol>
+  <li>Stack en <code>CREATE_COMPLETE</code> y la pestaña Resources con logical ID → physical ID (SG, EC2, alarma).</li>
+  <li>CPUUtilization del <b>mismo InstanceId</b> sube a ~100% en los periodos de la carga (900 s del user data) y baja al terminar.</li>
+  <li>Historial de la alarma: OK → <b>ALARM</b> con un timestamp coherente con 2 de 2 periodos de 5 min ≥ 70%, y luego vuelve a OK.</li>
+  <li>Update v1 → v2: <code>UPDATE_COMPLETE</code>, el <b>mismo InstanceId</b> y el tag <code>dcl:lab-revision = v2</code>.</li>
+  <li>Delete stack: <code>DELETE_COMPLETE</code> y el baseline S01 intacto.</li>
+</ol>
+<p><b>Frase:</b> «CREATE_COMPLETE prueba que se desplegó; la cadena carga → métrica → threshold → evaluación → ALARM prueba que se comporta».</p>
+</details>
+
+<details>
+<summary>S07 · S3 ObjectCreated → Lambda → CloudWatch Logs (montaje ≈ 3 min)</summary>
+<ol>
+  <li>Bucket privado con un trigger <code>s3:ObjectCreated:*</code>, prefix <code>incoming/</code> y suffix <code>.json</code>. La resource-based policy de la función permite que s3.amazonaws.com invoque desde ese bucket.</li>
+  <li>Execution role solo con <code>logs:CreateLogStream</code> y <code>logs:PutLogEvents</code> sobre el log group, sin S3.</li>
+  <li>Subir <code>incoming/order-001.json</code> (el productor, no un Test manual).</li>
+  <li>En el log stream, la línea JSON tiene el <b>mismo key</b>, <code>eventName: ObjectCreated:Put</code>, un eventTime pegado al LastModified y el requestId de START/END.</li>
+  <li>Extra que suma: subir <code>incoming/x.txt</code> no dispara nada (Invocations sigue en 1). Demuestra el filtro.</li>
+</ol>
+<p><b>Frase:</b> «la evidencia es objeto → evento → invocación → log con el mismo key; que la Lambda exista no prueba la integración».</p>
+</details>
+
+<details>
+<summary>Antes de entrar</summary>
+<ul>
+  <li>Consola en us-east-1 y acceso a la cuenta probado. Baseline S01 intacto.</li>
+  <li>Sin restos de corridas anteriores con los mismos nombres (bucket, role, stack o función).</li>
+  <li>No arreglar un AccessDenied con <code>s3:*</code> o FullAccess: eso destruye la prueba.</li>
+  <li>Cleanup al final de cada demo.</li>
+</ul>
+</details>
+
+<h2>2. Test (50%)</h2>
+<p>
+  <button id="sim">Simulacro: 5 al azar (como el real)</button>
+  <button id="todo">Las 30</button>
+</p>
+<div id="examen"></div>
+<button id="calificar">Calificar</button>
+<button id="reiniciar">Reiniciar</button>
+<div id="nota"></div>
+
+<script>
+// ok = índice de la respuesta correcta
+const BANCO = [
+ // ── S05 · Seguridad y gobernanza ──
+ { t: "S05 · Authorization", q: "Desde la misma EC2 y con el mismo role, GetObject de <code>allowed/context.txt</code> funciona, pero el de <code>restricted/secret.txt</code> da AccessDenied. El objeto existe. ¿Qué explica la diferencia?",
+   o: ["El SG de la EC2 bloquea el prefijo restricted/", "El Resource de la policy es allowed/*, y restricted/ queda fuera del alcance concedido", "SSE-S3 impide leer objetos de restricted/"], ok: 1,
+   e: "La red es la misma y el PASS lo demuestra. Solo cambia el Resource. Un SG no entiende prefijos de S3, y SSE-S3 es transparente para una identidad autorizada." },
+ { t: "S05 · Authorization", q: "PutObject sobre <code>allowed/write-test.txt</code> da AccessDenied, aunque el prefijo es el permitido. ¿Qué haces?",
+   o: ["Agregar AmazonS3FullAccess al role para que pase", "Nada: es el resultado esperado, porque la policy no concede s3:PutObject", "Abrir la salida del SG a 0.0.0.0/0"], ok: 1,
+   e: "El Resource coincide pero la Action no. Es el deny implícito que demuestra least privilege. Ampliar permisos para «arreglarlo» destruye la prueba." },
+ { t: "S05 · Reachability", q: "Un compañero lanza la EC2 del Lab 05 en una subnet sin ruta 0.0.0.0/0 al IGW y sin IP pública. El comando S3 se queda colgado y termina en «Could not connect to the endpoint URL». ¿Qué falla?",
+   o: ["La reachability: no hay camino de red hasta el endpoint de S3", "La autorización: la policy no concede s3:GetObject", "La identidad: el instance profile no está asociado"], ok: 0,
+   e: "Timeout o «could not connect» significa que no hay camino. Un problema de policy respondería rápido con AccessDenied, y uno de identidad con «Unable to locate credentials». Se revisan la route table, la IP pública y el DNS." },
+ { t: "S05 · Identidad", q: "En la EC2, cualquier comando S3 responde «Unable to locate credentials». ¿Qué revisas primero?",
+   o: ["La policy del bucket", "Que la instancia tenga asociado el instance profile con el role", "La route table de la subnet"], ok: 1,
+   e: "Sin credenciales todavía no se evalúa ninguna policy. La EC2 obtiene credenciales temporales del role por el instance metadata, y para eso necesita el instance profile. La red no produce este error." },
+ { t: "S05 · Credenciales temporales", q: "Para «ahorrar tiempo», alguien copia sus access keys en la EC2 con <code>aws configure</code>. ¿Cuál es el problema principal?",
+   o: ["Las access keys son más lentas que un role", "Son credenciales de larga duración guardadas en disco: si se filtran, sirven hasta que alguien las rote, y los permisos son los del usuario, no los mínimos de la tarea", "Las access keys no funcionan dentro de una VPC"], ok: 1,
+   e: "El role entrega credenciales temporales que rotan solas y se acotan a la tarea (least privilege). La guía prohíbe crear access keys como workaround." },
+ { t: "S05 · Cifrado", q: "El objeto de <code>allowed/</code> está cifrado con SSE-S3, y aun así la EC2 lo lee en texto claro. ¿Por qué?",
+   o: ["El cifrado falló", "SSE-S3 cifra en reposo y descifra de forma transparente para quien está autorizado: no decide quién lee", "SSE-S3 solo cifra los objetos de restricted/"], ok: 1,
+   e: "El cifrado protege el dato en disco. Quién puede leer lo decide IAM. Verificar que un objeto está cifrado no demuestra que esté bien autorizado." },
+ { t: "S05 · Trazabilidad", q: "Quieres saber quién adjuntó la policy al role y cuándo. ¿Qué evidencia usas?",
+   o: ["El evento AttachRolePolicy en CloudTrail Event history, con userIdentity, eventTime y requestParameters", "Los logs de acceso del bucket S3", "La métrica CPUUtilization de la EC2"], ok: 0,
+   e: "AttachRolePolicy es un management event y aparece en Event history (90 días). CloudTrail atribuye lo que pasó, pero no previene nada." },
+ { t: "S05 · Trazabilidad", q: "Buscas en CloudTrail Event history el PutObject de la prueba y no aparece. ¿Por qué?",
+   o: ["CloudTrail tarda más de un día en registrar", "PutObject es un data event de S3: Event history solo muestra management events", "Los intentos denegados nunca se registran"], ok: 1,
+   e: "Los data events (GetObject, PutObject) necesitan un trail con data events habilitados. Event history no los muestra por defecto." },
+ { t: "S05 · Troubleshooting", q: "En otra cuenta, GetObject de <code>restricted/secret.txt</code> devuelve PASS, y debería dar AccessDenied. ¿Qué revisas?",
+   o: ["La route table, porque hay una ruta de más", "Las demás policies del role o una bucket policy que conceda más de lo previsto", "El cifrado del objeto"], ok: 1,
+   e: "Un PASS inesperado es un permiso más amplio que no se previó: una managed policy extra, s3:* o Resource: *, o una resource policy. La red no concede permisos." },
+
+ // ── S06 · Operación y automatización ──
+ { t: "S06 · Observación", q: "El stack está en CREATE_COMPLETE, pero 3 minutos después la alarma sigue en INSUFFICIENT_DATA. ¿Qué es lo más probable?",
+   o: ["El template está mal y hay que borrar el stack", "Con basic monitoring todavía no hay suficientes datapoints de 5 min para evaluar 2 periodos", "La EC2 no tiene IP pública y no puede publicar métricas"], ok: 1,
+   e: "Es un tema de observación, no de despliegue. Las métricas básicas de EC2 las publica el hipervisor, sin agente ni red pública. Hay que esperar datapoints." },
+ { t: "S06 · Causalidad", q: "¿Qué evidencia permite afirmar que la alarma la causó la carga controlada, y no solo que «la alarma existe»?",
+   o: ["La captura del stack en CREATE_COMPLETE", "Datapoints de CPUUtilization ≥ 70% del mismo InstanceId en los periodos de la carga, y un timestamp de ALARM coherente con ellos", "Que la alarma tenga una acción SNS configurada"], ok: 1,
+   e: "Causalidad con timestamps: user data → carga → datapoints altos en la instancia correcta → 2 de 2 periodos sobre el threshold → transición a ALARM. Al terminar la carga, vuelve a OK." },
+ { t: "S06 · Evaluación", q: "La CPU superó el 70% en un solo periodo de 5 min y luego bajó. La alarma no pasó a ALARM. ¿Por qué?",
+   o: ["La alarma exige 2 datapoints en 2 periodos", "CloudWatch ignora los picos de menos de 15 min", "La alarma no tiene SNS"], ok: 0,
+   e: "La regla es M de N: aquí 2 de 2 periodos de 300 s. Un periodo alto no basta. SNS es solo una acción, no forma parte de la evaluación." },
+ { t: "S06 · IaC", q: "Haces el update de LabRevision v1 → v2. ¿Cómo demuestras que la EC2 no fue reemplazada?",
+   o: ["El stack quedó en UPDATE_COMPLETE", "El physical ID de OpsInstance es el mismo antes y después, y el tag dice v2", "La alarma volvió a OK"], ok: 1,
+   e: "UPDATE_COMPLETE también aparece cuando hay replacement. La prueba es comparar el InstanceId. El change set muestra antes si hay Replacement: True." },
+ { t: "S06 · Despliegue vs observación", q: "El stack pasa a ROLLBACK_COMPLETE y no hay ninguna EC2. ¿Dónde está la evidencia?",
+   o: ["En las métricas de CloudWatch de la EC2", "En los Events del stack: el primer CREATE_FAILED dice qué recurso falló y por qué", "En el historial de la alarma"], ok: 1,
+   e: "Es un problema de despliegue (template, permisos, parámetros, quota). Si no hay recurso, no hay métrica que mirar. Los Events dan la causa." },
+ { t: "S06 · Drift", q: "Alguien agrega a mano una regla inbound 22 al SG que creó el stack. ¿Qué consecuencia tiene?",
+   o: ["Ninguna: CloudFormation adopta el cambio automáticamente", "El estado real ya no coincide con la definición declarativa (drift). El cambio correcto es editar el template y hacer update", "El stack se borra solo"], ok: 1,
+   e: "IaC funciona si la definición es la fuente de verdad. Los cambios manuales no quedan en el template, no se repiten y se pueden perder o chocar en el próximo update." },
+ { t: "S06 · Cleanup", q: "¿Por qué el cleanup del Lab 06 se hace con Delete stack y no borrando los recursos uno por uno?",
+   o: ["Porque borrar a mano es más caro", "Porque el stack es la unidad de ciclo de vida: sabe qué creó y en qué orden borrarlo, y no toca lo que no es suyo, como el baseline", "Porque la consola no deja borrar una EC2"], ok: 1,
+   e: "Create, update y delete son operaciones sobre un estado deseado. Borrar a mano deja el stack inconsistente y puede llevar a DELETE_FAILED." },
+ { t: "S06 · Señal", q: "La alarma está en ALARM. Un compañero dice: «la alarma ya nos dice la causa raíz». ¿Qué le respondes?",
+   o: ["Tiene razón: ALARM identifica la causa", "ALARM solo dice que la condición sobre la métrica se cumplió. La causa se establece correlacionando con lo que produjo la señal", "ALARM indica que la instancia está caída"], ok: 1,
+   e: "Una métrica es una señal y la alarma evalúa una condición sobre esa señal. En el lab, la causa se demuestra con la carga del user data y sus timestamps." },
+ { t: "S06 · Cadencia", q: "Quieres que la alarma detecte el problema en unos 2 minutos en lugar de 10. ¿Qué cambio tiene sentido?",
+   o: ["Bajar el threshold a 10%", "Detailed monitoring (datapoints de 1 min) y un periodo de 60 s en la alarma", "Darle una IP pública a la EC2"], ok: 1,
+   e: "Basic monitoring entrega datapoints cada 5 min: 2 de 2 periodos son unos 10 min. Detailed monitoring baja la cadencia a 1 min, a cambio de un costo." },
+
+ // ── S07 · Modernización ──
+ { t: "S07 · Integración", q: "Subes <code>incoming/order-001.json</code> y el objeto aparece, pero no hay ninguna invocación. La función pasa su Test manual. ¿Dónde está el problema?",
+   o: ["En el código, que falla con eventos reales", "En la integración: notificación del bucket, filtro prefix/suffix o permiso para que S3 invoque", "En el execution role, que no tiene permisos de S3"], ok: 1,
+   e: "El Test manual prueba el código, no el camino S3 → Lambda. Sin invocación, la falla está antes de la función. El role no necesita S3, porque la función no lee el objeto." },
+ { t: "S07 · Permisos", q: "El execution role solo tiene <code>logs:CreateLogStream</code> y <code>logs:PutLogEvents</code>. ¿Por qué S3 puede invocar la función?",
+   o: ["Porque el execution role también define quién invoca", "Porque la resource-based policy de la función permite lambda:InvokeFunction a s3.amazonaws.com desde ese bucket", "Porque el bucket y la función están en la misma VPC"], ok: 1,
+   e: "Son dos direcciones distintas. La resource-based policy dice quién puede invocar la función, y el execution role dice qué puede hacer la función. En el lab, sin ese permiso S3 rechazó la notificación: «Unable to validate the following destination configurations»." },
+ { t: "S07 · Least privilege", q: "¿Por qué el execution role del lab no tiene ningún permiso de S3?",
+   o: ["Porque Lambda tiene acceso a S3 por defecto", "Porque la función no lee el objeto: bucket y key llegan dentro del evento, y solo necesita escribir logs", "Porque el bucket es público"], ok: 1,
+   e: "Least privilege = los permisos mínimos para la tarea. Si la función tuviera que leer el contenido, se agregaría s3:GetObject solo sobre el bucket/incoming/*. Es el mismo razonamiento de S05." },
+ { t: "S07 · Logs", q: "La función se ejecuta (Invocations = 1), pero el log group sigue vacío. Alguien lo había borrado. ¿Qué pasó?",
+   o: ["El evento S3 no llegó", "El role no tiene logs:CreateLogGroup, así que la función no puede recrear el grupo y sus logs se pierden", "Lambda no escribe logs si el bucket es privado"], ok: 1,
+   e: "Por eso el log group se crea antes: así no hace falta conceder CreateLogGroup. Si ejecuta y no hay log, se revisan el execution role, el log group y el timestamp." },
+ { t: "S07 · Semántica", q: "Aparecen dos invocaciones para el mismo <code>incoming/order-001.json</code>, y solo lo subiste una vez. ¿Qué concluyes primero?",
+   o: ["El trigger está duplicado: hay que borrar la función", "Las notificaciones de S3 son at-least-once: un duplicado ocasional es posible, y el consumidor debería ser idempotente", "S3 reintenta porque el bucket es privado"], ok: 1,
+   e: "Primero se correlacionan el key y el evento, y después se asume un fallo. En producción se diseña la idempotencia." },
+ { t: "S07 · Recursión", q: "Un compañero cambia la función para que escriba el resultado en <code>incoming/result.json</code>. ¿Qué riesgo hay?",
+   o: ["Ninguno: es un archivo distinto", "Un bucle: cada escritura crea un objeto que cumple el filtro, dispara otra invocación, y crecen el costo y los logs", "La función pierde permisos de logs"], ok: 1,
+   e: "La regla crítica del lab: la función nunca escribe en un prefijo que vuelva a disparar el mismo trigger. Si debe escribir, lo hace en otro prefijo o en otro bucket." },
+ { t: "S07 · Filtro", q: "Subes <code>incoming/order-002.txt</code> y <code>archive/order-003.json</code>. ¿Qué pasa?",
+   o: ["Se invoca la función dos veces", "Ninguna invocación: el primero no cumple el suffix .json y el segundo no cumple el prefix incoming/", "Solo se invoca con archive/order-003.json"], ok: 1,
+   e: "El filtro exige prefix Y suffix. En la corrida del 16 oct, esos dos objetos no generaron ninguna invocación: Invocations siguió en 1." },
+ { t: "S07 · Orden", q: "Subiste <code>incoming/order-001.json</code> antes de configurar el trigger y luego creaste el trigger. No hay log. ¿Por qué?",
+   o: ["Las notificaciones no son retroactivas: solo se emiten para objetos creados después de configurar el trigger", "El objeto quedó corrupto", "Falta el permiso de S3 en el execution role"], ok: 0,
+   e: "Por eso la guía pide crear el objeto después del trigger. Para probarlo, se sube de nuevo, porque sobrescribir también es un ObjectCreated:Put." },
+ { t: "S07 · URL encoding", q: "Subes <code>incoming/pedido 1.json</code>. Sin <code>unquote_plus</code>, el log mostraría <code>pedido+1.json</code>. ¿Por qué?",
+   o: ["S3 renombra los archivos con espacios", "En el evento, el key llega URL-encoded (el espacio como +), y hay que decodificarlo para correlacionarlo con el objeto real", "Lambda no acepta espacios"], ok: 1,
+   e: "Está en la tabla de troubleshooting: «log aparece pero key no coincide» → objeto usado, evento y URL encoding del key." },
+ { t: "S07 · Decisión", q: "Café Luna quiere reaccionar a cada pedido subido a S3 con un proceso de milisegundos, pocas veces por hora. ¿Qué justifica Lambda en lugar de una EC2 esperando eventos?",
+   o: ["Que Lambda es más moderna y más segura que EC2", "Ejecución corta e intermitente, disparada por un evento, sin necesidad de controlar el SO ni de mantener capacidad encendida", "Que Lambda elimina IAM y logs"], ok: 1,
+   e: "La decisión se defiende con restricciones, no con etiquetas. Una VM sigue siendo válida para procesos largos o continuos, para software o SO específicos, o cuando un uso alto y sostenido la hace más barata." },
+ { t: "S07 · Responsabilidad", q: "Tras pasar el proceso de una EC2 a Lambda, ¿qué responsabilidad sigue siendo del equipo?",
+   o: ["Parchear el sistema operativo", "Los permisos (execution role y resource policy), el código, el manejo de eventos y los logs", "Mantener la capacidad en varias AZ"], ok: 1,
+   e: "Serverless transfiere el servidor, el SO, el runtime, la capacidad y la disponibilidad. No elimina IAM, código, eventos, logs ni costo: la frontera se mueve." },
+ { t: "S07 · Costo", q: "Durante 6 horas no llega ningún pedido. ¿Cómo se compara el costo de cómputo?",
+   o: ["Igual en ambos", "La EC2 cobra las 6 horas encendida; Lambda cobra por invocación y duración, así que casi 0 (quedan S3 y Logs)", "Lambda cobra más, porque mantiene la función lista"], ok: 1,
+   e: "En la corrida del 16 oct: 1 invocación, 2.36 ms de ejecución y 140 ms facturados (con el init). Una VM esperando eventos paga aunque no haga nada." },
+];
+
+// Barajar opciones para que la correcta no quede siempre en la misma posición
+BANCO.forEach(p => {
+  const orden = p.o.map((_, j) => j).sort(() => Math.random() - 0.5);
+  p.ok = orden.indexOf(p.ok);
+  p.o = orden.map(j => p.o[j]);
+});
+
+let P = [];
+const cont = document.getElementById("examen");
+const nota = document.getElementById("nota");
+
+function render(lista) {
+  P = lista;
+  cont.innerHTML = "";
+  nota.textContent = "";
+  P.forEach((p, i) => {
+    const d = document.createElement("div");
+    d.className = "q";
+    d.innerHTML = `<div class="tag">${p.t}</div><h3>${i + 1}. ${p.q}</h3>` +
+      p.o.map((o, j) => `<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("") +
+      `<div class="exp">${p.e}</div>`;
+    cont.appendChild(d);
+  });
+}
+
+// Simulacro: una pregunta de cada lab y dos más al azar, como el real (5 preguntas)
+function simulacro() {
+  const mezcla = a => [...a].sort(() => Math.random() - 0.5);
+  const fijas = ["S05", "S06", "S07"].map(s => mezcla(BANCO.filter(p => p.t.startsWith(s)))[0]);
+  const resto = mezcla(BANCO.filter(p => !fijas.includes(p))).slice(0, 2);
+  return mezcla([...fijas, ...resto]);
+}
+
+document.getElementById("sim").onclick = () => render(simulacro());
+document.getElementById("todo").onclick = () => render(BANCO);
+
+document.getElementById("calificar").onclick = () => {
+  let bien = 0;
+  const fallos = {};
+  document.querySelectorAll(".q").forEach((d, i) => {
+    const sel = d.querySelector("input:checked");
+    const labels = d.querySelectorAll("label");
+    labels.forEach(l => l.classList.remove("ok", "mal"));
+    labels[P[i].ok].classList.add("ok");
+    if (sel && +sel.value === P[i].ok) bien++;
+    else {
+      if (sel) labels[sel.value].classList.add("mal");
+      const tema = P[i].t.split(" · ")[0];
+      fallos[tema] = (fallos[tema] || 0) + 1;
+    }
+    d.classList.add("done");
+  });
+  const repasar = Object.entries(fallos).map(([t, n]) => `${t} (${n})`).join(", ") || "nada";
+  nota.textContent = `${bien}/${P.length} · nota ${(bien / P.length * 5).toFixed(1)}/5 · repasar: ${repasar}`;
+};
+
+document.getElementById("reiniciar").onclick = () => location.reload();
+
+render(BANCO);
+</script>
+</body>
+</html>

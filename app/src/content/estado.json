@@ -1,5 +1,5 @@
 {
-  "actualizado": "14 oct 2026, 11:15 (Bogotá)",
+  "actualizado": "16 oct 2026, 12:30 (Bogotá)",
   "items": [
     {
       "pill": "ok",
@@ -32,9 +32,14 @@
       "text": "Lab 06 corrido el 14 oct por CLI: stack CREATE_COMPLETE en 26 s, CPUUtilization 75 → 100 → 100 → 30%, alarma OK → ALARM (15:56:58 UTC) → OK al terminar la carga, update v1 → v2 sin replacement, Delete stack. Solo queda el baseline S01."
     },
     {
+      "pill": "ok",
+      "tag": "HECHO",
+      "text": "Lab 07 corrido el 16 oct por CLI (12:24–12:27): incoming/order-001.json → ObjectCreated:Put → 1 invocación → línea JSON en CloudWatch Logs con el mismo key. Control negativo: .txt y archive/ no invocan. Cleanup: solo queda el baseline S01."
+    },
+    {
       "pill": "todo",
       "tag": "21 OCT",
-      "text": "Lab 07 (S3 → Lambda → CloudWatch Logs) y Checkpoint Lab 2 (S05–S07, 50% funcionamiento + 50% test). Architecture Challenge el 28 oct, Brief días antes."
+      "text": "Checkpoint Lab 2 (S05–S07, individual): 50% funcionamiento en tu propia cuenta + 50% test de 5 preguntas. Architecture Challenge el 28 oct, Brief días antes."
     }
   ],
   "corriendo": [],

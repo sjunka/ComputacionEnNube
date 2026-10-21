@@ -1,0 +1,285 @@
+{
+  "id": "07",
+  "name": "Lab 07",
+  "sub": "S3 → Lambda → CloudWatch Logs",
+  "lead": "Un objeto nuevo en <code>incoming/</code> de un bucket privado dispara <code>s3:ObjectCreated:*</code>. S3 invoca una Lambda de forma asíncrona, y la Lambda escribe en CloudWatch Logs una línea JSON con bucket, key, eventName y requestId. No hay VM ni se toca la VPC del baseline.",
+  "why": "<strong>Idea clave:</strong> serverless <b>mueve la frontera</b> de responsabilidad, no la elimina. AWS administra servidor, SO, runtime, capacidad y disponibilidad. El equipo sigue a cargo de IAM, código, eventos, logs y costo. La evidencia es la cadena <b>objeto → ObjectCreated → invocación → log</b> con el mismo key y timestamps coherentes. «La Lambda existe» no prueba nada. Corrido en cuenta propia el <b>16 oct</b> por CLI.",
+  "fecha": "16 oct",
+  "done": true,
+  "phases": [
+    {
+      "h": "0 · Preflight",
+      "note": "S07 no usa la VPC: la integración S3 → Lambda es administrada y no pasa por subnets, route tables ni SG. El baseline S01 se confirma, pero no se modifica.",
+      "steps": [
+        {
+          "t": "Variables, baseline intacto y sin restos de S07",
+          "e": "El nombre del bucket lleva el Account ID porque los nombres de S3 son globales. Nada debe existir con los nombres de S07 antes de empezar.",
+          "c": "export AWS_REGION=us-east-1\nACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)\nBUCKET=dcl-s07-team01-$ACCOUNT_ID\nLG=/aws/lambda/dcl-dev-order-event-s07\naws ec2 describe-subnets --filters Name=tag:Name,Values=dcl-dev-subnet-a,dcl-dev-subnet-b \\\n  --query 'Subnets[].[CidrBlock,AvailabilityZone]' --output text\naws s3api head-bucket --bucket $BUCKET\naws lambda get-function --function-name dcl-dev-order-event-s07\naws iam get-role --role-name dcl-dev-role-lambda-s07",
+          "r": "10.20.1.0/24  us-east-1a\n10.20.2.0/24  us-east-1b   ← baseline S01\nHeadBucket: 404 Not Found · GetFunction: ResourceNotFoundException · GetRole: NoSuchEntity   ← sin restos"
+        }
+      ]
+    },
+    {
+      "h": "1 · Bucket privado y log group",
+      "note": "El log group se crea antes para no conceder <code>logs:CreateLogGroup</code> al execution role. Retención de 1 día.",
+      "steps": [
+        {
+          "t": "Crear el bucket con Block Public Access",
+          "e": "En us-east-1, <code>create-bucket</code> no lleva LocationConstraint. Los buckets nuevos ya traen Block Public Access y SSE-S3 por defecto; el comando lo deja explícito.",
+          "c": "aws s3api create-bucket --bucket $BUCKET\naws s3api put-public-access-block --bucket $BUCKET \\\n  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true\naws s3api get-bucket-encryption --bucket $BUCKET",
+          "r": "Location: /dcl-s07-team01-{{ACCOUNT_ID}}\nBlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets: true\nSSEAlgorithm: AES256",
+          "k": {
+            "p": "S3 › Create bucket",
+            "s": [
+              "General purpose, nombre <code>dcl-s07-team01-‹account-id›</code>, región us-east-1.",
+              "Dejar <b>Block all public access</b> marcado.",
+              "Todavía no subir <code>incoming/order-001.json</code>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/s3/buckets?region=us-east-1"
+          }
+        },
+        {
+          "t": "Crear el log group con retención de 1 día",
+          "e": "Lambda escribe por defecto en <code>/aws/lambda/‹función›</code>. Si el grupo ya existe, el role solo necesita crear streams y escribir eventos.",
+          "c": "aws logs create-log-group --log-group-name $LG\naws logs put-retention-policy --log-group-name $LG --retention-in-days 1",
+          "r": "/aws/lambda/dcl-dev-order-event-s07   retentionInDays = 1",
+          "k": {
+            "p": "CloudWatch › Logs › Log groups › Create log group",
+            "s": [
+              "Nombre <code>/aws/lambda/dcl-dev-order-event-s07</code>.",
+              "Retention setting: <b>1 day</b>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups"
+          }
+        }
+      ]
+    },
+    {
+      "h": "2 · Execution role mínimo",
+      "note": "La función no lee el objeto: recibe bucket y key dentro del evento. Por eso el role no tiene ningún permiso de S3. Quien necesita permiso para invocar es S3, y eso va en la resource-based policy de la función (fase 4).",
+      "steps": [
+        {
+          "t": "Role con trust en lambda.amazonaws.com e inline policy solo de Logs",
+          "e": "Trust policy = quién puede asumir el role (el servicio Lambda). Permission policy = qué puede hacer: <code>logs:CreateLogStream</code> y <code>logs:PutLogEvents</code> sobre ese log group. Es el mismo patrón de S05 (role → credenciales temporales → least privilege), con Lambda en lugar de EC2.",
+          "c": "cat > trust.json <<EOF\n{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}\nEOF\ncat > logs-policy.json <<EOF\n{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\n \"Resource\":\"arn:aws:logs:us-east-1:$ACCOUNT_ID:log-group:$LG:*\"}]}\nEOF\naws iam create-role --role-name dcl-dev-role-lambda-s07 --assume-role-policy-document file://trust.json\naws iam put-role-policy --role-name dcl-dev-role-lambda-s07 --policy-name dcl-s07-logs-only --policy-document file://logs-policy.json\naws iam list-attached-role-policies --role-name dcl-dev-role-lambda-s07\naws iam list-role-policies --role-name dcl-dev-role-lambda-s07",
+          "r": "arn:aws:iam::{{ACCOUNT_ID}}:role/dcl-dev-role-lambda-s07\nAttachedPolicies: []   ← ninguna managed policy, nada de S3\nPolicyNames: dcl-s07-logs-only",
+          "k": {
+            "p": "IAM › Roles › Create role",
+            "s": [
+              "Trusted entity: <b>AWS service</b>, use case <b>Lambda</b>.",
+              "No adjuntar policies. Nombre <code>dcl-dev-role-lambda-s07</code>.",
+              "En el role: <b>Add permissions › Create inline policy › JSON</b> con las dos acciones de Logs acotadas al log group."
+            ],
+            "n": "No usar AWSLambdaBasicExecutionRole: concede CreateLogGroup sobre cualquier log group (Resource: *).",
+            "l": "https://us-east-1.console.aws.amazon.com/iam/home#/roles"
+          }
+        }
+      ]
+    },
+    {
+      "h": "3 · Función Lambda",
+      "note": "Sin VPC config: la función corre en la red administrada por Lambda. No se evalúa Python; el código solo registra metadata del evento.",
+      "steps": [
+        {
+          "t": "Crear dcl-dev-order-event-s07 (Python 3.14, x86_64, role existente)",
+          "e": "Se esperan unos segundos tras crear el role: IAM es eventualmente consistente. El handler recorre <code>Records</code>, decodifica el key con <code>unquote_plus</code> (S3 lo manda URL-encoded) y emite una línea JSON.",
+          "c": "cat > lambda_function.py <<'EOF'\nimport json\nimport logging\nfrom urllib.parse import unquote_plus\n\nlogger = logging.getLogger()\nlogger.setLevel(logging.INFO)\n\ndef lambda_handler(event, context):\n    for record in event.get('Records', []):\n        payload = {\n            'bucket': record['s3']['bucket']['name'],\n            'key': unquote_plus(record['s3']['object']['key']),\n            'eventName': record.get('eventName'),\n            'eventTime': record.get('eventTime'),\n            'requestId': context.aws_request_id\n        }\n        logger.info(json.dumps(payload))\n    return {'records': len(event.get('Records', []))}\nEOF\nzip function.zip lambda_function.py\naws lambda create-function --function-name dcl-dev-order-event-s07 --runtime python3.14 --architectures x86_64 \\\n  --handler lambda_function.lambda_handler --role arn:aws:iam::$ACCOUNT_ID:role/dcl-dev-role-lambda-s07 --zip-file fileb://function.zip\naws lambda wait function-active-v2 --function-name dcl-dev-order-event-s07\naws lambda get-function-configuration --function-name dcl-dev-order-event-s07 \\\n  --query '[State,LoggingConfig.LogGroup,VpcConfig.VpcId,MemorySize,Timeout]'",
+          "r": "dcl-dev-order-event-s07  python3.14  x86_64  Pending → Active\nLogGroup: /aws/lambda/dcl-dev-order-event-s07 · VpcId: None · 128 MB · timeout 3 s",
+          "k": {
+            "p": "Lambda › Functions › Create function › Author from scratch",
+            "s": [
+              "Nombre <code>dcl-dev-order-event-s07</code>, runtime <b>Python 3.14</b>, arquitectura <b>x86_64</b>.",
+              "Change default execution role › <b>Use an existing role</b> › <code>dcl-dev-role-lambda-s07</code>.",
+              "Pestaña Code: pegar el código de la guía y <b>Deploy</b>."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions"
+          }
+        }
+      ]
+    },
+    {
+      "h": "4 · Trigger ObjectCreated",
+      "note": "Dos piezas: la resource-based policy de Lambda (S3 puede invocar) y la notificación del bucket (qué eventos y qué keys). En consola, <b>Add trigger</b> crea las dos. Por CLI, el permiso va primero.",
+      "steps": [
+        {
+          "t": "Probar la notificación sin permiso de invocación",
+          "e": "S3 valida el destino al guardar la configuración: si Lambda no le permite invocar, la rechaza. Es la evidencia de que el trigger depende de una autorización explícita, no de que ambos recursos existan.",
+          "c": "FN_ARN=$(aws lambda get-function --function-name dcl-dev-order-event-s07 --query Configuration.FunctionArn --output text)\ncat > notif.json <<EOF\n{\"LambdaFunctionConfigurations\":[{\"Id\":\"s07-incoming-json\",\"LambdaFunctionArn\":\"$FN_ARN\",\"Events\":[\"s3:ObjectCreated:*\"],\n \"Filter\":{\"Key\":{\"FilterRules\":[{\"Name\":\"prefix\",\"Value\":\"incoming/\"},{\"Name\":\"suffix\",\"Value\":\".json\"}]}}}]}\nEOF\naws s3api put-bucket-notification-configuration --bucket $BUCKET --notification-configuration file://notif.json",
+          "r": "InvalidArgument: Unable to validate the following destination configurations   ← falta el permiso"
+        },
+        {
+          "t": "Permiso para que S3 invoque y notificación con prefix/suffix",
+          "e": "La condición <code>AWS:SourceArn</code> limita la invocación a este bucket y <code>AWS:SourceAccount</code> a esta cuenta (evita el confused deputy). El filtro <code>incoming/</code> + <code>.json</code> acota qué objetos disparan.",
+          "c": "aws lambda add-permission --function-name dcl-dev-order-event-s07 --statement-id s3-invoke-s07 --action lambda:InvokeFunction \\\n  --principal s3.amazonaws.com --source-arn arn:aws:s3:::$BUCKET --source-account $ACCOUNT_ID\naws s3api put-bucket-notification-configuration --bucket $BUCKET --notification-configuration file://notif.json\naws s3api get-bucket-notification-configuration --bucket $BUCKET\naws lambda get-policy --function-name dcl-dev-order-event-s07",
+          "r": "Principal s3.amazonaws.com · Action lambda:InvokeFunction\nCondition: SourceAccount = {{ACCOUNT_ID}} · SourceArn = arn:aws:s3:::dcl-s07-team01-{{ACCOUNT_ID}}\nNotificación s07-incoming-json: s3:ObjectCreated:*  prefix incoming/  suffix .json",
+          "k": {
+            "p": "Lambda › dcl-dev-order-event-s07 › Add trigger › S3",
+            "s": [
+              "Bucket = el de S07. Event types = <b>All object create events</b>.",
+              "Prefix <code>incoming/</code>, Suffix <code>.json</code>.",
+              "Aceptar el aviso de invocación recursiva y <b>Add</b>.",
+              "Configuration › Permissions › <b>Resource-based policy statements</b>: debe aparecer s3.amazonaws.com con el ARN del bucket."
+            ],
+            "m": [
+              "En S3 › bucket › Properties › Event notifications aparece la misma notificación.",
+              "La función nunca escribe en <code>incoming/</code>: así no hay recursión."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/dcl-dev-order-event-s07"
+          }
+        }
+      ]
+    },
+    {
+      "h": "5 · Evento y evidencia en logs",
+      "note": "El comportamiento empieza en el productor (crear el objeto), no en un Test manual de Lambda. Un Test manual prueba el código, no la integración.",
+      "steps": [
+        {
+          "t": "Subir exactamente incoming/order-001.json",
+          "e": "El objeto se crea después de que el trigger quedó configurado. Su LastModified es el punto de partida de la cadena.",
+          "c": "echo '{\"orderId\": \"order-001\", \"source\": \"lab-s07\", \"action\": \"created\"}' > order-001.json\naws s3api put-object --bucket $BUCKET --key incoming/order-001.json --body order-001.json\naws s3api head-object --bucket $BUCKET --key incoming/order-001.json --query '[LastModified,ContentLength]'",
+          "r": "ServerSideEncryption: AES256\nLastModified 2026-10-16T17:25:30Z · 67 bytes",
+          "k": {
+            "p": "S3 › dcl-s07-team01-… › Create folder incoming › Upload",
+            "s": [
+              "Crear localmente <code>order-001.json</code> con el payload de la guía.",
+              "Dentro de <code>incoming/</code>: Upload › Add files › Upload."
+            ],
+            "m": ["Key exacto: <code>incoming/order-001.json</code>."],
+            "l": "https://us-east-1.console.aws.amazon.com/s3/buckets?region=us-east-1"
+          }
+        },
+        {
+          "t": "Encontrar la invocación y la línea JSON del código",
+          "e": "Correlación: el key del log es el del objeto; <code>eventTime</code> (17:25:29.556) coincide con la creación; el <code>requestId</code> de la línea JSON es el mismo de START/END/REPORT. INIT_START indica cold start. Una sola invocación.",
+          "c": "aws logs tail $LG --since 10m --format short\naws logs filter-log-events --log-group-name $LG --filter-pattern '\"incoming/order-001.json\"' --query 'length(events)'",
+          "r": "17:25:30 INIT_START Runtime Version: python:3.14.mainline.v75\n17:25:31 START RequestId: 7512e69f-…-c26037bd3273\n17:25:31 [INFO] {\"bucket\": \"dcl-s07-team01-{{ACCOUNT_ID}}\", \"key\": \"incoming/order-001.json\", \"eventName\": \"ObjectCreated:Put\",\n         \"eventTime\": \"2026-10-16T17:25:29.556Z\", \"requestId\": \"7512e69f-…-c26037bd3273\"}\n17:25:31 END RequestId: 7512e69f-…\n17:25:31 REPORT Duration: 2.36 ms  Billed Duration: 140 ms  Memory 128 MB  Max Used 39 MB  Init Duration: 136.77 ms\n1   ← una sola línea con ese key",
+          "k": {
+            "p": "CloudWatch › Logs › Log groups › /aws/lambda/dcl-dev-order-event-s07",
+            "s": [
+              "Abrir el log stream más reciente.",
+              "Buscar la línea [INFO] con el JSON del código.",
+              "Comparar bucket, key, eventName y eventTime con el objeto subido; requestId con START/END."
+            ],
+            "m": [
+              "Si tarda, esperar y volver: no cambiar permisos sin evidencia.",
+              "Lambda › Monitor muestra la métrica Invocations = 1."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#logsV2:log-groups"
+          }
+        }
+      ]
+    },
+    {
+      "h": "6 · Control negativo del filtro (extra)",
+      "note": "No está en la guía, pero demuestra causalidad: un objeto fuera del filtro no dispara nada. Borrar esos objetos después (la guía pide eliminar objetos accidentales).",
+      "steps": [
+        {
+          "t": "Subir objetos que no cumplen prefix o suffix",
+          "e": "<code>incoming/order-002.txt</code> falla el suffix y <code>archive/order-003.json</code> falla el prefix. Ninguno genera invocación: sigue habiendo un solo START y Invocations = 1.",
+          "c": "aws s3api put-object --bucket $BUCKET --key incoming/order-002.txt --body order-001.json\naws s3api put-object --bucket $BUCKET --key archive/order-003.json --body order-001.json\nsleep 25\naws logs filter-log-events --log-group-name $LG --filter-pattern '\"RequestId\"' --query 'events[].message'\naws cloudwatch get-metric-statistics --namespace AWS/Lambda --metric-name Invocations \\\n  --dimensions Name=FunctionName,Value=dcl-dev-order-event-s07 --start-time ‹hace 20 min› --end-time ‹ahora› --period 600 --statistics Sum\naws s3api delete-object --bucket $BUCKET --key incoming/order-002.txt\naws s3api delete-object --bucket $BUCKET --key archive/order-003.json",
+          "r": "START / END / REPORT de 7512e69f-… solamente   ← ninguna invocación nueva\nInvocations Sum = 1.0\nObjetos en el bucket: incoming/order-001.json"
+        }
+      ]
+    },
+    {
+      "h": "7 · Comparación EC2 vs Lambda",
+      "note": "Responder con restricciones, no con etiquetas. «Porque es serverless» o «porque es más moderno» no explica la decisión.",
+      "steps": [
+        {
+          "t": "Completar la tabla de responsabilidades",
+          "e": "<b>Servidor, SO, runtime:</b> en EC2 los parchea el equipo; en Lambda los administra AWS (el equipo elige la versión del runtime y la actualiza antes de su deprecación).<br><b>Scaling y disponibilidad:</b> en EC2, ASG, AZ y health checks a cargo del equipo; en Lambda, por invocación y multi-AZ por defecto (queda la quota de concurrencia).<br><b>IAM, código, logs:</b> del equipo en ambos (instance profile frente a execution role; agente o permisos de Logs).<br><b>Costo sin ejecución:</b> EC2 cobra por hora encendida aunque no lleguen eventos; Lambda cobra por invocación y duración, casi 0 en reposo (quedan S3 y Logs).",
+          "r": "Esta corrida: 1 invocación, 2.36 ms de ejecución, 140 ms facturados (incluye el init), 39 de 128 MB. Una EC2 esperando eventos habría cobrado la hora completa."
+        },
+        {
+          "t": "Pregunta de decisión: ¿qué restricción justifica Lambda aquí?",
+          "e": "Reacción <b>corta</b> (milisegundos, muy por debajo del límite de 15 min), <b>intermitente</b> (sin tráfico constante), <b>disparada por un evento</b> que S3 ya emite, <b>sin necesidad de controlar el SO</b> y sin capacidad dedicada que dimensionar. Una VM sigue siendo válida si el proceso es largo o continuo, si necesita software o kernel específicos, conexiones persistentes, o si un uso sostenido y alto la hace más barata."
+        }
+      ]
+    },
+    {
+      "h": "8 · Troubleshooting",
+      "note": "¿Integración o existencia? Que la función exista y pase un Test manual solo prueba el código. Si el objeto existe y no hay invocación (Invocations = 0, sin log stream nuevo), el problema está entre S3 y Lambda.",
+      "steps": [
+        {
+          "t": "Síntoma → qué revisar primero",
+          "e": "<b>Objeto existe pero Lambda no ejecuta:</b> región, notificación del bucket, prefix/suffix contra el key real, resource-based policy (SourceArn), que el objeto se creó después del trigger.<br><b>Lambda ejecuta pero no aparece log:</b> execution role (CreateLogStream, PutLogEvents), ARN del log group, timestamp. Si se borra el log group con el role mínimo, el log no vuelve, porque el role no tiene CreateLogGroup.<br><b>Log aparece pero el key no coincide:</b> objeto usado, URL encoding (espacios llegan como <code>+</code>; por eso <code>unquote_plus</code>).<br><b>Dos invocaciones:</b> la entrega es at-least-once. Comparar el requestId del evento y el key antes de asumir un fallo; en producción, idempotencia."
+        }
+      ]
+    },
+    {
+      "h": "9 · Cleanup",
+      "cleanup": true,
+      "note": "Primero cortar el trigger, después lo demás. El role va al final, sin su inline policy.",
+      "steps": [
+        {
+          "t": "Borrar trigger, función, log group, bucket y role",
+          "e": "Una configuración de notificación vacía quita el trigger. <code>delete-role</code> falla si el role aún tiene policies, por eso va primero <code>delete-role-policy</code>.",
+          "c": "aws s3api put-bucket-notification-configuration --bucket $BUCKET --notification-configuration '{}'\naws lambda delete-function --function-name dcl-dev-order-event-s07\naws logs delete-log-group --log-group-name $LG\naws s3 rm s3://$BUCKET --recursive\naws s3api delete-bucket --bucket $BUCKET\naws iam delete-role-policy --role-name dcl-dev-role-lambda-s07 --policy-name dcl-s07-logs-only\naws iam delete-role --role-name dcl-dev-role-lambda-s07",
+          "r": "17:26:46Z cleanup → 17:26:51Z verificado\nHeadBucket 404 · GetFunction ResourceNotFoundException · log groups /aws/lambda/dcl-dev*: 0 · GetRole NoSuchEntity\nBaseline: dcl-dev-vpc 10.20.0.0/16, subnet-a 10.20.1.0/24 (1a), subnet-b 10.20.2.0/24 (1b)",
+          "k": {
+            "p": "Lambda › Configuration › Triggers · Lambda › Functions · CloudWatch › Log groups · S3 › Empty / Delete · IAM › Roles",
+            "s": [
+              "Quitar el trigger S3 de la función (o la Event notification del bucket).",
+              "Delete function; Delete log group.",
+              "Empty bucket y luego Delete bucket.",
+              "En el role: borrar la inline policy y después el role."
+            ],
+            "l": "https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions"
+          }
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "s": "Subes <code>incoming/order-001.json</code>, el objeto aparece en el bucket, pero el log group no tiene ninguna invocación. La función pasa su Test manual sin errores. ¿Dónde está el problema?",
+      "o": [
+        "En el código de la función, que falla con eventos reales.",
+        "En la integración: notificación del bucket, filtro prefix/suffix o el permiso para que S3 invoque.",
+        "En el execution role, que no tiene permisos de S3."
+      ],
+      "a": 1,
+      "x": "El Test manual prueba el código, no el camino S3 → Lambda. Sin invocación, la falla está antes de la función. El role no necesita S3: la función no lee el objeto."
+    },
+    {
+      "s": "El execution role del lab solo permite <code>logs:CreateLogStream</code> y <code>logs:PutLogEvents</code>. ¿Por qué S3 puede invocar la función?",
+      "o": [
+        "Porque el execution role define también quién invoca la función.",
+        "Porque la resource-based policy de la función permite <code>lambda:InvokeFunction</code> a s3.amazonaws.com desde ese bucket.",
+        "Porque el bucket y la función están en la misma VPC."
+      ],
+      "a": 1,
+      "x": "Son dos direcciones distintas: la resource-based policy dice quién puede invocar la función; el execution role dice qué puede hacer la función. Ninguno de los dos está en una VPC."
+    },
+    {
+      "s": "En los logs aparecen dos invocaciones para el mismo <code>incoming/order-001.json</code>, y solo lo subiste una vez. ¿Qué concluyes primero?",
+      "o": [
+        "El trigger está duplicado y hay que borrar la función.",
+        "Las notificaciones de S3 son at-least-once: un duplicado ocasional es posible y el consumidor debe ser idempotente.",
+        "La función se invoca a sí misma porque escribe en <code>incoming/</code>."
+      ],
+      "a": 1,
+      "x": "Se correlaciona el key y el evento antes de asumir un fallo. La recursión sería otra hipótesis, pero en este lab la función no escribe nada en S3."
+    },
+    {
+      "s": "Café Luna quiere reaccionar a cada pedido subido a S3 con un proceso de milisegundos, unas pocas veces por hora. ¿Qué restricción justifica Lambda en lugar de una EC2 esperando eventos?",
+      "o": [
+        "Que Lambda es más moderna y más segura que EC2.",
+        "Ejecución corta e intermitente, disparada por un evento, sin necesidad de controlar el SO ni de mantener capacidad encendida.",
+        "Que Lambda elimina la necesidad de IAM y de logs."
+      ],
+      "a": 1,
+      "x": "La decisión se defiende con restricciones del workload. Serverless transfiere servidor, SO, runtime y capacidad; IAM, código, eventos, logs y costo siguen siendo del equipo."
+    }
+  ],
+  "oral": [
+    {
+      "q": "¿Qué evidencia demuestra que el problema está en la integración y no en la existencia de la función?",
+      "a": "La función existe y su Test manual funciona, así que el código y el role de logs están bien. El objeto existe con el key esperado y se creó después del trigger. Pero Invocations = 0 y no hay log stream nuevo. Entonces la falla está entre S3 y Lambda: notificación del bucket, prefix/suffix frente al key real, región o resource-based policy. En el lab se vio: sin permiso de invocación, S3 rechaza la notificación (Unable to validate the following destination configurations)."
+    },
+    {
+      "q": "¿Qué responsabilidades se transfirieron a AWS y cuáles siguen siendo del equipo?",
+      "a": "Se transfieren el servidor, el SO y sus parches, el runtime administrado, el escalado por invocación, la disponibilidad multi-AZ y el costo en reposo (no hay VM encendida). Siguen siendo del equipo: el execution role y la resource-based policy (least privilege), el código y el manejo de eventos (URL encoding, duplicados at-least-once, evitar recursión), el filtro del trigger, los logs como evidencia y retención, y el costo por invocación. La complejidad no desaparece: se mueve a permisos, eventos y observabilidad."
+    }
+  ]
+}
