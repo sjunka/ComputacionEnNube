@@ -1,6 +1,6 @@
 # Architecture Decision Brief: Digital Café Luna
 
-Sergio Alfredo Junca Valero · ST1611 Computación en Nube · EAFIT · Borrador para revisión (entrega antes del 28 oct 2026, 6:00 p. m.)
+Sergio Alfredo Junca Valero · ST1611 Computación en Nube · EAFIT · Entrega antes del 28 oct 2026, 6:00 p. m.
 
 ## 1. Problema y restricciones
 
@@ -60,17 +60,17 @@ Supuestos: la campaña dura pocos días; el pico es de un orden de magnitud sobr
 
 ## 5. Costo (aproximación mensual, us-east-1)
 
-Cifras de orden de magnitud con precios de lista que recuerdo; **verificar con AWS Pricing Calculator antes de entregar**.
+Precios de lista on-demand de us-east-1 consultados en la AWS Price List API (la misma fuente de la Pricing Calculator) el 21 oct 2026; 730 horas por mes. Los consumos (GB, LCU) son supuestos.
 
-| Componente | Driver de costo | Estimado USD/mes |
+| Componente | Precio de lista | Estimado USD/mes |
 |---|---|---|
-| ALB | Horas + LCU | 20 a 30 |
-| 2 EC2 t3.small (base) | Horas | 30 |
-| NAT Gateway | Horas + GB procesados | 35 a 50 |
-| RDS PostgreSQL Multi-AZ, db.t4g.small + 20 GB | Horas + almacenamiento | 50 a 60 |
-| CloudFront + S3 | GB transferidos y requests | 5 a 20 (sube con la campaña) |
-| IPv4 públicas, CloudWatch, CloudTrail | Por recurso | 10 a 15 |
-| **Total base** | | **150 a 200** |
+| ALB | USD 0,0225/h + USD 0,008 por LCU-h (1 a 5 LCU) | 22 a 30 |
+| 2 EC2 t3.small (base) + 2 volúmenes de 8 GB | USD 0,0208/h cada una | 31 |
+| NAT Gateway | USD 0,045/h + USD 0,045/GB (50 a 150 GB) | 35 a 40 |
+| RDS PostgreSQL Multi-AZ, db.t4g.small + 20 GB gp2 | USD 0,065/h + USD 0,23/GB-mes | 52 |
+| CloudFront + S3 | GB transferidos y requests (no consultado; sube con la campaña) | 5 a 20 |
+| IPv4 públicas (2 del ALB + 1 del NAT, USD 0,005/h cada una), alarmas CloudWatch | Por recurso | 12 a 15 |
+| **Total base** | | **155 a 190** |
 
 Cost drivers dominantes: NAT, RDS Multi-AZ y horas de cómputo. Palancas: apagar el entorno de desarrollo fuera de horario, usar Savings Plans solo cuando la demanda base sea estable, y retirar el NAT si la app solo necesita S3 (endpoint) y servicios con VPC endpoint.
 
@@ -90,6 +90,7 @@ Las afirmaciones del brief se apoyan en labs corridos en mi cuenta (resultados e
 - **Lab 03:** S3 Versioning y EFS compartido. Sustenta el manejo de estado fuera de la instancia.
 - **Lab 04:** subnet pública solo por su route table; PASS, FAIL y PASS de A a B quitando y restaurando una regla del SG. Sustenta la segmentación por SG de la decisión 4.
 - **Lab 05:** mismo role, misma red; GetObject PASS en `allowed/*` y AccessDenied en otro Resource y en PutObject. AttachRolePolicy visible en CloudTrail. Sustenta la decisión 4.
+- **Lab 06:** stack de CloudFormation (EC2, SG y alarma) en CREATE_COMPLETE en 26 s. Alarma de CPU con Average ≥ 70 en 2 de 2 periodos de 5 min: OK, ALARM a los 5 min de iniciar la carga (CPU 75, 100, 100%) y OK al terminar. Update v1 a v2 con change set sin reemplazo (mismo InstanceId) y Delete stack sin recursos residuales. Sustenta la decisión 6.
 
 ## 8. Cómo validaría el comportamiento (para la defensa)
 

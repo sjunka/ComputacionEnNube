@@ -8,6 +8,39 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-10-14 — Clase (S06 — Operación y automatización)
+
+**Notas:**
+- Una alarma que nadie revisa es solo una notificación: no pasa nada.
+- Hoy en día se espera que esas acciones se hagan de manera automática. Se está logrando, pero muy discretamente.
+- El mundo empresarial no es desarrollo.
+- Con IA o sin IA, el desarrollo iba a evolucionar: el desarrollador asumiría un rol diferente.
+- Ciclo: señal → hipótesis → evidencia → acción → aprendizaje.
+  - Se dispara una señal, y la señal genera una hipótesis. Ej.: parece que está al 70%, pero es hipótesis: "el sistema está lento".
+  - Lo que convierte la hipótesis en realidad es el log, la trazabilidad.
+  - Con esa evidencia genero una acción.
+  - Finalmente debería aprender ese comportamiento.
+- Los errores se vuelven recurrentes si hay fallas en la documentación.
+- De la automatización nació el código como infraestructura (IaC). Nació hace unos 6 años, nativo en el mundo open source.
+- La nube avanza por el open source y luego se comercializa.
+- Había que automatizar porque el tiempo ganado en el delivery se perdía al reconstruir instancias.
+- La IaC la llegaron a confundir con configuration management.
+  - Confunden Terraform y CloudFormation con configuration management.
+  - Configuration management automatiza los ambientes.
+  - La IaC hace despliegue, no configura. Se puede hacer configuración con IaC, pero para eso está configuration management.
+- El lenguaje declarativo (de Terraform) se llama HCL.
+- Configuration management es imperativo: hay que declarar línea por línea. Terraform y CloudFormation son declarativos.
+- IaC: idempotencia. El mismo resultado sin importar cuántas veces se ejecute.
+  - Se declara el estado deseado y la herramienta calcula el cambio.
+  - `terraform plan` muestra el cambio antes de aplicarlo.
+- Terraform es portable gracias al Terraform provider.
+- CloudFormation y Terraform responden a restricciones distintas.
+- El archivo más importante de Terraform es el state (`terraform.tfstate`).
+- Terraform es multi-provider; entiende JSON y HCL. CloudFormation usa YAML (también JSON).
+- CI/CD automatiza el camino del cambio.
+  - Tiene sentido CI/CD. Hay una fase que se llama continuous deployment.
+  - Los libros de software hablan de deployment y por dentro tienen delivery.
+
 ## 2026-10-14 — Correo Checkpoint Lab 2 (Ing. Luis Lunar)
 
 **Notas:**

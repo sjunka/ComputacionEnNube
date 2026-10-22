@@ -28,7 +28,7 @@ Otros equipos:
 | 3b2 | Lab Evolutivo 06 — Operación y automatización (CloudFormation + CloudWatch) | 2026-10-14 | Hecho en cuenta propia el 14 oct por CLI (app: `lab06.json`); una página en `estudio/lab06/` |
 | 3c | Lab Evolutivo 07 — Modernización: S3 ObjectCreated → Lambda → CloudWatch Logs (ejecutar antes) | 2026-10-21 | Hecho en cuenta propia el 16 oct por CLI (app: `lab07.json`); cleanup verificado |
 | 4 | **Checkpoint Lab 2** — S05–S07, individual — 20% (50% funcionamiento + 50% test) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md`; examen de práctica en `estudio/examen-checkpoint2.html`; tutor por lab en `estudio/lab05-tutor.html` (https://claude.ai/artifact/UqPgE3RSHYWAGD4iQsSnCP); montaje con `bash estudio/checkpoint2.sh up` |
-| 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Borrador del Brief en `assignments/architecture-challenge/decision-brief.md`, pendiente de revisión; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
+| 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Brief listo para entregar en `assignments/architecture-challenge/decision-brief.md` (costos verificados con la Price List API el 22 oct, evidencia hasta Lab 06); guion en `defensa.md`; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
 
 Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Checkpoint 2: 50% funcionamiento + 50% test (sin oral, correo del 14 oct). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
 
@@ -66,6 +66,11 @@ Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 pregunt
 - Material S07 (modernización) y guía del Checkpoint Lab 2 en `material/` y `material-md/`.
 - Checkpoint Lab 2 el 21 oct: 50% funcionamiento + 50% test; reemplaza el 50/30/20 de la guía.
 - Lab 07 se va ejecutando antes y se revisa en la sesión del 21 oct.
+
+### 2026-10-14 — Clase S06 y Lab 06
+- Lab 06 corrido antes de clase por CLI: stack CREATE_COMPLETE, CPU 75 → 100 → 100%, alarma OK → ALARM (15:56:58 UTC) → OK, update v1 → v2 sin replacement, Delete stack. Cleanup verificado: solo baseline S01.
+- Una página de estudio: `estudio/lab06/lab06-una-pagina.pdf` y `estudio/lab05/lab05-una-pagina.pdf`.
+- Capturas originales de consola fuera del repo (`.gitignore`); en la app van tapadas.
 
 ### 2026-10-16 — Lab 07 y preparación del Checkpoint Lab 2
 - Lab 07 corrido por CLI en la cuenta propia (12:24–12:27 Bogotá): `incoming/order-001.json` → `ObjectCreated:Put` → 1 invocación → línea JSON en CloudWatch Logs con el mismo key y requestId.

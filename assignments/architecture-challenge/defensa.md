@@ -21,7 +21,7 @@ Cadena que debe sonar en cada respuesta: restricción, decisión, mecanismo, evi
 - **¿Por qué EC2 y no serverless o contenedores?** Equipo pequeño y modelo conocido. Serverless exige rediseñar y capacitar antes de la campaña. Alternativa a futuro: ECS Fargate.
 - **¿Por qué RDS y no DynamoDB?** Pedidos y clientes son relacionales y transaccionales. DynamoDB escala mejor pero obliga a modelar por patrones de acceso.
 - **¿Qué pasa si cae una AZ?** ALB y ASG siguen en la otra AZ; RDS hace failover. Se pierde el NAT si estaba en esa AZ.
-- **¿Por qué un solo NAT?** Cuesta unos USD 35 a 50 al mes por unidad. Aceptable porque la app casi no necesita Internet; S3 va por gateway endpoint.
+- **¿Por qué un solo NAT?** Cuesta unos USD 33 al mes fijos (USD 0,045/h) más USD 0,045 por GB procesado. Aceptable porque la app casi no necesita Internet; S3 va por gateway endpoint.
 - **¿Qué es lo más caro y cómo lo bajas?** NAT, RDS Multi-AZ y horas de cómputo. Quitar el NAT con endpoints, bajar el ASG después de la campaña.
 - **¿Cómo pruebas que el AccessDenied es autorización y no red?** El GetObject permitido funciona desde la misma EC2 y el mismo role; solo cambia Resource o Action (Lab 05).
 - **¿RPO y RTO?** RPO de 5 minutos y RTO de 1 hora ante falla de zona; 4 horas ante falla regional con backup y restore. Son supuestos que el negocio debe confirmar.
@@ -41,5 +41,5 @@ Ordenar la respuesta así: 1) qué decisión mantengo, 2) qué cambio, 3) qué n
 
 1. Releer el Brief completo con el diagrama.
 2. Poder dibujar el diagrama de memoria en un tablero.
-3. Tener los números de costo verificados en Pricing Calculator.
+3. Tener presentes los costos (verificados con la Price List API el 21 oct): total base USD 155 a 190 al mes; RDS Multi-AZ 52, NAT 35 a 40, ALB 22 a 30, EC2 31.
 4. Cronometrar los 6 minutos en voz alta.

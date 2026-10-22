@@ -1,5 +1,5 @@
 {
-  "actualizado": "16 oct 2026, 12:30 (Bogotá)",
+  "actualizado": "22 oct 2026 (Bogotá)",
   "items": [
     {
       "pill": "ok",
@@ -38,8 +38,8 @@
     },
     {
       "pill": "todo",
-      "tag": "21 OCT",
-      "text": "Checkpoint Lab 2 (S05–S07, individual): 50% funcionamiento en tu propia cuenta + 50% test de 5 preguntas. Architecture Challenge el 28 oct, Brief días antes."
+      "tag": "28 OCT",
+      "text": "Architecture Challenge (caso Digital Café Luna): Decision Brief antes de la sesión y defensa individual."
     }
   ],
   "corriendo": [],
