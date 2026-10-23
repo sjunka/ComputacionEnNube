@@ -28,7 +28,7 @@ Otros equipos:
 | 3b2 | Lab Evolutivo 06 — Operación y automatización (CloudFormation + CloudWatch) | 2026-10-14 | Hecho en cuenta propia el 14 oct por CLI (app: `lab06.json`); una página en `estudio/lab06/` |
 | 3c | Lab Evolutivo 07 — Modernización: S3 ObjectCreated → Lambda → CloudWatch Logs (ejecutar antes) | 2026-10-21 | Hecho en cuenta propia el 16 oct por CLI (app: `lab07.json`); cleanup verificado |
 | 4 | **Checkpoint Lab 2** — S05–S07, individual — 20% (50% funcionamiento + 50% test) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md`; examen de práctica en `estudio/examen-checkpoint2.html`; tutor por lab en `estudio/lab05-tutor.html` (https://claude.ai/artifact/UqPgE3RSHYWAGD4iQsSnCP); montaje con `bash estudio/checkpoint2.sh up` |
-| 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Brief listo para entregar en `assignments/architecture-challenge/decision-brief.md` (costos verificados con la Price List API el 22 oct, evidencia hasta Lab 06); guion en `defensa.md`; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
+| 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Brief listo para entregar: `assignments/architecture-challenge/decision-brief.pdf` (fuente `.md`, costos de la Price List API, evidencia de Labs 01 a 07, Lambda por evento como modernización parcial); índice en `README.md`; guion en `defensa.md`; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
 
 Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Checkpoint 2: 50% funcionamiento + 50% test (sin oral, correo del 14 oct). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
 
@@ -82,6 +82,11 @@ Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 pregunt
 - `estudio/checkpoint2.sh up|down|status [05|06|07]`: monta y desmonta los tres labs (up ≈ 1.5 min, down ≈ 1.5 min). Probado a las 10:02: la policy de S05 da allowed solo a GetObject en `allowed/*` (simulate-principal-policy), el stack de S06 queda en CREATE_COMPLETE en 32 s y el log de S07 aparece. Cleanup verificado.
 - Tutor web con pestañas por lab (cadena, corrida real, test de 35 preguntas, orales): `estudio/lab05-tutor.html`, publicado en https://claude.ai/artifact/UqPgE3RSHYWAGD4iQsSnCP
 - Plan de la tarde: `up` a las 17:10 para que la alarma de S06 esté en ALARM a las 17:40; las pruebas se hacen a mano en la demo; `down` al terminar la sesión.
+
+### 2026-10-23 — Brief final del Architecture Challenge
+- Brief revisado contra la rúbrica. Se integró el Lab 07: decisión 7 (tareas posteriores al pedido por `ObjectCreated` → Lambda, idempotente), fila de trade-off, costo de Lambda (Price List API: menos de USD 1 al mes) y paso de validación.
+- Sección de evidencia como tabla Labs 01 a 07 → decisión. Diagrama con la cadena S3 → Lambda → CloudWatch Logs.
+- `decision-brief.pdf` (5 páginas) para entregar antes del 28 oct a las 6:00 p. m. Guion de defensa con Lab 07 y resumen de una línea por lab.
 
 ## Sin clasificar
 
