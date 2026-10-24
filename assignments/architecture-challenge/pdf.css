@@ -1,0 +1,23 @@
+@page {
+  size: Letter;
+  margin: 14mm 15mm 16mm;
+  @bottom-center {
+    content: "Architecture Decision Brief · Digital Café Luna · Sergio Alfredo Junca Valero · " counter(page) " de " counter(pages);
+    font: 7.5pt -apple-system, Helvetica, Arial, sans-serif;
+    color: #777;
+  }
+}
+body { font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 9.3pt; line-height: 1.34; color: #111; margin: 0; }
+h1 { font-size: 16pt; margin: 0 0 2px; }
+h1 + p { color: #555; margin-top: 0; }
+h1 + p + p { background: #f3f6fa; border-left: 3px solid #23395d; padding: 6px 9px; }
+h2 { font-size: 12pt; margin: 13px 0 5px; border-bottom: 1px solid #ccc; padding-bottom: 2px; break-after: avoid; }
+p, li { margin: 4px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 8.1pt; margin: 4px 0 6px; }
+th, td { border: 1px solid #bbb; padding: 2.5px 5px; vertical-align: top; text-align: left; }
+th { background: #eef0f3; }
+tr { break-inside: avoid; }
+img { width: 100%; break-inside: avoid; }
+code { font-size: 8.4pt; }
+figure { margin: 0; }
+figcaption { display: none; }
