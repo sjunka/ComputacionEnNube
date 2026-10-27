@@ -119,6 +119,8 @@ El contenido son datos: agregar un lab, checkpoint o entrega es agregar `app/src
 (y sus capturas vía `redact.json` + `node app/scripts/sync-img.mjs`). `/mostrarenaws` escribe ahí.
 Siguiente etapa: el juego de verificación, `scripts/PROMPT-juego-labs.md`.
 El artifact de la guía (`guia-labs-01-04.html`) está deprecado: no extenderlo.
+- `assignments/architecture-challenge/web/` — repo propio `sjunka/digital-cafe-luna` (ignorado aquí): Brief de 2 páginas y tablero
+animado de la defensa, https://sjunka.github.io/digital-cafe-luna/. El texto vive en `web/src/content.ts`; `npm run deploy` publica sitio y PDF.
 
 ### Checklist al agregar un lab nuevo
 

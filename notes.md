@@ -8,6 +8,28 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-10-26 — Correo cierre del curso (S08, Brief y defensa)
+
+**Notas:**
+- Miércoles 28 oct, presencial: primera parte, S08 (Arquitectura, costo y decisión). Lógica: requerimiento → restricción → decisión → mecanismo → consecuencia → costo → riesgo → trade-off → evidencia.
+  - El resto del tiempo: trabajo individual en el Architecture Challenge y dudas con el profe.
+- Miércoles 4 nov, virtual: evaluación final. Architecture Decision Brief (40%) y defensa individual (20%).
+- Brief: máximo 2 páginas, "por favor no más de eso". No un informe extenso ni una descripción de servicios AWS: un documento breve que permita entender qué decisiones se tomaron y por qué.
+- Las 2 páginas, compactas y en este orden:
+  1. Problema y restricciones principales: qué condiciones del caso realmente afectan la arquitectura.
+  2. Diagrama de arquitectura: una vista clara de los componentes principales y sus relaciones.
+  3. 4 a 5 decisiones arquitectónicas relevantes: qué se decide y qué restricción o necesidad justifica cada decisión.
+  4. Trade-offs, riesgos y supuestos: qué se gana, qué se sacrifica y qué riesgos permanecen.
+  5. Costo y evolución: principales factores de costo y qué decisiones se tomarían ahora o se dejarían para después.
+- Una decisión se explica así: restricción → decisión → mecanismo → consecuencia → trade-off.
+  - Ejemplo: la demanda es variable → no conviene mantener capacidad fija para el pico → capacidad escalable → la infraestructura se ajusta a la demanda → se reduce capacidad ociosa, pero aumenta la necesidad de observar y controlar el comportamiento del escalamiento.
+  - Es distinto de escribir "Usaré Auto Scaling porque mejora la escalabilidad".
+- No se evalúa por cantidad de páginas o servicios, ni por un documento más elaborado: se evalúa la coherencia de las decisiones y la capacidad de justificarlas.
+- Defensa: sin presentación adicional; el Brief y el diagrama son el soporte. Unos 10 minutos de presentación y 2 preguntas.
+- En la defensa interesa explicar: qué se decidió, qué restricción lo justificó, qué problema resuelve, qué sacrificio o trade-off implica, qué riesgo permanece y cómo se demostraría que la solución funciona.
+- Puede introducirse una restricción adicional para analizar cómo se adapta la arquitectura. No se modifica el Brief: explicar qué se mantiene, qué se cambiaría y por qué.
+- "El Brief muestra qué decidiste. La defensa demuestra que entiendes por qué lo decidiste."
+
 ## 2026-10-14 — Clase (S06 — Operación y automatización)
 
 **Notas:**

@@ -14,3 +14,6 @@ aws_credentials
 # Capturas originales de consola: muestran el Account ID. Se publican tapadas en app/public/img vía redact.json
 evidencias/**/consola/*.png
 !evidencias/lab-evolutivo-06/consola/07-cpu-grafica.png
+
+# El Brief y el sitio de la defensa tienen su propio repo (sjunka/digital-cafe-luna)
+assignments/architecture-challenge/web/

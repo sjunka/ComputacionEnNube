@@ -28,7 +28,8 @@ Otros equipos:
 | 3b2 | Lab Evolutivo 06 — Operación y automatización (CloudFormation + CloudWatch) | 2026-10-14 | Hecho en cuenta propia el 14 oct por CLI (app: `lab06.json`); una página en `estudio/lab06/` |
 | 3c | Lab Evolutivo 07 — Modernización: S3 ObjectCreated → Lambda → CloudWatch Logs (ejecutar antes) | 2026-10-21 | Hecho en cuenta propia el 16 oct por CLI (app: `lab07.json`); cleanup verificado |
 | 4 | **Checkpoint Lab 2** — S05–S07, individual — 20% (50% funcionamiento + 50% test) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md`; examen de práctica en `estudio/examen-checkpoint2.html`; tutor por lab en `estudio/lab05-tutor.html` (https://claude.ai/artifact/UqPgE3RSHYWAGD4iQsSnCP); montaje con `bash estudio/checkpoint2.sh up` |
-| 5 | **Architecture Challenge** (caso Digital Café Luna) — Decision Brief individual (40%, entregar días antes) + Defensa individual (20%) | 2026-10-28 | Brief final en `assignments/architecture-challenge/decision-brief.pdf` (6 páginas; entregar el **lunes 26 oct**: la apertura dice 26, la guía v02 dice antes de las 6 p. m. del 28). Guion en `defensa.md`; índice y rúbrica en `README.md`; guion en `defensa.md`; guía en `material-md/cloud-computing-posgrado-architecture-challenge-v02.md` |
+| 4b | S08: Arquitectura, costo y decisión (clase) y tiempo de trabajo en el Architecture Challenge | 2026-10-28 | Presencial. Después de la clase, trabajo individual y dudas con el profe |
+| 5 | **Architecture Challenge** (caso Digital Café Luna): Architecture Decision Brief (40%, máximo 2 páginas) y defensa individual (20%, 10 min y 2 preguntas) | 2026-11-04 | **Virtual.** Brief de 2 páginas en `assignments/architecture-challenge/web/public/brief.pdf` (repo `sjunka/digital-cafe-luna`); sitio con el tablero animado en https://sjunka.github.io/digital-cafe-luna/. Guion y restricciones probables en `assignments/architecture-challenge/defensa.md` |
 
 Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Checkpoint 2: 50% funcionamiento + 50% test (sin oral, correo del 14 oct). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
 
@@ -93,6 +94,12 @@ Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 pregunt
 - Cambios: prioridad explícita R1 > R2 > R3 > R5 > R6, decisiones D1 a D8 con restricción, mecanismo, alternativa descartada y sacrificio, resiliencia por escenario (RTO/RPO), 7 supuestos con validación y 8 pruebas.
 - Arreglos de diseño: solo CloudFront entra al ALB (prefix list), autenticación IAM a la base, health check de tipo ELB (el Lab 02 usaba EC2), alarmas con acción (el Lab 06 tenía `ActionsEnabled: false`), un solo NAT porque vender no depende de él.
 - Costo con la Price List API: USD 173 en mes normal y 292 en mes con campaña, con créditos de t3 y CloudFront de Sudamérica. Diagrama nuevo con D1 a D7 y el flujo de una compra.
+
+### 2026-10-26 — Correo del profe: cierre del curso y Brief de 2 páginas
+- La entrega y la defensa pasan al **miércoles 4 de noviembre, virtual**. El 28 de octubre es la clase S08 y tiempo de trabajo.
+- Brief rehecho a 2 páginas carta, con el orden que pide el correo y 5 decisiones, una por dimensión (capacidad, resiliencia y datos, red y seguridad, operación, modernización), cada una con la cadena restricción → decisión → mecanismo → consecuencia → trade-off y la evidencia de un lab.
+- Sitio nuevo en su propio repo (`sjunka/digital-cafe-luna`, carpeta `assignments/architecture-challenge/web/`): tablero mímico animado con GSAP, siete escenas, modo adaptación para la restricción adicional y el PDF generado del mismo contenido.
+- `defensa.md` rehecho para 10 minutos y 2 preguntas, con 11 restricciones adicionales probables y su respuesta.
 
 ## Sin clasificar
 

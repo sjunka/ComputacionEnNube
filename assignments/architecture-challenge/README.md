@@ -2,40 +2,30 @@
 
 ST1611 Computación en Nube · EAFIT · Sergio Alfredo Junca Valero
 
-Evaluación individual (correo del 28 de septiembre): Architecture Decision Brief (40%) y defensa (20%). Entrega del Brief: la presentación de apertura dice lunes 26 de octubre y la guía v02 dice antes de las 6:00 p. m. del miércoles 28, día de la defensa. Lo seguro es entregarlo el lunes 26. Guía: `material-md/cloud-computing-posgrado-architecture-challenge-v02.md`.
+Evaluación final individual: Architecture Decision Brief (40%) y defensa (20%), **miércoles 4 de noviembre de 2026, virtual** (correo del profe del 26 de octubre). El Brief tiene máximo 2 páginas y la defensa son 10 minutos y 2 preguntas, con el Brief y el diagrama como soporte.
 
-## Archivos
+## Versión que se entrega
+
+Vive en `web/`, que es su propio repo (`sjunka/digital-cafe-luna`) y este repo ignora:
+
+- Brief de 2 páginas: `web/public/brief.pdf`, publicado en https://sjunka.github.io/digital-cafe-luna/brief.pdf
+- Tablero animado para la defensa: https://sjunka.github.io/digital-cafe-luna/
+- Fuente única del texto: `web/src/content.ts`. El PDF sale de la misma página (`?vista=brief`) con `npm run pdf`, que exige 2 páginas.
+
+## Archivos de esta carpeta
 
 | Archivo | Qué es |
 |---|---|
-| `decision-brief.pdf` | Lo que se entrega: 6 páginas, con el diagrama vectorial. Se genera desde `decision-brief.md` |
-| `decision-brief.md` | Fuente del Brief |
-| `arquitectura.svg` | Fuente del diagrama. `arquitectura.png` es su render, para ver el `.md` en GitHub |
-| `pdf.css` | Estilo del PDF: tipografía, tablas y número de página |
-| `defensa.md` | Guion de 6 minutos, frases ancla, números, preguntas probables y método para la restricción adicional. No se entrega |
+| `defensa.md` | Guion de 10 minutos con teclas, frases ancla, números, preguntas probables y 11 restricciones adicionales con su respuesta. No se entrega |
+| `decision-brief.md`, `decision-brief.pdf`, `arquitectura.svg`, `arquitectura.png`, `pdf.css` | Versión de 6 páginas con 8 decisiones (23 de octubre). Quedó reemplazada por la de 2 páginas; sirve como respaldo de cifras y argumentos |
 
-## Cómo cubre la rúbrica del Brief
+## Cómo cubre la rúbrica
 
 | Criterio (puntos) | Dónde |
 |---|---|
-| Problema y restricciones (6) | Sección 1: restricciones R1 a R6, prioridad cuando chocan y alcance según la priorización de S01 |
-| Coherencia de arquitectura (10) | Sección 2: diagrama con decisiones D1 a D7, flujo de una compra en 4 pasos, región y subnets |
-| Decisiones y justificación (10) | Sección 3: cada decisión con restricción, mecanismo, alternativa descartada y lo que sacrifica |
-| Trade-offs, riesgos y supuestos (6) | Sección 4: tabla de trade-offs, resiliencia por escenario con RTO/RPO y 7 supuestos con su validación |
-| Costo y evolución (4) | Secciones 5 y 6: mes normal y con campaña (Price List API), cost drivers, palancas y evolución por señales |
-| Diagrama y evidencia (4) | Sección 7: Labs 01 a 07 con la decisión que sustenta cada uno y lo que no cubren; sección 8: 8 pruebas |
-
-## Regenerar el diagrama y el PDF
-
-Desde esta carpeta, con pandoc y Google Chrome:
-
-```sh
-CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-"$CHROME" --headless=new --hide-scrollbars --force-device-scale-factor=2 \
-  --window-size=1030,740 --screenshot=$PWD/arquitectura.png file://$PWD/arquitectura.svg
-sed 's/(arquitectura\.png)/(arquitectura.svg)/' decision-brief.md \
-  | pandoc -s --embed-resources --css pdf.css --metadata pagetitle="Decision Brief Digital Café Luna" -o /tmp/brief.html
-"$CHROME" --headless=new --no-pdf-header-footer --print-to-pdf=$PWD/decision-brief.pdf file:///tmp/brief.html
-```
-
-El PDF usa el SVG para que el diagrama no pierda nitidez al hacer zoom.
+| Problema y restricciones (6) | Sección 1: R1 a R6 con lo que exige cada una, prioridad cuando chocan y alcance |
+| Coherencia de arquitectura (10) | Sección 2: una figura con capas, AZ, CIDR y rutas; cinco decisiones, una por dimensión (cómputo, resiliencia y datos, red y seguridad, operación, modernización) |
+| Decisiones y justificación (10) | Sección 3: D1 a D5, cada una con restricción → decisión → mecanismo → consecuencia → trade-off, alternativas descartadas y evidencia de un lab |
+| Trade-offs, riesgos y supuestos (6) | Sección 4: qué gano, qué sacrifico, qué riesgo permanece y cómo lo detecto; RTO y RPO por escenario; 5 supuestos con su validación |
+| Costo y evolución (4) | Sección 5: mes normal y con campaña (Price List API), costo fijo frente a variable, palancas, qué hago ahora y qué después con la señal que lo dispara |
+| Diagrama y evidencia (4) | Figura 1 con la ruta de una compra y D1 a D5; evidencia de los Labs 01 a 07 en cada decisión |
