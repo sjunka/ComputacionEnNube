@@ -5,26 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guion de defensa</title>
 <style>
-  :root { --ink: #15181b; --muted: #4a514c; --rule: #c9cec8; --lit: #f5b400; --bg: #f4f5f2; --card: #fff; }
+  :root { --ink: #15181b; --muted: #4a514c; --soft: #858c86; --rule: #c9cec8; --lit: #f5b400; --bg: #f4f5f2; --card: #fff; --no: #a3261e; --si: #2f6b3a; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, -apple-system, sans-serif; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 system-ui, -apple-system, sans-serif; }
   main { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
   h1 { margin: 0; font-size: 30px; }
-  .meta { margin: 4px 0 24px; color: var(--muted); }
-  h2 { margin: 36px 0 12px; font-size: 21px; text-transform: uppercase; letter-spacing: .04em; }
+  .meta { margin: 4px 0 16px; color: var(--muted); }
+  h2 { margin: 44px 0 12px; font-size: 21px; text-transform: uppercase; letter-spacing: .04em; scroll-margin-top: 12px; }
+  h3 { margin: 26px 0 8px; font-size: 18px; }
   a { color: inherit; }
-  .chain { padding: 12px 16px; background: var(--card); border-left: 5px solid var(--lit); }
-  .block { display: grid; grid-template-columns: 112px 1fr; gap: 16px; padding: 16px; margin-bottom: 10px; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
-  .t { font: 700 15px ui-monospace, monospace; }
-  .k { display: inline-block; margin-top: 6px; padding: 2px 8px; border: 2px solid var(--ink); border-radius: 4px; font: 700 14px ui-monospace, monospace; }
-  .block h3 { margin: 0 0 4px; font-size: 18px; }
-  .block p { margin: 0; }
-  .block ul { margin: 6px 0 0; padding-left: 20px; }
-  .quote { margin-top: 8px; font-style: italic; color: var(--muted); }
-  ol, ul { padding-left: 22px; }
-  li { margin-bottom: 4px; }
+  p { margin: 0 0 10px; }
+  ul, ol { margin: 0 0 10px; padding-left: 22px; }
+  ul { list-style-type: "-  "; }
+  li { margin-bottom: 5px; }
   code { font: 15px ui-monospace, monospace; background: #e6e8e3; padding: 0 4px; border-radius: 3px; }
-  @media print { body { background: #fff; } .block { break-inside: avoid; } }
+  kbd { display: inline-block; min-width: 1.7em; padding: 0 5px; border: 2px solid var(--ink); border-radius: 4px; background: var(--card); font: 700 14px/1.35 ui-monospace, monospace; text-align: center; }
+  .toc { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 15px; }
+  .card { padding: 14px 16px; margin-bottom: 10px; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
+  .lit { border-left: 5px solid var(--lit); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .no b { color: var(--no); }
+  .si b { color: var(--si); }
+  .note { color: var(--muted); font-size: 15px; }
+  .block { display: grid; grid-template-columns: 118px 1fr; gap: 16px; padding: 16px; margin-bottom: 10px; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
+  .t { font: 700 15px ui-monospace, monospace; }
+  .where { margin-top: 6px; font-size: 14px; color: var(--muted); }
+  .block h3 { margin: 0 0 8px; }
+  .say p { font-size: 18px; }
+  .opt { color: var(--soft); }
+  dl { margin: 0; }
+  .qa dt { margin-top: 16px; font-weight: 700; }
+  .qa dd { margin: 4px 0 0; }
+  .piezas dt { margin-top: 12px; font-weight: 700; }
+  .piezas dd { margin: 2px 0 0; }
+  @media (max-width: 640px) { .block, .cols { grid-template-columns: 1fr; gap: 6px; } }
+  @media print { body { background: #fff; } .toc { display: none; } .block, .card, .qa dt, .qa dd { break-inside: avoid; } }
 </style>
 </head>
 <body>
@@ -32,121 +48,475 @@
   <h1>Guion de defensa: Digital Café Luna</h1>
   <p class="meta">Sergio Alfredo Junca Valero · miércoles 4 de noviembre de 2026, virtual · 10 minutos y 2 preguntas ·
     <a href="https://sjunka.github.io/digital-cafe-luna/">tablero</a> ·
-    <a href="https://sjunka.github.io/digital-cafe-luna/demos/">demos</a> ·
-    <a href="https://sjunka.github.io/digital-cafe-luna/brief.pdf">Brief</a></p>
+    <a href="https://sjunka.github.io/digital-cafe-luna/brief.pdf">Brief en PDF</a></p>
 
-  <p class="chain">En cada decisión: <b>restricción → decisión → mecanismo → consecuencia → trade-off</b>, y cerrar con <b>qué riesgo queda y cómo lo demuestro</b>.</p>
+  <nav class="toc" aria-label="Contenido">
+    <a href="#mira">Lo que mira el profe</a>
+    <a href="#antes">Antes de que me llamen</a>
+    <a href="#guion">Los 10 minutos</a>
+    <a href="#lamina">Las 7 preguntas de la lámina</a>
+    <a href="#preguntas">Preguntas probables</a>
+    <a href="#restriccion">Restricción nueva</a>
+    <a href="#numeros">Números</a>
+    <a href="#piezas">Piezas del diagrama</a>
+    <a href="#ensayo">Cómo ensayar</a>
+  </nav>
 
-  <h2>Antes de conectarse</h2>
+  <h2 id="mira">Lo que mira el profe</h2>
+  <p>Lo dijo en el correo del 26 de octubre y en la clase del 28. El Brief muestra qué decidí; la defensa tiene que mostrar que entiendo por qué lo decidí.</p>
+  <ul>
+    <li>Qué decidí, qué restricción lo justificó, qué problema resuelve, qué sacrifico, qué riesgo queda y cómo demostraría que funciona.</li>
+    <li>Cifras: cuánto cuesta, cuánto tarda, cuántos pedidos. En sus palabras: "lo hizo, lo probó".</li>
+    <li>Que sepa qué se comunica con qué, quién tiene permiso, dónde vive el estado, qué observo, qué repito, qué modelo de ejecución uso y qué riesgo acepto.</li>
+    <li>Puede preguntar por cualquier pieza del diagrama, y todo lo que yo diga tiene que verse en el diagrama.</li>
+    <li>Puede traer una restricción nueva. El Brief no cambia: explico qué mantengo, qué cambio y por qué.</li>
+    <li>No busca un experto en AWS. Busca criterio sobre costo, seguridad, diseño y valor para el negocio.</li>
+  </ul>
+  <p class="note">Rúbrica de la defensa (20%): dominio de las decisiones, 5 puntos; razonamiento técnico, 5; trade-offs, riesgos y adaptación, 6; validación y evidencia, 4.</p>
+  <div class="cols">
+    <div class="card no">
+      <p><b>No digo</b></p>
+      <ul>
+        <li>"Usé Auto Scaling porque mejora la escalabilidad."</li>
+        <li>"Lo hice así porque hoy todo es Kubernetes."</li>
+        <li>"Por portabilidad", sin decir qué restricción lo pide.</li>
+        <li>"Lo implementé porque sí."</li>
+      </ul>
+    </div>
+    <div class="card si">
+      <p><b>Sí digo (el ejemplo del correo)</b></p>
+      <p>"La demanda es variable, así que no conviene mantener capacidad fija para el pico. Por eso uso capacidad que escala, y la infraestructura se ajusta a la demanda. Reduzco la capacidad ociosa, pero tengo que vigilar cómo escala."</p>
+    </div>
+  </div>
+  <p class="card lit">Si no sé algo, lo digo así: "No lo medí. Lo que sé es ___, y lo comprobaría con ___."</p>
+
+  <h2 id="antes">Antes de que me llamen</h2>
   <ol>
-    <li>Abrir el sitio en Chrome y compartir solo esa pestaña. <code>F</code> pantalla completa, <code>T</code> reloj de 10 minutos.</li>
-    <li>Dejar el PDF abierto en otra pestaña.</li>
-    <li>Probar el teclado: <code>→</code> avanza, <code>←</code> retrocede, <code>1</code> a <code>7</code> cambian de escena, <code>A</code> modo adaptación, <code>Esc</code> sale.</li>
-    <li>Si falla la red: abrir <code>web/dist/index.html</code> local.</li>
-    <li>Cómo se lee el tablero (decirlo en la primera escena): lo iluminado es lo que explica el paso; la ruta gruesa se dibuja detrás del paquete; el hilo ámbar fino es lo ya recorrido; rojo es tráfico rechazado. Medidores y registrador son una simulación con los supuestos S1 a S5.</li>
+    <li>Cámara encendida y micrófono probado. El profe llama a cada uno, pide la cámara y los demás escuchan.</li>
+    <li>Chrome con dos pestañas: el tablero y el Brief en PDF. En Teams comparto la ventana de Chrome, no toda la pantalla, para poder pasar al PDF si el profe lo pide.</li>
+    <li>En el tablero pulso <kbd>F</kbd> para pantalla completa y <kbd>T</kbd> para el reloj de 10 minutos. Después: <kbd>→</kbd> avanza, <kbd>←</kbd> retrocede, <kbd>1</kbd> a <kbd>7</kbd> cambian de escena, <kbd>A</kbd> abre el modo adaptación y <kbd>Esc</kbd> sale.</li>
+    <li>Las demos son para repasar: no las abro mientras comparto pantalla. El tablero ya no tiene botón hacia ellas.</li>
+    <li>Si el sitio no carga, abro <code>web/dist/index.html</code> en local. Es un solo archivo y funciona sin Internet.</li>
+    <li>Notificaciones en silencio y este guion en otra pantalla o impreso. Lo miro para ubicarme, no para leerlo.</li>
   </ol>
 
-  <h2>Los 10 minutos</h2>
+  <h2 id="guion">Los 10 minutos</h2>
+  <p class="note"><kbd>→</kbd> dentro del texto marca dónde avanzo un paso. Lo gris es opcional: lo salto si voy tarde. Los tiempos están calculados a 150 palabras por minuto, un ritmo tranquilo: sin lo gris son unos 9 minutos y medio, y con lo gris, unos 10 y medio.</p>
 
-  <div class="block"><div><div class="t">0:00 – 1:00</div><span class="k">1</span></div><div>
+  <div class="block"><div><div class="t">0:00 – 1:05</div><div class="where">Tecla <kbd>1</kbd></div></div><div class="say">
     <h3>El problema</h3>
-    <ul>
-      <li>Campaña de pocos días con demanda incierta, datos de clientes y pedidos, equipo pequeño, presupuesto limitado.</li>
-      <li>Prioridad R1 &gt; R2 &gt; R3 &gt; R5; R4 es un límite.</li>
-      <li>El inventario va después: valor medio y riesgo alto.</li>
-    </ul></div></div>
+    <p><kbd>1</kbd> Buenas noches, profe. Le presento mi Brief de Digital Café Luna. Lo que ve en pantalla es la figura 1 del Brief, animada. Los medidores de abajo son una simulación con mis supuestos, no medidas reales.</p>
+    <p>Café Luna va a lanzar una campaña nacional de pocos días y no sabe cuánta gente va a llegar. <span class="opt">Hoy compra capacidad a ciegas: en el pico le falta y el resto del año le sobra.</span></p>
+    <p>Seis condiciones del caso cambian la arquitectura. <kbd>→</kbd> No puede perder pedidos ni exponer datos de clientes. <kbd>→</kbd> La demanda sube y baja. <kbd>→</kbd> Tiene que seguir vendiendo si algo falla. <kbd>→</kbd> El equipo es pequeño y el presupuesto, limitado. <kbd>→</kbd> Y debe poder crecer sin rehacer lo que ya funciona. Si chocan, el orden es: pedidos y datos, demanda, resiliencia y costo. Lo que el equipo no pueda operar, no entra.</p>
+    <p>Mis números de partida: unos 1.000 pedidos al día en un mes normal, una campaña de hasta 5 días con 10 veces el tráfico, casi todo a páginas estáticas, y un presupuesto de unos 175 dólares al mes, 300 con campaña.</p>
+  </div></div>
 
-  <div class="block"><div><div class="t">1:00 – 2:00</div><span class="k">2</span></div><div>
+  <div class="block"><div><div class="t">1:05 – 2:05</div><div class="where">Tecla <kbd>2</kbd></div></div><div class="say">
     <h3>Una compra</h3>
-    <ul>
-      <li>Caché de CloudFront → ALB que solo acepta a CloudFront → EC2 sana → RDS con copia síncrona → <code>incoming/</code> → Lambda.</li>
-    </ul>
-    <p class="quote">"Hay una sola puerta y el estado no vive en las instancias."</p></div></div>
+    <p><kbd>2</kbd> Sigo una compra para mostrar qué se comunica con qué. El cliente abre la campaña y la página sale de la caché de CloudFront, sin tocar los servidores. <kbd>→</kbd> Cuando compra, la petición pasa de CloudFront al balanceador, que solo acepta tráfico de CloudFront. <kbd>→</kbd> El balanceador la entrega a una instancia sana, y la aplicación guarda el pedido en la base de datos, que copia la escritura en la otra zona antes de confirmar. <kbd>→</kbd> La pasarela confirma el pago con un webhook firmado, y la aplicación deja un archivo del pedido en S3. <kbd>→</kbd> Ese archivo dispara una función Lambda que arma el reporte.</p>
+    <p>De este recorrido me importan dos cosas. Hay una sola puerta de entrada. Y el estado no vive en las instancias: la sesión va en una cookie firmada, el carrito y los pedidos están en la base, y los archivos, en S3. Por eso puedo perder una instancia sin perder nada.</p>
+  </div></div>
 
-  <div class="block"><div><div class="t">2:00 – 3:20</div><span class="k">3</span></div><div>
+  <div class="block"><div><div class="t">2:05 – 3:05</div><div class="where">Tecla <kbd>3</kbd></div></div><div class="say">
     <h3>D1 · Llega la campaña</h3>
-    <ul>
-      <li><b>Restricción:</b> pico corto, incierto y estático.</li>
-      <li><b>Decisión:</b> no dimensionar para el pico.</li>
-      <li><b>Mecanismo:</b> caché en el borde; ASG de 2 a 6 con target tracking al 50%; mínimo 4 la víspera.</li>
-      <li><b>Consecuencia:</b> fuera de campaña pago 2 instancias.</li>
-      <li><b>Trade-off:</b> USD 61 al mes menos que 6 fijas, a cambio de vigilar el escalamiento; sobre el techo de 6 la API se degrada.</li>
-      <li><b>Evidencia:</b> Lab 06, la alarma tardó dos periodos de 5 min.</li>
-    </ul>
-    <p class="quote">"La capacidad más barata es la que no necesito: el pico estático nunca llega a las EC2."</p></div></div>
+    <p><kbd>3</kbd> Primera decisión: no compro capacidad para el pico. El pico dura pocos días, no sé de qué tamaño será y casi todo es contenido estático.</p>
+    <p><kbd>→</kbd> Lo absorbo en dos niveles. <kbd>→</kbd> La víspera subo el mínimo del grupo de Auto Scaling de 2 a 4 instancias, porque escalar por métrica toma minutos: en el Lab 06 la alarma necesitó dos periodos de 5 minutos para dispararse. <kbd>→</kbd> En el pico, CloudFront sirve lo estático desde su caché y, si la CPU promedio pasa de 50%, el grupo agrega instancias hasta llegar a 6. <kbd>→</kbd> Cuando termina la campaña, vuelve a 2.</p>
+    <p><kbd>→</kbd> Lo que gano: fuera de campaña pago 2 instancias, y tener 6 fijas costaría 61 dólares más al mes. Lo que sacrifico: si el pico pide más de 6 instancias, la API se pone lenta. Ese techo es mi límite de costo, y una alarma me avisa si lo toco. <span class="opt">Descarté pasar toda la API a Lambda, porque obligaba a rediseñar la aplicación antes de la campaña.</span></p>
+  </div></div>
 
-  <div class="block"><div><div class="t">3:20 – 4:40</div><span class="k">4</span></div><div>
+  <div class="block"><div><div class="t">3:05 – 4:15</div><div class="where">Tecla <kbd>4</kbd></div></div><div class="say">
     <h3>D2 · Cae una zona</h3>
-    <ul>
-      <li><b>Restricción:</b> un pedido confirmado no se pierde.</li>
-      <li><b>Mecanismo:</b> health check de tipo ELB y reemplazo del ASG; RDS copia síncrona y mueve el endpoint.</li>
-      <li><b>Consecuencia:</b> RTO 1 a 2 min, RPO 0.</li>
-      <li><b>Trade-off:</b> USD 26 al mes y 2 instancias siempre encendidas.</li>
-      <li><b>Evidencia:</b> Lab 02, 35 s para sacar la instancia y 2 min 40 s para que el reemplazo atendiera.</li>
-    </ul>
-    <p class="quote">"El balanceador reparte, el ASG repone y la base no se pierde porque no vive en las instancias."</p></div></div>
+    <p><kbd>4</kbd> Segunda decisión: no perder pedidos. La venta tiene que seguir aunque caiga una zona completa.</p>
+    <p><kbd>→</kbd> Por eso todo va en dos zonas y el estado vive fuera de las instancias, en una base PostgreSQL administrada: RDS Multi-AZ. <kbd>→</kbd> Supongamos que cae la zona 1a. El balanceador deja de mandarle tráfico y todo va a la 1b. <span class="opt">Como el health check es de tipo ELB, el grupo también reemplaza una aplicación colgada, no solo una máquina apagada.</span> <kbd>→</kbd> La base copiaba cada escritura en la otra zona de forma síncrona. Ahora RDS promueve esa copia y mueve el endpoint, y la aplicación sigue escribiendo en la misma dirección. <kbd>→</kbd> La venta vuelve en 1 a 2 minutos y no se pierde ningún pedido confirmado.</p>
+    <p><kbd>→</kbd> El precio son 26 dólares más al mes que una base en una sola zona. Sé que se puede usar más de una región; no lo hago porque casi duplica el costo fijo y el caso no lo pide. <span class="opt">Tampoco monto PostgreSQL en EC2, porque el equipo tendría que operar la réplica, los backups y los parches.</span></p>
+    <p>En el Lab 02 lo vi con una instancia: el balanceador la sacó en 35 segundos y el reemplazo atendía a los 2 minutos 40, sin cortar el servicio.</p>
+  </div></div>
 
-  <div class="block"><div><div class="t">4:40 – 5:50</div><span class="k">5</span></div><div>
+  <div class="block"><div><div class="t">4:15 – 5:25</div><div class="where">Tecla <kbd>5</kbd></div></div><div class="say">
     <h3>D3 · Una sola puerta</h3>
-    <ul>
-      <li><b>Restricción:</b> datos de clientes.</li>
-      <li><b>Mecanismo:</b> cada SG acepta solo a la capa anterior; IAM Roles sin llaves; token IAM a la base; CloudTrail.</li>
-      <li><b>Trade-off:</b> más reglas y un solo NAT (USD 37 menos): si cae su AZ, la venta sigue sin parches.</li>
-      <li><b>Evidencia:</b> Labs 04 y 05.</li>
-    </ul>
-    <p class="quote">"Llegar no es estar autorizado: la red decide si llega, IAM si puede y CloudTrail deja la evidencia."</p></div></div>
+    <p><kbd>5</kbd> Tercera decisión: una sola puerta. Hay datos de clientes, y todo lo que queda expuesto a Internet se puede atacar.</p>
+    <p><kbd>→</kbd> CloudFront es la única entrada pública, y cada grupo de seguridad acepta solo a la capa anterior: el balanceador a CloudFront, las instancias al balanceador y la base a las instancias. <kbd>→</kbd> Si alguien llama al balanceador saltándose CloudFront, la conexión expira. <kbd>→</kbd> Y la base ni siquiera tiene ruta desde Internet.</p>
+    <p><kbd>→</kbd> Pero llegar no es estar autorizado. Cada componente tiene un rol de IAM con los permisos mínimos, sin llaves guardadas. Si un error de la aplicación intenta borrar un reporte, llega a S3, pero IAM se lo niega. <kbd>→</kbd> El costo es mantener más reglas, y CloudTrail registra quién cambió cada permiso.</p>
+    <p>También uso un solo NAT, solo para parches: ahorro 37 dólares al mes, y si cae su zona la venta sigue, porque no depende de él. Los labs 04 y 05 lo mostraron: sin la regla entre grupos de seguridad hubo timeout, y con el mismo rol, leer funcionó y escribir dio AccessDenied.</p>
+  </div></div>
 
-  <div class="block"><div><div class="t">5:50 – 6:50</div><span class="k">6</span></div><div>
+  <div class="block"><div><div class="t">5:25 – 6:25</div><div class="where">Tecla <kbd>6</kbd></div></div><div class="say">
     <h3>D4 · Todo como código</h3>
-    <ul>
-      <li><b>Restricción:</b> equipo pequeño.</li>
-      <li><b>Mecanismo:</b> un template por capa, change set, el mismo template para la prueba de carga; alarmas que actúan o avisan al de turno.</li>
-      <li><b>Trade-off:</b> portabilidad y disciplina de no tocar la consola (drift).</li>
-      <li><b>Evidencia:</b> Lab 06.</li>
-    </ul>
-    <p class="quote">"Una alarma que nadie mira es solo una notificación."</p></div></div>
+    <p><kbd>6</kbd> Cuarta decisión: todo como código y alarmas que actúan. Con un equipo pequeño, un cambio hecho a mano no se repite igual, y una alarma que nadie mira no protege nada.</p>
+    <p><kbd>→</kbd> Toda la infraestructura está en CloudFormation. <kbd>→</kbd> Son tres plantillas: red, datos y aplicación. Antes de aplicar un cambio, el change set me muestra qué se va a reemplazar, y con la misma plantilla levanto y borro el ambiente de la prueba de carga. <kbd>→</kbd> Cada alarma tiene una acción: la CPU hace escalar al grupo, y el resto avisa por SNS a la persona de turno, que sigue un procedimiento de una página.</p>
+    <p><kbd>→</kbd> Así cada cambio se puede repetir y auditar. <kbd>→</kbd> Lo que cedo: las plantillas solo sirven en AWS, y nadie puede tocar la consola, porque un cambio a mano aparece como drift. <span class="opt">Descarté Terraform porque me obliga a custodiar el archivo de estado, y con una sola nube no lo necesito.</span></p>
+    <p>En el Lab 06 la alarma llegó a ALARM, pero no tenía acciones y no pasó nada. Por eso aquí ninguna alarma queda sin dueño.</p>
+  </div></div>
 
-  <div class="block"><div><div class="t">6:50 – 7:50</div><span class="k">7</span></div><div>
+  <div class="block"><div><div class="t">6:25 – 7:35</div><div class="where">Tecla <kbd>7</kbd></div></div><div class="say">
     <h3>D5 · Reporte por evento</h3>
+    <p><kbd>7</kbd> Quinta decisión: modernizo solo lo intermitente. Aquí elijo el modelo de ejecución de cada parte. La API recibe tráfico todo el tiempo y sigue en instancias, y la base va en un servicio administrado, porque el equipo no puede operar réplicas. <kbd>→</kbd> Y los reportes, que son intermitentes y de bajo riesgo, van por evento a una función.</p>
+    <p><kbd>→</kbd> Cuando se confirma un pedido, la aplicación escribe un archivo en la carpeta incoming de S3, y S3 invoca la Lambda. <kbd>→</kbd> La Lambda escribe el reporte y una línea de log con el mismo número de pedido. No usa las instancias del pico y cuesta menos de un dólar al mes. <span class="opt">Descarté correr los reportes en las mismas instancias, porque competirían con la API justo en el pico.</span></p>
+    <p><kbd>→</kbd> El trade-off es que S3 puede entregar el mismo evento dos veces. Como el reporte se guarda con el número del pedido, un evento repetido sobrescribe el mismo archivo. <kbd>→</kbd> En el Lab 07, un archivo en incoming produjo una invocación y su log; un .txt o un archivo en archive, ninguna, porque no cumplen el filtro.</p>
+  </div></div>
+
+  <div class="block"><div><div class="t">7:35 – 8:35</div><div class="where">Bajar a la sección 5, Costo y evolución</div></div><div class="say">
+    <h3>Costo y evolución</h3>
+    <p>Ahora el costo. Lo calculé con la API de precios de AWS, sin capa gratuita: 173 dólares en un mes normal y 292 en un mes con campaña.</p>
+    <p>El 85% del mes normal es fijo. La base, el NAT, el balanceador, las IP públicas y las dos instancias mínimas se pagan aunque no haya ventas, así que el piso lo ponen los datos y la red, no el cómputo. En campaña manda el tráfico: CloudFront pasa de 16 a 88 dólares y los créditos de CPU suman 22, mientras que las 4 instancias extra cuestan solo 10.</p>
+    <p class="opt">Hay dos palancas: la capa gratuita de CloudFront deja el mes en 158 y 206 dólares, y la base reservada la compraría después de 3 meses de métricas estables.</p>
+    <p>Lo que no hago ahora son contenedores, varias regiones ni una base NoSQL, porque resuelven problemas que el caso no tiene. Cada una tiene una señal que la activa. Por ejemplo, agrego caché o una réplica de lectura si la CPU de la base pasa de 60%, y el inventario de las tiendas entra cuando cierre la campaña.</p>
+  </div></div>
+
+  <div class="block"><div><div class="t">8:35 – 9:35</div><div class="where">Bajar a Evidencia</div></div><div class="say">
+    <h3>Qué está probado, qué riesgo queda y cierre</h3>
+    <p>Para cerrar, qué está probado y qué no. El balanceo, la red, los permisos, las plantillas y los eventos los probé yo, en los labs 01 a 07. CloudFront, la base Multi-AZ, el NAT y la carga real no los cubren los labs, así que dejé pruebas definidas en el Brief. Una prueba de carga a 10 veces lo normal, en un ambiente temporal: el grupo no debe pasar de 6 instancias y el 95% de las respuestas debe tardar menos de un segundo. Un failover de la base en medio de esa carga, contando los pedidos antes y después: tienen que coincidir. <span class="opt">Y una llamada directa al balanceador, que tiene que dar timeout.</span></p>
+    <p>Los riesgos que acepto son un pico mayor que mi supuesto, la base como cuello de botella y depender de una sola región.</p>
+    <p>Mi criterio fue escoger cada servicio por la restricción que resuelve, y saber qué sacrifico y cuánto cuesta. Gracias, profe.</p>
+  </div></div>
+
+  <div class="card lit">
+    <p><b>Frases de apoyo para las preguntas</b></p>
     <ul>
-      <li><b>Restricción:</b> trabajo intermitente que no debe competir con la API.</li>
-      <li><b>Mecanismo:</b> <code>ObjectCreated</code> → Lambda asíncrona, salida por id.</li>
-      <li><b>Trade-off:</b> entrega al menos una vez, así que la idempotencia es obligatoria; nueva ruta de diagnóstico.</li>
-      <li><b>Evidencia:</b> Lab 07.</li>
+      <li>"El estado no vive en las instancias."</li>
+      <li>"Llegar no es estar autorizado: la red decide quién llega, e IAM decide qué puede hacer."</li>
+      <li>"Una alarma que nadie mira es solo una notificación."</li>
+      <li>"Que el stack diga CREATE_COMPLETE no prueba que funcione; lo prueban las pruebas."</li>
+      <li>"Serverless me quita servidores que operar, no la responsabilidad."</li>
     </ul>
-    <p class="quote">"Serverless mueve la frontera de responsabilidad, no la elimina."</p></div></div>
+  </div>
 
-  <div class="block"><div><div class="t">7:50 – 9:00</div><span class="k">bajar</span></div><div>
-    <h3>Costo y evolución (sección 5)</h3>
-    <ul>
-      <li>USD 173 en un mes normal y 292 con campaña. El 85% es fijo: el piso lo ponen la base y la red.</li>
-      <li>En campaña manda el tráfico: CloudFront 88, créditos de t3 22.</li>
-      <li>Lo que no hago ahora y la señal que lo dispararía.</li>
-    </ul></div></div>
+  <h2 id="lamina">Las 7 preguntas de la lámina</h2>
+  <p>El profe cerró la clase del 28 con estas preguntas y dijo que quien las responda sobre su propio diagrama tiene una base sólida para la defensa.</p>
+  <dl class="qa">
+    <dt>¿Qué se comunica con qué?</dt>
+    <dd>El cliente solo habla con CloudFront. CloudFront lee la web del bucket privado y manda las llamadas de la API al balanceador por HTTPS. El balanceador habla con las instancias, y las instancias hablan con la base por el puerto 5432 y con S3 por el gateway endpoint, sin pasar por Internet. Cuando llega un archivo a <code>incoming/</code>, S3 invoca la Lambda, y la Lambda escribe en S3 y en CloudWatch Logs. La pasarela de pagos entra por la misma puerta, CloudFront, con un webhook firmado. La única salida a Internet es el NAT, y solo la usan los parches y Session Manager.</dd>
 
-  <div class="block"><div><div class="t">9:00 – 10:00</div><span class="k">bajar</span></div><div>
-    <h3>Cómo lo demuestro (Evidencia)</h3>
-    <ul>
-      <li>Carga hasta 10 veces en un ambiente temporal.</li>
-      <li>Failover de RDS contando pedidos antes y después.</li>
-      <li>Llamar al ALB directo y ver el timeout.</li>
-    </ul>
-    <p class="quote">Cerrar: "No escojo servicios por modernos: escojo el que responde a la restricción, y digo qué sacrifico."</p></div></div>
+    <dt>¿Quién tiene permiso?</dt>
+    <dd>Nadie usa llaves guardadas: cada pieza tiene un rol de IAM con lo mínimo. El rol de las instancias puede conectarse a la base con un token de 15 minutos y escribir en <code>incoming/</code>, pero no borrar reportes. El rol de la Lambda puede leer <code>incoming/</code>, escribir en <code>reports/</code> y escribir su log. S3 tiene permiso para invocar esa Lambda y nada más; en el Lab 07, sin ese permiso, S3 rechazó la configuración. Solo CloudFront puede leer el bucket de la web. Los operadores entran a las instancias por Session Manager, sin puerto 22, y CloudTrail registra quién cambió qué.</dd>
 
-  <h2>Números que hay que saber</h2>
+    <dt>¿Dónde vive el estado?</dt>
+    <dd>Fuera de las instancias. Los pedidos, los clientes y el carrito están en RDS, con una copia síncrona en la otra zona y backups de 7 días copiados a us-east-2. La sesión viaja en una cookie firmada, así que cualquier instancia atiende a cualquier cliente. Los archivos y los reportes están en S3. La aplicación viene instalada en la AMI y la infraestructura está en las plantillas. Por eso puedo destruir una instancia o una Lambda sin perder nada.</dd>
+
+    <dt>¿Qué observamos?</dt>
+    <dd>Lo que siente el cliente y lo que paga el negocio: el tiempo de respuesta p95 del balanceador, los errores 5XX, cuántas instancias están sanas, la CPU y las conexiones de la base, los errores de la Lambda y el gasto contra el presupuesto. La CPU hace escalar al grupo sola; lo demás avisa por SNS a la persona de turno. Sigo el ciclo de la clase de operación: la alarma es una señal, la confirmo con logs y métricas, actúo, y lo que aprendo va al procedimiento. Además, cada reporte deja una línea de log con el número del pedido, y CloudTrail guarda quién cambió qué.</dd>
+
+    <dt>¿Qué repetimos?</dt>
+    <dd>La infraestructura, con código. Son tres plantillas de CloudFormation, red, datos y aplicación, que dan el mismo resultado cada vez que se aplican. Con ellas levanto y borro el ambiente de la prueba de carga, y en un desastre las despliego en us-east-2. Cada cambio pasa por un change set, así que veo qué se reemplaza antes de aplicarlo. Y si la pregunta es qué duplico para no caerme: dos zonas, dos instancias como mínimo, la base con su copia en la otra zona y los backups en otra región.</dd>
+
+    <dt>¿Qué modelo de ejecución conviene?</dt>
+    <dd>Depende de cómo trabaja cada parte. La API recibe tráfico todo el día y ya corre en Linux, así que va en máquinas virtuales con Auto Scaling: el equipo sabe operarlas y no hay que rediseñar antes de la campaña. La base va en un servicio administrado, porque el equipo no puede operar réplicas, backups y parches. Los reportes son intermitentes, así que van en Lambda y no pago un servidor esperando. Lo estático va en S3 y CloudFront. Cada paso hacia lo administrado le quita operación al equipo, pero no responsabilidad: los permisos, los eventos, los logs y el costo siguen siendo míos.</dd>
+
+    <dt>¿Qué cuesta, qué riesgo acepto y qué trade-off?</dt>
+    <dd>Cuesta 173 dólares en un mes normal y 292 con campaña, y el 85% es fijo. Acepto tres riesgos: un pico mayor que mi supuesto, porque el techo es de 6 instancias; la base como cuello de botella, porque crece en vertical; y una sola región, con 4 horas para recuperarme si cae. El trade-off que pago a propósito son 26 dólares al mes por la base en dos zonas. Los que decidí no pagar son 37 por un segundo NAT y 61 por tener 6 instancias fijas.</dd>
+  </dl>
+
+  <h2 id="preguntas">Preguntas probables</h2>
+
+  <h3>Generales</h3>
+  <dl class="qa">
+    <dt>¿Lo probaste?</dt>
+    <dd>En parte, y lo digo así. El balanceo y el reemplazo de instancias, la red privada, los permisos de IAM, las plantillas, las alarmas y el evento de S3 a Lambda los probé en mi cuenta, en los labs 01 a 07. CloudFront, la base Multi-AZ, el NAT y la carga real no los probé: para eso dejé pruebas definidas en el Brief, con el resultado que espero de cada una.</dd>
+
+    <dt>¿Cuántos pedidos o usuarios al día supusiste?</dt>
+    <dd>En un mes normal, unos 1.000 pedidos al día, 30.000 al mes. En campaña, 10 veces el tráfico durante hasta 5 días, casi todo a páginas estáticas.</dd>
+
+    <dt>¿De dónde salen los 150.000 pedidos y los 600 GB del mes de campaña?</dt>
+    <dd>Son un techo para calcular el costo, no un pronóstico. Con 10 veces el tráfico durante 5 días, el mes daría unos 75.000 pedidos y 250 GB. Usé más o menos el doble para no quedarme corto en lo que más crece, que es CloudFront.</dd>
+
+    <dt>¿Por qué no Kubernetes o contenedores?</dt>
+    <dd>Porque no resuelve ninguna restricción del caso y le suma operación a un equipo pequeño. El pico lo absorben CloudFront y el grupo de Auto Scaling, la aplicación ya corre en Linux, y supuse que el equipo sabe Linux y SQL, no contenedores. Un clúster trae un plano de control, redes y actualizaciones que alguien tiene que operar. Lo consideraría, empezando por ECS Fargate y no por Kubernetes, cuando haya despliegues semanales y el equipo sepa trabajar con contenedores.</dd>
+
+    <dt>¿Por qué AWS?</dt>
+    <dd>Porque es donde corrí los labs y tengo evidencia propia. Las decisiones no dependen de AWS: en otra nube serían las mismas piezas, una red de distribución de contenido, un balanceador, un grupo que escala, una base administrada con copia en otra zona y funciones por evento.</dd>
+
+    <dt>¿Por qué us-east-1 y no São Paulo?</dt>
+    <dd>Es más barata, tiene todos los servicios que uso y es la región de los labs. CloudFront acerca lo estático a Colombia, y la API tolera la ida y vuelta a Virginia. Los datos pueden estar en Estados Unidos según la Ley 1581, y ese es el supuesto 4 del Brief.</dd>
+
+    <dt>¿Qué valor le entrega esto al negocio?</dt>
+    <dd>Puede vender en el pico de la campaña sin pagar ese pico todo el año. No pierde pedidos aunque falle una zona. Los datos de sus clientes no quedan expuestos. Y un equipo pequeño lo puede operar, porque casi todo se recupera solo.</dd>
+  </dl>
+
+  <h3>Capacidad (D1)</h3>
+  <dl class="qa">
+    <dt>¿Y si el pico supera las 6 instancias?</dt>
+    <dd>La API se pone lenta, pero lo estático sigue saliendo de CloudFront. La alarma de p95 con el grupo en 6 me avisa, y subir el máximo es una actualización del stack que toma minutos, si el presupuesto lo permite. El techo existe a propósito: es mi límite de costo.</dd>
+
+    <dt>¿Cómo sabes que 6 instancias alcanzan?</dt>
+    <dd>Todavía no lo sé: es un supuesto. Lo valido con la prueba de carga a 10 veces lo normal. Si con 6 instancias el p95 pasa de un segundo, subo el techo con presupuesto aprobado o guardo en caché más del catálogo.</dd>
+
+    <dt>¿Por qué subir el mínimo la víspera y no esperar al escalado automático?</dt>
+    <dd>Porque escalar por métrica llega tarde a un pico que empieza de golpe. En el Lab 06 la alarma necesitó dos periodos de 5 minutos, y una instancia nueva tarda varios minutos más en atender. La fecha de la campaña la conozco, así que una acción programada llega antes que la métrica.</dd>
+
+    <dt>¿Por qué no toda la API en Lambda?</dt>
+    <dd>Porque obliga a rediseñar la aplicación justo antes de la campaña. La API trabaja todo el tiempo y ya corre en Linux; serverless lo dejo para lo intermitente, que son los reportes.</dd>
+
+    <dt>¿Qué son los créditos de CPU de las t3?</dt>
+    <dd>Las t3 tienen una línea base de CPU, 20% en la t3.small, y acumulan créditos cuando están por debajo. En modo unlimited, si pasan de la línea base por mucho tiempo, AWS cobra el excedente a 0,05 dólares por vCPU-hora. En la campaña eso suma unos 22 dólares.</dd>
+  </dl>
+
+  <h3>Resiliencia y datos (D2)</h3>
+  <dl class="qa">
+    <dt>¿Por qué un balanceador solo no recupera capacidad?</dt>
+    <dd>Porque el balanceador solo decide a quién manda tráfico: deja de enviarle a la instancia enferma, pero no crea otra. El que repone instancias es el grupo de Auto Scaling. En el Lab 02 se ve en el historial del grupo: primero "Terminating" y después "Launching", cada uno con su causa.</dd>
+
+    <dt>¿Por qué health check de tipo ELB?</dt>
+    <dd>El de tipo EC2 solo ve si la máquina está encendida. Con el de tipo ELB, el grupo también reemplaza una instancia encendida cuya aplicación no responde. En el Lab 02 era de tipo EC2; en el diseño lo corrijo.</dd>
+
+    <dt>¿Qué tiene que cumplir la aplicación para reemplazar instancias sin perder nada?</dt>
+    <dd>No guardar estado: la sesión en una cookie firmada, el carrito en la base, los archivos en S3 y la aplicación instalada en la AMI. Lo valido terminando una instancia con usuarios activos y revisando que no se pierda ningún carrito.</dd>
+
+    <dt>¿Por qué RDS y no DynamoDB o PostgreSQL en EC2?</dt>
+    <dd>Los pedidos son relacionales, necesitan transacciones, y el equipo sabe SQL. Con PostgreSQL en EC2 el equipo tendría que operar la réplica, los backups y los parches. DynamoDB escala más, pero obliga a rediseñar los datos según cómo se consultan, y eso no cabe antes de la campaña.</dd>
+
+    <dt>¿Versionar en S3 no es un respaldo?</dt>
+    <dd>Protege objetos, no la base. La base se respalda con restauración a cualquier punto de los últimos 7 días y con una copia de los backups en us-east-2. El versionado de S3 lo vi en el Lab 03.</dd>
+
+    <dt>¿Por qué no Aurora Serverless v2?</dt>
+    <dd>Escala la base, pero con alta disponibilidad necesita dos instancias y su costo es menos predecible. Si la base se vuelve el cuello de botella, lo evalúo junto con ElastiCache.</dd>
+
+    <dt>¿Qué pasa si cae toda la región?</dt>
+    <dd>Restauro los backups y las plantillas en us-east-2. Mi objetivo es volver a vender en 4 horas y perder como máximo una hora de datos. Bajar eso a minutos exige un warm standby en otra región, que casi duplica el costo fijo; lo haría si el negocio pide recuperar la región en menos de una hora.</dd>
+
+    <dt>¿Por qué 99,9% y no más?</dt>
+    <dd>99,9% son unos 43 minutos de caída al mes, o unos 7 minutos en una campaña de 5 días. Dos zonas en una región lo cubren. Para 99,99%, unos 4 minutos al mes, necesitaría un standby en otra región.</dd>
+  </dl>
+
+  <h3>Red y seguridad (D3)</h3>
+  <dl class="qa">
+    <dt>¿Por qué un solo NAT si la resiliencia pesa más que el costo?</dt>
+    <dd>Porque vender no depende del NAT. La aplicación viene en la AMI, el token de la base se firma dentro de la instancia, S3 va por el gateway endpoint y el pago entra como webhook. Por el NAT solo salen los parches y Session Manager. Si la pasarela exigiera llamadas salientes, pondría un NAT por zona, 37 dólares más al mes.</dd>
+
+    <dt>¿Cómo pruebas que nadie entra directo al balanceador?</dt>
+    <dd>Con un <code>curl</code> al DNS del balanceador: tiene que dar timeout, porque su grupo de seguridad solo acepta la lista de IP de CloudFront. Por CloudFront, la misma ruta responde 200. Es la misma prueba del Lab 04, donde sin la regla hubo timeout.</dd>
+
+    <dt>¿Llegar a S3 no basta para escribir?</dt>
+    <dd>No. La red decide quién llega e IAM decide qué puede hacer. En el Lab 05, con el mismo rol y la misma red, leer en <code>allowed/</code> funcionó y escribir dio AccessDenied.</dd>
+
+    <dt>¿Para qué Secrets Manager si la aplicación entra con token IAM?</dt>
+    <dd>Para la contraseña maestra de la base, la del administrador. RDS la guarda y la rota en Secrets Manager, así nadie la tiene en un archivo. La aplicación no la usa: entra con un token de IAM de 15 minutos. Cuesta 0,40 dólares al mes.</dd>
+
+    <dt>¿El token IAM no limita las conexiones a la base?</dt>
+    <dd>Sí, limita las conexiones nuevas por segundo. Por eso la aplicación usa un pool de conexiones por instancia, que abre pocas y las reutiliza.</dd>
+
+    <dt>¿Y los bots o un ataque de denegación?</dt>
+    <dd>CloudFront trae Shield Standard, sin costo, contra los ataques de denegación comunes. Si en los logs aparecen bots, agrego AWS WAF en CloudFront con reglas por tasa; está en la tabla de evolución.</dd>
+  </dl>
+
+  <h3>Operación (D4)</h3>
+  <dl class="qa">
+    <dt>¿Por qué CloudFormation y no Terraform?</dt>
+    <dd>Uso una sola nube y el equipo es pequeño: CloudFormation guarda el estado por mí. Terraform sirve para varias nubes, pero me obliga a custodiar el archivo de estado, y hoy no tengo varias nubes que lo justifiquen.</dd>
+
+    <dt>¿Qué te enseñó el Lab 06 sobre las alarmas?</dt>
+    <dd>Que una alarma sin acción no hace nada. Llegó a ALARM a las 15:56:58 con la CPU en 100% y 75%, pero no tenía acciones: solo cambió de estado. Por eso cada alarma del diseño hace escalar al grupo o avisa por SNS a alguien.</dd>
+
+    <dt>¿Qué es drift?</dt>
+    <dd>La diferencia entre lo que dice la plantilla y lo que existe en la cuenta, por ejemplo un grupo de seguridad cambiado a mano en la consola. CloudFormation lo detecta y lo muestra.</dd>
+
+    <dt>¿Quién recibe las alarmas y qué hace?</dt>
+    <dd>La persona de turno, por SNS. Cada alarma tiene un procedimiento de una página que dice qué revisar primero y qué hacer.</dd>
+  </dl>
+
+  <h3>Eventos (D5)</h3>
+  <dl class="qa">
+    <dt>¿Qué hace la Lambda si llega el mismo evento dos veces?</dt>
+    <dd>Vuelve a escribir <code>reports/&lt;fecha&gt;/&lt;id&gt;.json</code>. Como el nombre es el número del pedido, queda un solo reporte. Si falla después de los reintentos, la alarma de errores avisa y lo reproceso desde <code>incoming/</code>. El pedido nunca está en riesgo, porque vive en la base.</dd>
+
+    <dt>¿Por qué el reporte no vuelve a disparar la Lambda?</dt>
+    <dd>Porque el evento solo se activa en <code>incoming/</code> y para archivos <code>.json</code>, y la Lambda escribe en <code>reports/</code>. En el Lab 07, un archivo en <code>archive/</code> no invocó nada.</dd>
+
+    <dt>¿Por qué no un proceso en las EC2?</dt>
+    <dd>Competiría por CPU con la API justo en el pico. Y una máquina dedicada estaría encendida todo el mes para un trabajo intermitente.</dd>
+
+    <dt>¿Qué pasa si falta el permiso de invocación?</dt>
+    <dd>S3 ni siquiera acepta la configuración: responde "Unable to validate the following destination configurations". Me pasó en el Lab 07.</dd>
+  </dl>
+
+  <h3>Costo</h3>
+  <dl class="qa">
+    <dt>¿Qué es lo más caro?</dt>
+    <dd>En un mes normal, la base (52 dólares) y el NAT (35). En campaña, CloudFront (88).</dd>
+
+    <dt>¿Por qué el 85% es fijo?</dt>
+    <dd>Porque la base en dos zonas, el NAT, el balanceador y las IP públicas se cobran por hora, haya ventas o no. Es el precio de no perder pedidos y de tener una sola puerta. La elasticidad ahorra en el pico, pero no baja ese piso.</dd>
+
+    <dt>¿Cómo evitas que el costo se dispare?</dt>
+    <dd>Con el techo de 6 instancias, una alerta de AWS Budgets al 80% del presupuesto y etiquetas de costo por ambiente. El ambiente de pruebas solo existe mientras dura la prueba.</dd>
+
+    <dt>¿Cómo lo bajarías?</dt>
+    <dd>Con la capa gratuita de CloudFront el mes queda en 158 y 206 dólares. La base reservada la compro después de 3 meses de métricas estables. Y si el presupuesto se reduce a la mitad, respondo con la primera restricción de la lista de abajo.</dd>
+  </dl>
+
+  <h2 id="restriccion">Si traen una restricción nueva</h2>
+  <p>La guía dice que será la misma para todos, que no exige tecnologías fuera del curso y que el Brief no se modifica. Respondo de palabra y lo marco en el tablero: <kbd>A</kbd>, escribo la restricción y marco qué se mantiene, qué cambia, qué se quita y qué se agrega.</p>
+  <ol>
+    <li>¿Qué condición del caso toca y cómo cambia el orden de prioridades?</li>
+    <li>¿Qué decisión mantengo y cuál cambio?</li>
+    <li>¿Qué gano, qué sacrifico y qué riesgo nuevo aparece? En dólares, si se puede.</li>
+    <li>¿Con qué prueba lo valido?</li>
+  </ol>
+  <p class="card lit">"Mantengo ___ porque ___. Cambio ___ por ___ porque ___. Gano ___ y sacrifico ___. El riesgo nuevo es ___, y lo valido con ___."</p>
+
+  <dl class="qa">
+    <dt>1. El presupuesto se reduce a la mitad, unos 90 dólares al mes</dt>
+    <dd>El costo sube en la prioridad. Mantengo CloudFront, el grupo con techo, la Lambda y CloudFormation. Paso la base a una sola zona, con restauración a un punto, y ahorro 26 dólares. Quito el NAT y ahorro unos 37: los parches llegan con una AMI nueva y un instance refresh, el operador entra por EC2 Instance Connect Endpoint y los logs de la aplicación van a S3 por el gateway endpoint. Con la capa gratuita de CloudFront el mes queda en unos 94 dólares, cerca de la meta. Sacrifico el RPO 0 si cae una zona: la base se restaura en una hora y puedo perder hasta 5 minutos de pedidos. Lo valido con un ensayo de restauración y una alerta de AWS Budgets al 80%. En el tablero marco la base para cambiar y el NAT para quitar.</dd>
+
+    <dt>2. Los datos personales no pueden salir de Colombia</dt>
+    <dd>Toca los datos, que son lo primero. AWS no tiene región en Colombia, así que separo: los datos personales quedan en el país, en un centro de datos propio o de un proveedor local, y en AWS solo viajan tokens o el id del cliente. La aplicación consulta el dato personal por VPN cuando lo necesita. Es una nube híbrida: gano cumplimiento, pero sumo latencia y un sitio más que operar, y eso choca con el equipo pequeño. Antes confirmaría si lo exige la ley o un contrato, porque la Ley 1581 permite transferir datos a países con un nivel adecuado de protección. Lo valido midiendo la latencia de la VPN en la prueba de carga.</dd>
+
+    <dt>3. El pico es 10 veces mayor que el supuesto</dt>
+    <dd>Toca la demanda y vuelve la base el cuello de botella. Subo el techo del grupo con presupuesto aprobado, guardo en la caché de CloudFront las consultas de catálogo de la API, que son de solo lectura, con un tiempo de vida corto, agrego ElastiCache o una réplica de lectura y subo la clase de la base la víspera. Ese cambio de clase es un failover de 1 a 2 minutos, así que lo hago antes de la campaña y no durante. Sacrifico costo variable y frescura del catálogo. Lo valido con una prueba de carga al nuevo pico, mirando el p95, la CPU y las conexiones de la base.</dd>
+
+    <dt>4. Disponibilidad de 99,99% o recuperar la región en minutos</dt>
+    <dd>Toca la resiliencia. Paso de backup y restauración a un warm standby en us-east-2: una réplica de lectura de la base entre regiones, un grupo mínimo y un balanceador allá, y el cambio de origen en CloudFront o en Route 53. La recuperación baja a minutos y la pérdida de datos a segundos, porque esa réplica es asíncrona. A cambio, el costo fijo casi se duplica y hay más piezas que operar. Lo valido con un ensayo de failover regional que mida el RTO y el RPO reales.</dd>
+
+    <dt>5. El equipo se reduce a una persona</dt>
+    <dd>El límite del equipo se vuelve más duro. Mantengo todo administrado, porque el grupo, el balanceador y el failover de la base ya se recuperan solos. Quito piezas, como el NAT, dejo cada alarma con una acción automática o un procedimiento de una página, y las plantillas documentan la arquitectura. El riesgo es que todo el conocimiento quede en una sola persona y la guardia pese mucho. Lo valido con un simulacro en el que esa persona sigue el procedimiento sola.</dd>
+
+    <dt>6. Cifrado con llaves propias o auditoría estricta</dt>
+    <dd>Toca los datos. Uso KMS con una llave administrada por el cliente en S3 y en la base, que cuesta 1 dólar al mes por llave. En RDS el cifrado se define al crear la base, así que hago un snapshot, lo copio con la llave nueva y restauro, con una ventana de corte. Sumo los data events de CloudTrail en los buckets con datos de clientes y el registro de sesiones de Session Manager. El riesgo nuevo es perder acceso a la llave, que equivale a perder los datos. Lo valido intentando leer con un rol que no tiene permiso sobre la llave.</dd>
+
+    <dt>7. La pasarela exige llamadas salientes</dt>
+    <dd>Ahora vender depende de la salida a Internet, así que pongo un NAT por zona, 37 dólares más al mes, para que la caída de una zona no corte los pagos. Es justo el supuesto 3 del Brief. Lo valido quitando la ruta al NAT de una zona: los pagos tienen que seguir por la otra.</dd>
+
+    <dt>8. El inventario de las tiendas entra ya</dt>
+    <dd>Toca la evolución. Uso el mismo patrón de la quinta decisión: cada tienda sube su archivo de stock a <code>incoming/inventario/</code>, una Lambda actualiza la base y la web lee de ahí. El riesgo es vender algo agotado por el desfase entre la tienda y la web; lo reduzco reservando el stock al confirmar y con una conciliación diaria. Lo valido subiendo dos veces el mismo archivo, para ver que no duplica, y uno con error, para ver que salta la alarma.</dd>
+
+    <dt>9. Las tiendas tienen Internet satelital o intermitente</dt>
+    <dd>El profe usó este ejemplo en clase. La venta en línea no cambia, porque el cliente compra desde su propia conexión a través de CloudFront. Lo que cambia es lo que sale de las tiendas: el archivo de inventario se sube por lotes cuando hay enlace, con reintentos y subida por partes a S3. Como el proceso por evento ya es idempotente, un archivo repetido no duplica nada. Sacrifico frescura del inventario. Lo valido cortando el enlace de una tienda en una prueba y revisando que, al volver, sincronice sin duplicados.</dd>
+
+    <dt>10. No depender de servicios propietarios</dt>
+    <dd>Mantengo lo que ya es portable: PostgreSQL, Linux y HTTP. Cambio CloudFormation por Terraform, con el estado en S3 y bloqueo, y los reportes pasan a un proceso en contenedor o en la máquina virtual. Sacrifico operación, porque el equipo administra más piezas. Lo valido levantando todo con Terraform en un ambiente temporal.</dd>
+
+    <dt>11. Bots o ataque de denegación durante la campaña</dt>
+    <dd>CloudFront ya trae Shield Standard. Agrego AWS WAF en CloudFront con reglas por tasa de peticiones y control de bots, unos 5 dólares al mes más las reglas. El riesgo es bloquear clientes reales por error. Lo valido con tráfico sintético que pase el límite y revisando qué bloqueó.</dd>
+
+    <dt>12. Un cliente pide que borren sus datos (Ley 1581)</dt>
+    <dd>Borro su registro en la base. Los backups lo purgan cuando vencen los 7 días. En S3 los reportes se guardan por número de pedido, y los logs no llevan datos personales. El riesgo es que un dato personal se cuele en un log. Lo valido buscando el id del cliente en logs y buckets después del borrado.</dd>
+  </dl>
+
+  <h2 id="numeros">Números que debo saber</h2>
+  <h3>Supuestos de demanda</h3>
   <ul>
-    <li>Costo: USD 173 normal y 292 con campaña; 158 y 206 con la capa gratuita de CloudFront. 85% fijo.</li>
-    <li>Trade-offs: Multi-AZ 26 al mes; segundo NAT 37; seis EC2 fijas 61; créditos de t3 22; CloudFront de 16 a 88.</li>
-    <li>Lo más caro: RDS (52) y NAT (35). En campaña, CloudFront (88).</li>
-    <li>ASG de 2 a 6, mínimo 4 la víspera, target tracking al 50% de CPU.</li>
-    <li>RTO y RPO: instancia, continuo y 0; AZ, 1 a 2 min y 0; error humano, 1 h y 5 min; región, 4 h y 1 h.</li>
-    <li>Lab 02: 35 s y 2 min 40 s. Lab 06: CREATE_COMPLETE en 26 s; alarma con 2 de 2 periodos de 5 min sobre 70%.</li>
-    <li>Token IAM de la base: 15 min. Restauración a un punto: 7 días.</li>
-    <li>Pico de 10 veces por 3 a 5 días; 30.000 pedidos al mes normal y 150.000 con campaña.</li>
+    <li>Mes normal: unos 1.000 pedidos al día (30.000 al mes); 100 GB y 2 millones de peticiones en CloudFront.</li>
+    <li>Campaña: 10 veces el tráfico durante 3 a 5 días, casi todo estático.</li>
+    <li>Para el costo, el mes de campaña tiene 150.000 pedidos, 600 GB y 9 millones de peticiones: cerca del doble de lo que darían 10 veces durante 5 días, a propósito.</li>
+    <li>Disponibilidad de 99,9% en campaña (unos 43 minutos al mes) y p95 de la API bajo 1 segundo.</li>
+  </ul>
+  <h3>Costo (USD al mes, us-east-1, sin capa gratuita)</h3>
+  <ul>
+    <li>173 en un mes normal y 292 con campaña. Con la capa gratuita de CloudFront, 158 y 206.</li>
+    <li>Fijo: 147, el 85% del mes normal.</li>
+    <li>Por pieza en un mes normal: base 52, NAT 35, EC2 32, balanceador 22, CloudFront 16, IP públicas 11, el resto 5.</li>
+    <li>En campaña: CloudFront 88, EC2 42, balanceador 31, créditos de CPU 22.</li>
+    <li>Trade-offs en dinero: base en dos zonas, 26 más; segundo NAT, 37 (no lo pago); 6 instancias fijas, 61 (no lo pago).</li>
+    <li>Lambda: menos de 1. Secrets Manager: 0,40. Una llave de KMS propia: 1. WAF: unos 5 más las reglas.</li>
+  </ul>
+  <h3>Capacidad y recuperación</h3>
+  <ul>
+    <li>Grupo de 2 a 6 instancias t3.small; mínimo de 4 la víspera; escala con la CPU promedio sobre 50%.</li>
+    <li>Falla de una instancia: servicio continuo y ningún dato perdido.</li>
+    <li>Falla de una zona: 1 a 2 minutos para volver a vender y ningún pedido perdido.</li>
+    <li>Error humano: restauración a un punto en 1 hora, con hasta 5 minutos de datos perdidos; los backups guardan 7 días.</li>
+    <li>Falla de la región: 4 horas para volver en us-east-2, con hasta 1 hora de datos perdidos.</li>
+    <li>Token IAM de la base: 15 minutos. Puerto de la base: 5432. El balanceador acepta 443 solo desde CloudFront.</li>
+  </ul>
+  <h3>Lo que medí en los labs</h3>
+  <ul>
+    <li>Lab 01: VPC 10.20.0.0/16 con 10.20.1.0/24 en la zona 1a y 10.20.2.0/24 en la 1b.</li>
+    <li>Lab 02: el balanceador repartió 10 y 10 peticiones entre dos zonas. Al terminar una instancia, salió del target group en 35 segundos y el reemplazo atendió a los 2 minutos 40, sin cortar el servicio.</li>
+    <li>Lab 03: S3 guardó versiones de un objeto, y EFS dio el mismo archivo a dos instancias en zonas distintas.</li>
+    <li>Lab 04: de A a B por el puerto 8080 pasó, dio timeout al quitar la regla que referencia el otro grupo de seguridad y volvió al restaurarla.</li>
+    <li>Lab 05: con el mismo rol, GetObject en <code>allowed/</code> pasó; <code>restricted/</code> y PutObject dieron AccessDenied. SSE-S3 activo y AttachRolePolicy visible en CloudTrail.</li>
+    <li>Lab 06: CREATE_COMPLETE en 26 segundos; ALARM a las 15:56:58 con la CPU en 100% y 75%, dos de dos periodos de 5 minutos sobre 70%; la alarma no tenía acciones; update sin reemplazo y delete sin residuos.</li>
+    <li>Lab 07: <code>incoming/order-001.json</code> produjo una invocación de 2,36 ms (140 ms facturados) y un log con el mismo nombre. Sin permiso de invocación, S3 rechazó la configuración; un <code>.txt</code> y <code>archive/</code> no invocaron.</li>
   </ul>
 
-  <h2>Si traen una restricción nueva</h2>
-  <p class="chain">"Mantengo X porque…; cambio Y por Z porque…; gano…, sacrifico…; el riesgo nuevo es…, y lo valido con…". En el tablero: <code>A</code>, escribir la restricción y marcar los módulos.</p>
+  <h2 id="piezas">Cada pieza del diagrama en una frase</h2>
+  <p>El profe dijo que puede preguntar por cualquier servicio que aparezca, y que lo que yo nombre tiene que estar en el diagrama.</p>
+  <dl class="piezas">
+    <dt>Clientes</dt>
+    <dd>Navegador o móvil. Solo hablan con CloudFront.</dd>
+    <dt>Pasarela (pago alojado)</dt>
+    <dd>El cliente paga en la página de la pasarela, así que yo no guardo tarjetas. La pasarela confirma el pago con un webhook firmado que entra por CloudFront.</dd>
+    <dt>CloudFront</dt>
+    <dd>Red de distribución de contenido: guarda copias de la web cerca del cliente. Es la única puerta pública y trae Shield Standard contra ataques de denegación.</dd>
+    <dt>S3 web (privado, OAC)</dt>
+    <dd>Bucket con la web estática. Es privado: con Origin Access Control, solo CloudFront lo puede leer.</dd>
+    <dt>Región us-east-1</dt>
+    <dd>Virginia: la más barata, con todos los servicios que uso, y la de los labs.</dd>
+    <dt>VPC 10.20.0.0/16</dt>
+    <dd>Mi red privada, la del Lab 01, con tres capas en dos zonas.</dd>
+    <dt>IGW (Internet Gateway)</dt>
+    <dd>La conexión de la VPC con Internet. Solo la usan las subredes públicas.</dd>
+    <dt>Subredes públicas (10.20.1.0/24 y 10.20.2.0/24)</dt>
+    <dd>Tienen ruta al IGW, y en ellas están el balanceador y el NAT. Lo que hace pública a una subred es su tabla de rutas (Lab 04).</dd>
+    <dt>ALB (443 ← CF)</dt>
+    <dd>El balanceador de aplicación, presente en las dos zonas. Reparte entre instancias sanas, y su grupo de seguridad solo acepta por el puerto 443 la lista de IP de CloudFront.</dd>
+    <dt>NAT</dt>
+    <dd>Deja salir a Internet a las instancias privadas sin que nadie entre por ahí. Hay uno solo, en la zona 1a, para parches y Session Manager.</dd>
+    <dt>Subredes de aplicación (10.20.11.0/24 y 10.20.12.0/24)</dt>
+    <dd>Privadas. Su salida a Internet va al NAT.</dd>
+    <dt>ASG de 2 a 6 y EC2 t3.small</dt>
+    <dd>El grupo de Auto Scaling mantiene entre 2 y 6 instancias, reemplaza las que fallan y agrega más cuando la CPU promedio pasa de 50% (target tracking). La t3.small tiene 2 vCPU y 2 GB y es burstable.</dd>
+    <dt>Subredes de datos sin ruta (10.20.21.0/24 y 10.20.22.0/24)</dt>
+    <dd>No tienen ruta a Internet, ni de entrada ni de salida.</dd>
+    <dt>RDS primaria y copia síncrona</dt>
+    <dd>PostgreSQL administrado en dos zonas. La copia recibe cada escritura antes de confirmar, y si la primaria falla, RDS mueve el endpoint en 1 a 2 minutos.</dd>
+    <dt>GW (gateway endpoint de S3)</dt>
+    <dd>Camino privado y gratuito de la VPC a S3. El tráfico a S3 no pasa por el NAT ni por Internet.</dd>
+    <dt>S3 pedidos (incoming/ y reports/)</dt>
+    <dd>Bucket privado. En <code>incoming/</code> entra un archivo por pedido y en <code>reports/</code> queda el reporte.</dd>
+    <dt>Lambda</dt>
+    <dd>Función que corre solo cuando S3 la invoca. Se paga por invocación y por milisegundo.</dd>
+    <dt>CloudWatch Logs</dt>
+    <dd>Donde la Lambda escribe una línea por pedido, con el mismo número.</dd>
+    <dt>SNS</dt>
+    <dd>Servicio de notificaciones: lleva cada alarma a la persona de turno.</dd>
+    <dt>us-east-2 (backups y AMI)</dt>
+    <dd>Región de respaldo en Ohio, con la copia de los backups y de la AMI para recuperarme si cae us-east-1.</dd>
+    <dt>CloudFormation</dt>
+    <dd>Infraestructura como código: tres plantillas, change sets y detección de drift.</dd>
+    <dt>CloudWatch</dt>
+    <dd>Métricas y alarmas: CPU, p95, errores 5XX, instancias sanas, base y Lambda.</dd>
+    <dt>CloudTrail</dt>
+    <dd>Registro de cada llamada a la API de AWS: quién, qué y cuándo.</dd>
+    <dt>IAM, KMS y ACM</dt>
+    <dd>IAM da los roles con permisos mínimos. KMS guarda las llaves que cifran la base y S3. ACM entrega los certificados para HTTPS.</dd>
+    <dt>AWS Budgets</dt>
+    <dd>Presupuesto mensual con alerta al 80%.</dd>
+  </dl>
+
+  <h3>Lo que nombro y no está dibujado</h3>
+  <p>Si sale en la conversación, digo dónde actúa dentro del diagrama.</p>
+  <dl class="piezas">
+    <dt>Secrets Manager</dt>
+    <dd>Junto a RDS: guarda la contraseña maestra de la base. La aplicación no la usa.</dd>
+    <dt>Session Manager</dt>
+    <dd>Entra a las EC2 sin SSH ni puerto 22, y sale por el NAT.</dd>
+    <dt>Prefix list de CloudFront</dt>
+    <dd>En el grupo de seguridad del ALB (la etiqueta "443 ← CF" de la figura): la lista de IP de CloudFront que mantiene AWS.</dd>
+    <dt>Target tracking</dt>
+    <dd>En el ASG: mantiene la CPU promedio cerca de 50% agregando o quitando instancias.</dd>
+    <dt>Token IAM de la base</dt>
+    <dd>Entre las EC2 y RDS: una credencial de 15 minutos que la aplicación firma con su rol.</dd>
+    <dt>Créditos de CPU (t3 unlimited)</dt>
+    <dd>En las EC2: lo que se paga por usar CPU sobre la línea base, 0,05 dólares por vCPU-hora.</dd>
+    <dt>AWS Health</dt>
+    <dd>Fuera del diagrama: avisa cuando AWS tiene un problema que afecta mis recursos, por ejemplo en la zona del NAT.</dd>
+    <dt>p95</dt>
+    <dd>El tiempo por debajo del cual queda el 95% de las respuestas. Lo mide el ALB.</dd>
+    <dt>RTO y RPO</dt>
+    <dd>RTO es cuánto tardo en volver a vender; RPO, cuántos datos puedo perder, medidos en tiempo.</dd>
+    <dt>Webhook firmado</dt>
+    <dd>La pasarela llama a mi API con una firma, y verifico esa firma antes de aceptar el pago.</dd>
+  </dl>
+
+  <h2 id="ensayo">Cómo ensayar</h2>
+  <ol>
+    <li>Decir los 10 minutos en voz alta con el reloj del tablero (<kbd>T</kbd>), pasando las escenas. Si paso de 9 minutos y medio, salto lo gris.</li>
+    <li>Dibujar la arquitectura de memoria siguiendo una compra.</li>
+    <li>Responder en voz alta las 7 preguntas de la lámina sin mirar.</li>
+    <li>Repasar los números sin mirar.</li>
+    <li>Ensayar dos restricciones nuevas con el modo adaptación (<kbd>A</kbd>).</li>
+  </ol>
+  <p class="note">Para repasar, no para mostrar: <a href="https://sjunka.github.io/digital-cafe-luna/demos/">demos de 20 segundos por decisión</a>.</p>
 </main>
 </body>
 </html>

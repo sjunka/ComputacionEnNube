@@ -29,7 +29,7 @@ Otros equipos:
 | 3c | Lab Evolutivo 07 — Modernización: S3 ObjectCreated → Lambda → CloudWatch Logs (ejecutar antes) | 2026-10-21 | Hecho en cuenta propia el 16 oct por CLI (app: `lab07.json`); cleanup verificado |
 | 4 | **Checkpoint Lab 2** — S05–S07, individual — 20% (50% funcionamiento + 50% test) | 2026-10-21 | Pendiente; guía en `material-md/cloud-computing-posgrado-checkpoint-lab-02-guia-estudiante-v01.md`; examen de práctica en `estudio/examen-checkpoint2.html`; tutor por lab en `estudio/lab05-tutor.html` (https://claude.ai/artifact/UqPgE3RSHYWAGD4iQsSnCP); montaje con `bash estudio/checkpoint2.sh up` |
 | 4b | S08: Arquitectura, costo y decisión (clase) y tiempo de trabajo en el Architecture Challenge | 2026-10-28 | Presencial. Después de la clase, trabajo individual y dudas con el profe |
-| 5 | **Architecture Challenge** (caso Digital Café Luna): Architecture Decision Brief (40%, máximo 2 páginas) y defensa individual (20%, 10 min y 2 preguntas) | 2026-11-04 | **Virtual.** Brief de 2 páginas en `assignments/architecture-challenge/decision-brief.pdf` (copia de `web/public/brief.pdf`, repo `sjunka/digital-cafe-luna`); sitio con el tablero animado en https://sjunka.github.io/digital-cafe-luna/. Guion y restricciones probables en `assignments/architecture-challenge/defensa.md` |
+| 5 | **Architecture Challenge** (caso Digital Café Luna): Architecture Decision Brief (40%, máximo 2 páginas) y defensa individual (20%, 10 min y 2 preguntas) | 2026-11-04 | **Virtual.** Brief de 2 páginas en `assignments/architecture-challenge/decision-brief.pdf` (copia de `web/public/brief.pdf`, repo `sjunka/digital-cafe-luna`); sitio con el tablero animado en https://sjunka.github.io/digital-cafe-luna/. Guion de la defensa en `assignments/architecture-challenge/guion.html` |
 
 Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 preguntas de escenario, 3 opciones) + 20% oral (2 preguntas). Checkpoint 2: 50% funcionamiento + 50% test (sin oral, correo del 14 oct). Sin informes ni paquetes de evidencias. Detalle en `notes.md`.
 
@@ -100,6 +100,10 @@ Checkpoint 1: 50% funcionamiento de implementación propia + 30% test (5 pregunt
 - Brief rehecho a 2 páginas carta, con el orden que pide el correo y 5 decisiones, una por dimensión (capacidad, resiliencia y datos, red y seguridad, operación, modernización), cada una con la cadena restricción → decisión → mecanismo → consecuencia → trade-off y la evidencia de un lab.
 - Sitio nuevo en su propio repo (`sjunka/digital-cafe-luna`, carpeta `assignments/architecture-challenge/web/`): tablero mímico animado con GSAP, siete escenas, modo adaptación para la restricción adicional y el PDF generado del mismo contenido.
 - `defensa.md` rehecho para 10 minutos y 2 preguntas, con 11 restricciones adicionales probables y su respuesta.
+
+### 2026-10-29 — Guion de defensa según la clase S08
+- Brief, sitio y demos revisados contra el correo del 26 de octubre y la clase del 28: cumplen el formato (2 páginas, 5 secciones en orden, 5 decisiones con la cadena).
+- `guion.html` reescrito en lenguaje natural: los 10 minutos palabra por palabra (unos 9 min 35 s a 150 palabras por minuto, más partes opcionales), las 7 preguntas de la lámina respondidas sobre el diagrama, preguntas probables, 12 restricciones nuevas, números y las piezas del diagrama. Reemplaza a `defensa.md`.
 
 ## Sin clasificar
 

@@ -17,7 +17,7 @@ Vive en `web/`, que es su propio repo (`sjunka/digital-cafe-luna`) y este repo i
 
 | Archivo | Qué es |
 |---|---|
-| `defensa.md` | Guion de 10 minutos con teclas, frases ancla, números, preguntas probables y 11 restricciones adicionales con su respuesta. No se entrega |
+| `guion.html` | Guion de la defensa en lenguaje natural: los 10 minutos con las teclas del tablero, las 7 preguntas de la lámina del 28 de octubre, preguntas probables, 12 restricciones nuevas con su respuesta, números y cada pieza del diagrama. No se entrega |
 | `decision-brief.pdf` | El Brief que se entrega: copia del PDF de 2 páginas de `web/public/brief.pdf` |
 | `decision-brief.md`, `arquitectura.svg`, `arquitectura.png`, `pdf.css` | Fuente de la versión de 6 páginas con 8 decisiones (23 de octubre); su PDF queda en el historial de git. Sirve como respaldo de cifras y argumentos |
 
