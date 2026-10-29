@@ -8,6 +8,32 @@ Tareas, fechas y entregas van en `board.md`.
 
 ---
 
+## 2026-10-28 — Clase (S08 — Arquitectura, costo y decisión; cierre, virtual)
+
+Fuente: transcripción de Teams (generada por IA, solo los últimos ~16 min).
+
+**Notas:**
+- Preguntas de la última lámina, a responder sobre el propio diagrama y la propia arquitectura: ¿qué se comunica con quién?, ¿quién tiene permiso?, ¿qué observamos?, ¿qué repetimos?, ¿qué modelo de ejecución conviene?, ¿qué cuesta, qué riesgo acepto, qué trade-off?
+  - Quien las responda con contexto tiene base sólida para la sustentación técnica.
+  - No saberlas es un problema en la evaluación y en la vida real: no saber cómo se comunican los elementos ni quién puede hacer qué = no hay gobierno de seguridad. Hay que saber dónde vive el estado (servicio, máquina o BD), qué cuesta y qué riesgo se acepta con esa decisión de arquitectura.
+- En una sustentación técnica piden cifras y números: lo hizo, lo probó. Fundamentar con bases técnicas, no con experiencia personal.
+- El correo de la evaluación trae un ejemplo de pregunta, de la respuesta que no espera y de la respuesta que sí espera. Se envió por correo y por el grupo de Teams (a 2 de 10 no les llegó).
+- Supuestos (pregunta de Mateo):
+  - Abiertos, pero dentro del marco: Café Luna se queda igual, e-commerce de café que migra a la nube. No inventar otra empresa.
+  - Válidos: presupuesto (inversión respetable, casi sin dinero, presupuesto por semestre según ventas), conectividad (internet satelital vs. enlace Claro/Movistar = dos soluciones muy distintas), usuarios o ventas por día.
+  - Se pueden agregar servicios que no estaban en los labs si se conocen y se pueden defender. "No vayas a meter algo que no conozcas", porque lo pregunta.
+- Costos: hay que poner números. Preguntará: qué decisiones tomaste, por qué, qué valor entregó, cuánto costó.
+- Qué busca y qué no:
+  - No busca un experto técnico en AWS (no se logra en 8 semanas).
+  - Sí busca conciencia de la importancia de costo, seguridad, diseño, arquitectura y valor.
+  - No evalúa qué servicio se eligió (ej. Kubernetes vs. otro). Evalúa la justificación. "Porque hoy todo es Kubernetes" o "por portabilidad" no son respuestas válidas.
+  - Ejemplo de buena respuesta: empresa en San Pedro de los Milagros con tal ancho de banda, en piloto → arranca con EC2, disponibilidad de X% → dos instancias en dos AZ, sin multirregión aunque sé que se puede. Muestra que leyó y analizó, no solo "next, next" en el lab.
+- Defensa: llama a cada persona, con cámara abierta, y todos escuchan la respuesta.
+- La arquitectura puede ser agnóstica (sin nombres de servicios) o con un proveedor concreto (AWS, GCP, Alibaba, DigitalOcean). No pide despliegue (en pregrado sí). Lo que esté en el diagrama debe ser claro y coherente con lo que se dice: "tengo un balanceador" y no aparece en el diagrama, mal.
+- Compartió su LinkedIn para seguir en contacto. Próxima sesión: miércoles 4 nov (evaluación).
+
+---
+
 ## 2026-10-26 — Correo cierre del curso (S08, Brief y defensa)
 
 **Notas:**

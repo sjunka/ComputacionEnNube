@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guion de defensa</title>
+<style>
+  :root { --ink: #15181b; --muted: #4a514c; --rule: #c9cec8; --lit: #f5b400; --bg: #f4f5f2; --card: #fff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, -apple-system, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { margin: 0; font-size: 30px; }
+  .meta { margin: 4px 0 24px; color: var(--muted); }
+  h2 { margin: 36px 0 12px; font-size: 21px; text-transform: uppercase; letter-spacing: .04em; }
+  a { color: inherit; }
+  .chain { padding: 12px 16px; background: var(--card); border-left: 5px solid var(--lit); }
+  .block { display: grid; grid-template-columns: 112px 1fr; gap: 16px; padding: 16px; margin-bottom: 10px; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
+  .t { font: 700 15px ui-monospace, monospace; }
+  .k { display: inline-block; margin-top: 6px; padding: 2px 8px; border: 2px solid var(--ink); border-radius: 4px; font: 700 14px ui-monospace, monospace; }
+  .block h3 { margin: 0 0 4px; font-size: 18px; }
+  .block p { margin: 0; }
+  .block ul { margin: 6px 0 0; padding-left: 20px; }
+  .quote { margin-top: 8px; font-style: italic; color: var(--muted); }
+  ol, ul { padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  code { font: 15px ui-monospace, monospace; background: #e6e8e3; padding: 0 4px; border-radius: 3px; }
+  @media print { body { background: #fff; } .block { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Guion de defensa: Digital Café Luna</h1>
+  <p class="meta">Sergio Alfredo Junca Valero · miércoles 4 de noviembre de 2026, virtual · 10 minutos y 2 preguntas ·
+    <a href="https://sjunka.github.io/digital-cafe-luna/">tablero</a> ·
+    <a href="https://sjunka.github.io/digital-cafe-luna/demos/">demos</a> ·
+    <a href="https://sjunka.github.io/digital-cafe-luna/brief.pdf">Brief</a></p>
+
+  <p class="chain">En cada decisión: <b>restricción → decisión → mecanismo → consecuencia → trade-off</b>, y cerrar con <b>qué riesgo queda y cómo lo demuestro</b>.</p>
+
+  <h2>Antes de conectarse</h2>
+  <ol>
+    <li>Abrir el sitio en Chrome y compartir solo esa pestaña. <code>F</code> pantalla completa, <code>T</code> reloj de 10 minutos.</li>
+    <li>Dejar el PDF abierto en otra pestaña.</li>
+    <li>Probar el teclado: <code>→</code> avanza, <code>←</code> retrocede, <code>1</code> a <code>7</code> cambian de escena, <code>A</code> modo adaptación, <code>Esc</code> sale.</li>
+    <li>Si falla la red: abrir <code>web/dist/index.html</code> local.</li>
+    <li>Cómo se lee el tablero (decirlo en la primera escena): lo iluminado es lo que explica el paso; la ruta gruesa se dibuja detrás del paquete; el hilo ámbar fino es lo ya recorrido; rojo es tráfico rechazado. Medidores y registrador son una simulación con los supuestos S1 a S5.</li>
+  </ol>
+
+  <h2>Los 10 minutos</h2>
+
+  <div class="block"><div><div class="t">0:00 – 1:00</div><span class="k">1</span></div><div>
+    <h3>El problema</h3>
+    <ul>
+      <li>Campaña de pocos días con demanda incierta, datos de clientes y pedidos, equipo pequeño, presupuesto limitado.</li>
+      <li>Prioridad R1 &gt; R2 &gt; R3 &gt; R5; R4 es un límite.</li>
+      <li>El inventario va después: valor medio y riesgo alto.</li>
+    </ul></div></div>
+
+  <div class="block"><div><div class="t">1:00 – 2:00</div><span class="k">2</span></div><div>
+    <h3>Una compra</h3>
+    <ul>
+      <li>Caché de CloudFront → ALB que solo acepta a CloudFront → EC2 sana → RDS con copia síncrona → <code>incoming/</code> → Lambda.</li>
+    </ul>
+    <p class="quote">"Hay una sola puerta y el estado no vive en las instancias."</p></div></div>
+
+  <div class="block"><div><div class="t">2:00 – 3:20</div><span class="k">3</span></div><div>
+    <h3>D1 · Llega la campaña</h3>
+    <ul>
+      <li><b>Restricción:</b> pico corto, incierto y estático.</li>
+      <li><b>Decisión:</b> no dimensionar para el pico.</li>
+      <li><b>Mecanismo:</b> caché en el borde; ASG de 2 a 6 con target tracking al 50%; mínimo 4 la víspera.</li>
+      <li><b>Consecuencia:</b> fuera de campaña pago 2 instancias.</li>
+      <li><b>Trade-off:</b> USD 61 al mes menos que 6 fijas, a cambio de vigilar el escalamiento; sobre el techo de 6 la API se degrada.</li>
+      <li><b>Evidencia:</b> Lab 06, la alarma tardó dos periodos de 5 min.</li>
+    </ul>
+    <p class="quote">"La capacidad más barata es la que no necesito: el pico estático nunca llega a las EC2."</p></div></div>
+
+  <div class="block"><div><div class="t">3:20 – 4:40</div><span class="k">4</span></div><div>
+    <h3>D2 · Cae una zona</h3>
+    <ul>
+      <li><b>Restricción:</b> un pedido confirmado no se pierde.</li>
+      <li><b>Mecanismo:</b> health check de tipo ELB y reemplazo del ASG; RDS copia síncrona y mueve el endpoint.</li>
+      <li><b>Consecuencia:</b> RTO 1 a 2 min, RPO 0.</li>
+      <li><b>Trade-off:</b> USD 26 al mes y 2 instancias siempre encendidas.</li>
+      <li><b>Evidencia:</b> Lab 02, 35 s para sacar la instancia y 2 min 40 s para que el reemplazo atendiera.</li>
+    </ul>
+    <p class="quote">"El balanceador reparte, el ASG repone y la base no se pierde porque no vive en las instancias."</p></div></div>
+
+  <div class="block"><div><div class="t">4:40 – 5:50</div><span class="k">5</span></div><div>
+    <h3>D3 · Una sola puerta</h3>
+    <ul>
+      <li><b>Restricción:</b> datos de clientes.</li>
+      <li><b>Mecanismo:</b> cada SG acepta solo a la capa anterior; IAM Roles sin llaves; token IAM a la base; CloudTrail.</li>
+      <li><b>Trade-off:</b> más reglas y un solo NAT (USD 37 menos): si cae su AZ, la venta sigue sin parches.</li>
+      <li><b>Evidencia:</b> Labs 04 y 05.</li>
+    </ul>
+    <p class="quote">"Llegar no es estar autorizado: la red decide si llega, IAM si puede y CloudTrail deja la evidencia."</p></div></div>
+
+  <div class="block"><div><div class="t">5:50 – 6:50</div><span class="k">6</span></div><div>
+    <h3>D4 · Todo como código</h3>
+    <ul>
+      <li><b>Restricción:</b> equipo pequeño.</li>
+      <li><b>Mecanismo:</b> un template por capa, change set, el mismo template para la prueba de carga; alarmas que actúan o avisan al de turno.</li>
+      <li><b>Trade-off:</b> portabilidad y disciplina de no tocar la consola (drift).</li>
+      <li><b>Evidencia:</b> Lab 06.</li>
+    </ul>
+    <p class="quote">"Una alarma que nadie mira es solo una notificación."</p></div></div>
+
+  <div class="block"><div><div class="t">6:50 – 7:50</div><span class="k">7</span></div><div>
+    <h3>D5 · Reporte por evento</h3>
+    <ul>
+      <li><b>Restricción:</b> trabajo intermitente que no debe competir con la API.</li>
+      <li><b>Mecanismo:</b> <code>ObjectCreated</code> → Lambda asíncrona, salida por id.</li>
+      <li><b>Trade-off:</b> entrega al menos una vez, así que la idempotencia es obligatoria; nueva ruta de diagnóstico.</li>
+      <li><b>Evidencia:</b> Lab 07.</li>
+    </ul>
+    <p class="quote">"Serverless mueve la frontera de responsabilidad, no la elimina."</p></div></div>
+
+  <div class="block"><div><div class="t">7:50 – 9:00</div><span class="k">bajar</span></div><div>
+    <h3>Costo y evolución (sección 5)</h3>
+    <ul>
+      <li>USD 173 en un mes normal y 292 con campaña. El 85% es fijo: el piso lo ponen la base y la red.</li>
+      <li>En campaña manda el tráfico: CloudFront 88, créditos de t3 22.</li>
+      <li>Lo que no hago ahora y la señal que lo dispararía.</li>
+    </ul></div></div>
+
+  <div class="block"><div><div class="t">9:00 – 10:00</div><span class="k">bajar</span></div><div>
+    <h3>Cómo lo demuestro (Evidencia)</h3>
+    <ul>
+      <li>Carga hasta 10 veces en un ambiente temporal.</li>
+      <li>Failover de RDS contando pedidos antes y después.</li>
+      <li>Llamar al ALB directo y ver el timeout.</li>
+    </ul>
+    <p class="quote">Cerrar: "No escojo servicios por modernos: escojo el que responde a la restricción, y digo qué sacrifico."</p></div></div>
+
+  <h2>Números que hay que saber</h2>
+  <ul>
+    <li>Costo: USD 173 normal y 292 con campaña; 158 y 206 con la capa gratuita de CloudFront. 85% fijo.</li>
+    <li>Trade-offs: Multi-AZ 26 al mes; segundo NAT 37; seis EC2 fijas 61; créditos de t3 22; CloudFront de 16 a 88.</li>
+    <li>Lo más caro: RDS (52) y NAT (35). En campaña, CloudFront (88).</li>
+    <li>ASG de 2 a 6, mínimo 4 la víspera, target tracking al 50% de CPU.</li>
+    <li>RTO y RPO: instancia, continuo y 0; AZ, 1 a 2 min y 0; error humano, 1 h y 5 min; región, 4 h y 1 h.</li>
+    <li>Lab 02: 35 s y 2 min 40 s. Lab 06: CREATE_COMPLETE en 26 s; alarma con 2 de 2 periodos de 5 min sobre 70%.</li>
+    <li>Token IAM de la base: 15 min. Restauración a un punto: 7 días.</li>
+    <li>Pico de 10 veces por 3 a 5 días; 30.000 pedidos al mes normal y 150.000 con campaña.</li>
+  </ul>
+
+  <h2>Si traen una restricción nueva</h2>
+  <p class="chain">"Mantengo X porque…; cambio Y por Z porque…; gano…, sacrifico…; el riesgo nuevo es…, y lo valido con…". En el tablero: <code>A</code>, escribir la restricción y marcar los módulos.</p>
+</main>
+</body>
+</html>
