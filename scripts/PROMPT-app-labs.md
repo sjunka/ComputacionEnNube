@@ -23,7 +23,7 @@ Alcance de esta tarea: el **esqueleto publicado**, el **contenido como datos** y
 - **Ruteo y base:** `base: '/ComputacionEnNube/'` en `vite.config.ts` y `HashRouter`, para que recargar una ruta en GitHub Pages no dé 404. Una ruta por lab (`#/lab/03`) y una para el repaso.
 - **Publicación:** `.github/workflows/deploy.yml` en la raíz del repo. En push a `main` que toque `app/**` (y con `workflow_dispatch`): `npm ci`, `npm test` y `npm run build` en `app/`, y publicación de `app/dist` con `actions/configure-pages`, `actions/upload-pages-artifact` y `actions/deploy-pages` (permisos `pages: write` e `id-token: write`).
 - **Visibilidad:** el repo es público y el sitio también. El material del profe es público y no es sensible.
-- **Datos de la cuenta AWS fuera de lo publicado:** el Account ID (278835524469), las IP públicas y los IDs de recursos van en `app/.env.local` (ignorado con `*.local`). Detalle abajo.
+- **Datos de la cuenta AWS fuera de lo publicado:** el Account ID ({{ACCOUNT_ID}}), las IP públicas y los IDs de recursos van en `app/.env.local` (ignorado con `*.local`). Detalle abajo.
 - **Diseño:** conserva la identidad de la guía actual (IBM Plex Sans y Mono desde Google Fonts; tokens `--bg`, `--surface`, `--ink`, `--muted`, `--line`, `--accent`, `--done`, `--warn`, `--bad`, `--net`, `--cmp`, `--dat`, `--sec`, `--con`, con sus valores claros y oscuros) como tema de Tailwind (`@theme`). Tema claro y oscuro según `prefers-color-scheme`, usable a 400 px, textos en español.
 
 ## Estructura

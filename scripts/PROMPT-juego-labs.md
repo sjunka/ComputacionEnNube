@@ -26,7 +26,7 @@ La app tiene dos caras: una **guía** (cada paso por CLI y en la consola AWS, co
 - **Ubicación:** `app/` dentro de este repo. `base: '/ComputacionEnNube/'` y `HashRouter`.
 - **Publicación:** GitHub Pages con `.github/workflows/deploy.yml` en la raíz: en push a `main` que toque `app/**`, `npm ci`, `npm test`, `npm run build` en `app/`, y publicación de `app/dist` con `actions/configure-pages`, `actions/upload-pages-artifact` y `actions/deploy-pages`.
 - **Visibilidad:** el repo `sjunka/ComputacionEnNube` es **público** y el sitio también lo será. El material del profe es público y no es sensible.
-- **Datos de la cuenta AWS fuera de lo publicado:** el Account ID (278835524469), las IP públicas y los IDs de recursos van en `app/.env.local` (ignorado por git con `*.local`). Ver «Datos de la cuenta».
+- **Datos de la cuenta AWS fuera de lo publicado:** el Account ID ({{ACCOUNT_ID}}), las IP públicas y los IDs de recursos van en `app/.env.local` (ignorado por git con `*.local`). Ver «Datos de la cuenta».
 - **Seguridad:** la app nunca pide ni guarda credenciales AWS, nunca llama a AWS ni a APIs de IA desde el navegador. La verificación siempre es: script de solo lectura en CloudShell y JSON pegado en la app.
 - **Idioma y forma:** textos en español, tema claro y oscuro, usable en el celular (~400 px). Conserva la identidad visual actual de la guía (IBM Plex Sans/Mono, paleta con tokens `--net`, `--cmp`, `--dat`, `--sec`, `--con`) como tokens de Tailwind.
 
