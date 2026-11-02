@@ -1,0 +1,131 @@
+<title>Historia de Digital Café Luna</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Una columna de lectura; cada decisión es un bloque "Se trata de / Objetivo / Costo". */
+:root {
+  --bg: #f6f5f2;
+  --fg: #1d2224;
+  --muted: #5a6468;
+  --line: #d9d8d2;
+  --accent: #1f5c63;
+  --soft: #e6eeee;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Source Sans 3", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #14191a; --fg: #e8ebea; --muted: #9ba6a8; --line: #2c3537; --accent: #6fc0c8; --soft: #1d2a2c; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #14191a; --fg: #e8ebea; --muted: #9ba6a8; --line: #2c3537; --accent: #6fc0c8; --soft: #1d2a2c; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font: 17px/1.55 var(--body); padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 42rem; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+h1, h2 { font-family: var(--display); font-weight: 600; text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: 2.1rem; }
+h2 { font-size: 1.35rem; }
+p { margin: 0; }
+.meta { color: var(--muted); font-size: 0.9rem; margin-top: 8px; }
+section { display: flex; flex-direction: column; gap: 12px; }
+.lead { font-size: 1.15rem; }
+ul { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 6px; }
+.decision { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 8px; }
+.decision h3 { margin: 0; font-size: 1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+.decision b { font-weight: 600; }
+.cifra { background: var(--soft); padding: 8px 12px; font-variant-numeric: tabular-nums; }
+.numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 12px; }
+.numeros div { border: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.numeros strong { font-family: var(--display); font-size: 1.8rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.numeros span { color: var(--muted); font-size: 0.9rem; }
+</style>
+<main>
+  <header>
+    <h1>Historia de Digital Café Luna</h1>
+    <p class="meta">Architecture Challenge · Sergio Alfredo Junca Valero · defensa del 4 de noviembre de 2026 · <a href="https://sjunka.github.io/digital-cafe-luna/?escena=problema&amp;paso=1">tablero</a> · <a href="https://sjunka.github.io/digital-cafe-luna/demos/">ruta de estudio</a></p>
+  </header>
+
+  <section>
+    <p class="lead">Se trata de Café Luna, una empresa de café que vende en línea y va a lanzar una campaña nacional de pocos días. Es un caso del curso, no una empresa real.</p>
+    <p class="lead">El objetivo: que la tienda en línea venda en el pico de la campaña, sin perder pedidos y sin pagar todo el año la capacidad de esos días.</p>
+  </section>
+
+  <section>
+    <h2>El problema</h2>
+    <p>Nadie sabe cuánta gente va a llegar. Hoy se compra capacidad a ciegas: en el pico falta y el resto del año sobra. El caso pone 6 condiciones:</p>
+    <ul>
+      <li>No perder pedidos ni exponer los datos de los clientes.</li>
+      <li>La demanda sube y baja.</li>
+      <li>Seguir vendiendo si algo falla.</li>
+      <li>Un equipo pequeño.</li>
+      <li>Un presupuesto limitado: unos 175 dólares al mes, 300 con campaña.</li>
+      <li>Poder crecer sin rehacer lo que ya funciona.</li>
+    </ul>
+    <p>Mis números de partida: 30.000 pedidos al mes y una campaña de 3 a 5 días con 10 veces el tráfico.</p>
+  </section>
+
+  <section>
+    <h2>Mis 5 decisiones</h2>
+
+    <div class="decision">
+      <h3>1. Capacidad</h3>
+      <p><b>Se trata de</b> que la tienda crezca sola durante la campaña, de 2 a 6 servidores, y vuelva a 2 al terminar.</p>
+      <p><b>Objetivo:</b> no pagar el pico todo el año.</p>
+      <p class="cifra">Tener 6 servidores fijos costaría 61 dólares más al mes.</p>
+      <p><b>Qué puede fallar:</b> un pico mayor que mi supuesto. <b>Cómo lo demuestro:</b> simulo 10 veces la carga normal. No debe pasar de 6 servidores y 95 de cada 100 respuestas deben tardar menos de 1 segundo.</p>
+    </div>
+
+    <div class="decision">
+      <h3>2. No perder pedidos</h3>
+      <p><b>Se trata de</b> tener todo en 2 zonas. Si una zona cae, la otra sigue y la base de datos ya tiene su copia.</p>
+      <p><b>Objetivo:</b> que ningún pedido confirmado se pierda.</p>
+      <p class="cifra">La venta vuelve en 1 a 2 minutos. Cuesta 26 dólares más al mes.</p>
+      <p><b>Qué puede fallar:</b> la base de datos se queda corta en el pico. <b>Cómo lo demuestro:</b> fuerzo el cambio a la copia durante la carga y cuento los pedidos antes y después. Deben coincidir.</p>
+    </div>
+
+    <div class="decision">
+      <h3>3. Una sola puerta</h3>
+      <p><b>Se trata de</b> que todo entre por un solo lugar, CloudFront. Cada pieza solo recibe a la anterior y tiene los permisos mínimos.</p>
+      <p><b>Objetivo:</b> proteger los datos de los clientes.</p>
+      <p class="cifra">Con una sola salida a Internet en vez de 2, ahorro 37 dólares al mes.</p>
+      <p><b>Qué puede fallar:</b> un permiso mal escrito. <b>Cómo lo demuestro:</b> intento entrar sin pasar por la puerta. La conexión no debe responder.</p>
+    </div>
+
+    <div class="decision">
+      <h3>4. Todo como código</h3>
+      <p><b>Se trata de</b> escribir la infraestructura en 3 plantillas y de que cada alarma tenga una acción o una persona a cargo.</p>
+      <p><b>Objetivo:</b> que un equipo pequeño pueda repetir y revisar cada cambio.</p>
+      <p><b>Qué puede fallar:</b> alguien cambia algo a mano. <b>Cómo lo demuestro:</b> hago un cambio a mano y compruebo que el sistema lo detecta.</p>
+    </div>
+
+    <div class="decision">
+      <h3>5. Reportes por evento</h3>
+      <p><b>Se trata de</b> que el reporte de cada pedido lo arme una función que solo corre cuando llega el pedido. Si el aviso llega 2 veces, queda 1 solo reporte.</p>
+      <p><b>Objetivo:</b> que los reportes no compitan con la tienda en el pico.</p>
+      <p><b>Qué puede fallar:</b> un reporte falla varias veces. Una alarma avisa. <b>Cómo lo demuestro:</b> envío 2 veces el mismo pedido y debe quedar 1 reporte.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Cuánto cuesta</h2>
+    <div class="numeros">
+      <div><strong>173</strong><span>dólares al mes, mes normal</span></div>
+      <div><strong>292</strong><span>dólares al mes, con campaña</span></div>
+      <div><strong>85%</strong><span>del mes normal es fijo: 147 dólares</span></div>
+    </div>
+    <p>Lo fijo se paga haya o no ventas: la base de datos, la salida a Internet, el balanceador y 2 servidores. En campaña manda el tráfico: CloudFront pasa de 16 a 88 dólares.</p>
+  </section>
+
+  <section>
+    <h2>Qué probé y qué no</h2>
+    <p>En los labs 1 a 7 probé el reparto de tráfico, la red, los permisos, las plantillas y los eventos.</p>
+    <p>No probé CloudFront, la base en 2 zonas, la salida a Internet ni la carga real. Para eso dejé 9 pruebas definidas en el Brief.</p>
+  </section>
+
+  <section>
+    <h2>Lo que puede salir mal</h2>
+    <ul>
+      <li>Un pico mayor que mi supuesto: el tope de 6 servidores se queda corto.</li>
+      <li>La base de datos como cuello de botella.</li>
+      <li>Depender de una sola región.</li>
+    </ul>
+    <p>Escogí cada servicio por la restricción que resuelve, sabiendo qué sacrifico y cuánto cuesta.</p>
+  </section>
+</main>

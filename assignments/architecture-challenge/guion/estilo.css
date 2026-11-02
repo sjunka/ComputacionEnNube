@@ -1,0 +1,14 @@
+@page { size: A4; margin: 14mm 14mm 16mm; }
+body { font: 11pt/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1c1c1c; max-width: none; margin: 0; padding: 0; }
+header#title-block-header { margin-bottom: 10mm; }
+h1.title { font-size: 22pt; margin: 0 0 2mm; }
+p.subtitle { font-size: 12pt; color: #555; margin: 0; }
+h2 { font-size: 16pt; border-bottom: 2px solid #1c1c1c; padding-bottom: 1mm; margin-top: 9mm; break-after: avoid; }
+section.level3 { break-inside: avoid; margin: 0 0 7mm; padding-top: 3mm; border-top: 1px solid #ccc; }
+h3 { font-size: 12.5pt; margin: 0 0 1.5mm; break-after: avoid; }
+section.level3 > p:first-of-type { margin: 0; }
+img { display: block; width: 100%; max-width: 125mm; border: 1px solid #bbb; margin: 2mm 0 3mm; }
+.opc { color: #888; }
+ul { padding-left: 5mm; }
+code { font-size: 10pt; background: #eee; padding: 0 1mm; border-radius: 2px; }
+em { color: #3f6b70; }

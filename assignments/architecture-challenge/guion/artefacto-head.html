@@ -1,0 +1,96 @@
+<title>Guion de sustentación Café Luna</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow+Semi+Condensed:wght@400;600&family=B612+Mono&display=swap">
+<style>
+/* Tablero de sala de control: lámina a la izquierda, lo que digo a la derecha; índice fijo arriba. */
+:root {
+  --bg: #dcdeda;
+  --fg: #1c2023;
+  --muted: #545b5c;
+  --line: #b7bbb6;
+  --panel: #eef0ec;
+  --plate: #1c2023;
+  --plate-fg: #f2f3ef;
+  --accent: #8a5a00;
+  --opc: #6c7273;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Barlow Semi Condensed", system-ui, sans-serif;
+  --mono: "B612 Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #171a1c; --fg: #e9ebe7; --muted: #a3aaaa; --line: #383e40; --panel: #212528; --plate: #2b3033; --plate-fg: #f2f3ef; --accent: #f5b400; --opc: #8f9697; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #171a1c; --fg: #e9ebe7; --muted: #a3aaaa; --line: #383e40; --panel: #212528; --plate: #2b3033; --plate-fg: #f2f3ef; --accent: #f5b400; --opc: #8f9697; color-scheme: dark; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--plate); }
+body { background: var(--bg); color: var(--fg); font: 18px/1.5 var(--body); }
+nav.indice { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--plate); padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-wrap: wrap; gap: 4px 18px; }
+nav.indice a { color: var(--plate-fg); font: 600 0.95rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; }
+nav.indice a:hover, nav.indice a:focus-visible { text-decoration: underline; }
+main { max-width: 76rem; margin: 0 auto; padding-block: 28px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 700 2.6rem/1.05 var(--display); text-transform: uppercase; letter-spacing: 0.02em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+h2 { font: 700 1.7rem/1.1 var(--display); text-transform: uppercase; letter-spacing: 0.04em; background: var(--plate); color: var(--plate-fg); display: inline-block; padding: 6px 14px; margin: 44px 0 14px; scroll-margin-top: 56px; text-wrap: balance; }
+h3 { font: 700 1.2rem/1.2 var(--display); letter-spacing: 0.03em; text-transform: uppercase; margin: 0; }
+section.level2 > p, section.level2 > ul, section.level2 > ol, section.level3:not(:has(img)) > p { max-width: 46rem; }
+section.level3 { margin-top: 28px; }
+section.level3:has(img) { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 4px 24px; align-content: start; padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--line); }
+section.level3:has(img) > * { grid-column: 2; margin: 0 0 8px; min-width: 0; }
+section.level3:has(img) > h3 { grid-column: 1 / -1; }
+section.level3:has(img) > p:has(img) { grid-column: 1; grid-row: 2 / span 12; margin: 0; }
+section.level3 img { display: block; width: 100%; height: auto; border: 1px solid var(--line); cursor: zoom-in; }
+section.level3 img:focus-visible, #cerrar-foto:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#foto { padding: 0; border: 0; background: transparent; max-width: none; max-height: none; width: 100%; height: 100%; }
+#foto::backdrop { background: rgba(10, 12, 13, 0.92); }
+#foto[open] { display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+#foto img { display: block; max-width: 98vw; max-height: 96vh; width: auto; height: auto; }
+#cerrar-foto { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); font: 600 1rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--plate-fg); background: var(--plate); border: 1px solid var(--plate-fg); padding: 8px 14px; cursor: pointer; }
+section.level3:has(img) > p:nth-of-type(1), section.level3:has(img) > p:nth-of-type(2) { font: 0.8rem/1.5 var(--mono); color: var(--muted); margin-bottom: 2px; }
+.opc { color: var(--opc); }
+em { color: var(--accent); font-style: normal; font-weight: 600; }
+code { font: 0.85em var(--mono); background: var(--panel); padding: 0 4px; border: 1px solid var(--line); }
+a { color: inherit; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 1.3rem; }
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  h1 { font-size: 2.1rem; }
+  section.level3:has(img) { display: block; }
+  section.level3:has(img) > p:has(img) { margin: 8px 0 12px; }
+}
+</style>
+<dialog id="foto" aria-label="Lámina en grande">
+  <button id="cerrar-foto" type="button">Cerrar</button>
+  <img id="foto-img" alt="">
+</dialog>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const foto = document.getElementById('foto')
+  const grande = document.getElementById('foto-img')
+  const abrir = img => {
+    grande.src = img.src
+    grande.alt = img.alt
+    foto.showModal()
+  }
+  foto.addEventListener('click', () => foto.close())
+  document.querySelectorAll('section.level3 img').forEach(img => {
+    img.tabIndex = 0
+    img.setAttribute('role', 'button')
+    img.setAttribute('aria-label', img.alt + ', ver en grande')
+    img.addEventListener('click', () => abrir(img))
+    img.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(img) }
+    })
+  })
+})
+</script>
+<nav class="indice" aria-label="Partes del guion">
+  <a href="#lo-que-pide-el-profe">Lo que pide</a>
+  <a href="#cómo-manejar-el-tablero">Tablero</a>
+  <a href="#parte-1-los-10-minutos">10 minutos</a>
+  <a href="#parte-2-las-2-preguntas">2 preguntas</a>
+  <a href="#parte-3-si-trae-una-restricción-nueva">Restricción</a>
+  <a href="#cómo-me-preparo">Preparación</a>
+</nav>
+<main>
+<h1>Guion de sustentación: Digital Café Luna</h1>
+<p class="sub">Defensa individual · miércoles 4 de noviembre de 2026, virtual · 10 minutos y 2 preguntas</p>
